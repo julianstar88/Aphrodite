@@ -129,4 +129,5 @@ dmypy.json
 .pyre/
 
 # Python projec related
-.ini
+*.ini
+*.ini.bak
