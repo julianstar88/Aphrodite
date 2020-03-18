@@ -10,6 +10,7 @@ import sys
 from PyQt5 import QtWidgets
 
 from CustomComponents import CustomBoxLayout, CustomScrollArea
+from CustomModel import CustomSqlModel
 
 class MainWindow(QtWidgets.QMainWindow):
     
@@ -19,6 +20,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.widget = QtWidgets.QWidget()
         self.scrollArea = CustomScrollArea(self.widget)
         self.layout = CustomBoxLayout(QtWidgets.QBoxLayout.BottomToTop, self.widget)
+        
+        self.model = CustomSqlModel()
+        
+        self.view = QtWidgets.QTableView()
+        self.view.setModel(self.model)
+        self.layout.addWidget(self.view)
         
         self.status = self.statusBar()
         
