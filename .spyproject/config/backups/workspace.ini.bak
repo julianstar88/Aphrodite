@@ -6,5 +6,5 @@ save_non_project_files = False
 
 [main]
 version = 0.2.0
-recent_files = ['examples\\Qt_ModelView\\MainWindow.py', 'examples\\Qt_ModelView\\CustomModel.py', 'examples\\SQLite3_Database\\SQLite3_Database_test.py', 'examples\\Qt_ModelView\\CustomComponents.py', 'examples\\Qt_ModelView\\QModel_test.py']
+recent_files = ['examples\\Qt_ModelView\\MainWindow.py', 'examples\\Qt_ModelView\\CustomModel.py', 'examples\\Qt_ModelView\\CustomComponents.py', 'examples\\Qt_ModelView\\QModel_test.py']
 

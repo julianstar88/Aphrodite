@@ -7,26 +7,33 @@ Created on Tue Mar 17 23:47:14 2020
 
 import sqlite3
 
-from PyQt5 import QtGui
+from CustomComponents import CustomModelItem
+
+from PyQt5 import QtGui, QtCore
 
 class CustomSqlModel(QtGui.QStandardItemModel):
     
     def __init__(self, database, *args):
         super().__init__(*args)
         self.database = database
-        self.data = None
+        self.data = list()
         
         
     def __populateModel(self):
-        pass
-    
-    def __getData(self, tableName):
         con = sqlite3.connect(self.database)
         with con:
             c = con.cursor()
-            sqlCommand = "SELECT * FROM {name}".format(name = tableName)
+            sqlCommand = "SELECT * FROM training_routine"
             c.execute(sqlCommand)
             data = c.fetchall()
         con.close()
-        return data
+        
+        for row in data:
+            l = [CustomModelItem(item) for item in row[1:]]
+            self.data.append(l)
+            
+        self.setRowCount = len(self.data)
+        self.setColumnCount = len(self.data[0])
+        
+    
             

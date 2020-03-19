@@ -37,7 +37,7 @@ class MainWindow(QtWidgets.QMainWindow):
         
         QMainWindow {
             background-image: url(figures/nature/leaf.jpg);
-            background-position: bottm center;
+            background-position: bottom right;
             background-origin: content;
         }
         
