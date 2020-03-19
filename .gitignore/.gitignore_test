@@ -128,9 +128,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# project related files
+# ignore python project related files
 *.ini
 *.ini.bak
-
-# compiled file
-*.pyc
