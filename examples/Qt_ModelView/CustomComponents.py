@@ -38,22 +38,8 @@ class CustomModelItem(QtGui.QStandardItem):
             c.execute(sqlCommand)
             data = c.fetchall()
         con.close()
-        for item in data:
-            alternative = {}
-            alternative["id"] = item[0]
-            alternative["exerciseID"] = item[1]
-            alternative["label"] = item[2]
-            alternative["short"] = item[3]
-            alternative["alternativeExercise"] = item[4]
-            alternative["warmUp"] = item[5]
-            alternative["repetition"] = item[6]
-            alternative["w1"] = item[7]
-            alternative["w2"] = item[8]
-            alternative["w3"] = item[9]
-            alternative["w4"] = item[10]
-            alternative["w5"] = item[11]
-            alternative["w6"] = item[12]
-            self.trainingAlternatives.append(alternative)
+        data = [list(item) for item in data]
+        self.trainingAlternatives.extend(data)
             
     def fetchNotesFromDatabase(self, database):
         con = sqlite3.connect(database)
@@ -63,110 +49,142 @@ class CustomModelItem(QtGui.QStandardItem):
             c.execute(sqlCommand)
             data = c.fetchall()
         con.close()
-        for item in data:
-            note = {}
-            note["id"] = item[0]
-            note["label"] = item[1]
-            note["short"] = item[2]
-            note["note"] = item[3]
-            self.trainingNotes.append(note)
+        data = [list(item) for item in data]
+        self.trainingNotes.extend(data)
     
-    def commitAlternativesToDatabase(self, database):
+    def commitAlternativesToDatabase(self, database, table):
         con = sqlite3.connect(database)
         with con:
             c = con.cursor()
             
             # 1: delete the old talbe as it is no longer important
-            sqlCommand = "DROP TABLE IF EXISTS training_alternatives"
+            sqlCommand = "DROP TABLE IF EXISTS {name}".format(name = table)
             c.execute(sqlCommand)
             
-            # 2: recreate the table with new values
+            # 2: create a new table
+            values = """
+                id INT,
+                exerciseID INT,
+                label TEXT,
+                short TEXT,
+                alternativ TEXT,
+                Warm Up TEXT,
+                Repetition TEXT,
+                Week_1 TEXT,
+                Week_2 TEXT,
+                Week_3 TEXT,
+                Week_4 TEXT,
+                Week_5 TEXT,
+                Week_6 TEXT
+            """
+            sqlCommand = "CREATE TABLE {name}({values})".format(
+                name = table, values = values)
+            c.execute(sqlCommand)
             
+            # 3: insert the actual table into the new table
+            values = "?, " * len(self.trainingAlternatives[0])
+            values = values[:-2]
+            sqlCommand = "INSERT INTO {name} VALUES({values})".format(
+                    name = table,
+                    values = values,
+                )
+            c.executemany(sqlCommand, self.trainingAlternatives)
             
+        con.close()
         
-    def commitNotesToDatabase(self, database):
+    def commitNotesToDatabase(self, database, table):
         con = sqlite3.connect(database)
         with con:
             c = con.cursor()
             
-            sqlCommand = "SELECT * FROM training_notes)"
+            # 1: delete the old table because it´s not needed anymore
+            sqlCommand = "DROP TABLE IF EXISTS {name}".format(name = table)
             c.execute(sqlCommand)
-            columns = [item[0] for item in c.description]
             
-            # sqlCommand = "DROP TABLE IF EXISTS training_notes"
-            # c.execute(sqlCommand)
+            # 2: create a new table
+            values = """
+                        id INT, 
+                        label TEXT, 
+                        short TEXT, 
+                        note TEXT
+                    """
+            sqlCommand = "CREATE TABLE {name}({values})".format(
+                name = table, values = values)
+            c.execute(sqlCommand)
+            
+            # 3: insert the actual values into the new table
+            values = "?, " * len(self.trainingNotes[0])
+            values = values[:-2]
+            sqlCommand = "INSERT INTO {name} VALUES({values})".format(
+                    name = table,
+                    values = values,
+                )
+            c.executemany(sqlCommand, self.trainingNotes)
+            
         con.close()
-        return columns
         
     def addTrainingAlternative(self, exerciseID, alternativeExercise, warmUp, repetition,
                                w1, w2, w3, w4, w5, w6, 
                                alternativeID = None, label = None, short = None):
         if not alternativeID:
-            alternativeID = len(self.trainingAlternatives)
+            alternativeID = len(self.trainingAlternatives) + 1
         
         if not label:
-            label = "{num}".format(num = str(len(self.trainingAlternatives)))
+            label = "{num}".format(num = str(len(self.trainingAlternatives) + 1))
             
         if not short:
-            short = "alternative {num}".format(num = str(len(self.trainingAlternatives)))
+            short = "alternative {num}".format(num = str(len(self.trainingAlternatives) + 1))
             
-        alternative = {}
-        alternative["id"] = alternativeID
-        alternative["exerciseID"] = exerciseID
-        alternative["label"] = label
-        alternative["short"] = short
-        alternative["alternativeExercise"] = alternativeExercise
-        alternative["warmUp"] = warmUp
-        alternative["repetition"] = repetition
-        alternative["w1"] = w1
-        alternative["w2"] = w2
-        alternative["w3"] = w3
-        alternative["w4"] = w4
-        alternative["w5"] = w5
-        alternative["w6"] = w6
-        self.trainingAlternatives.append(alternative)
+        data = [
+                alternativeID, 
+                exerciseID, 
+                label,
+                short,
+                alternativeExercise,
+                warmUp,
+                repetition,
+                w1,
+                w2,
+                w3,
+                w4,
+                w5,
+                w6,
+                ]
+        self.trainingAlternatives.append(data)
     
-    def deleteTrainingAlternativ(self, key, value):
-        for item in self.trainingAlternatives:
+    def deleteTrainingAlternativ(self, index):
             try:
-                if item[key] == value:
-                    index = self.trainingAlternatives.index(item)
-                    del self.trainingAlternatives[index]
-            except KeyError:
-                continue
+                del self.trainingAlternatives[index]
+            except IndexError:
+                return
     
     def addTrainingNote(self, note, noteID = None, label = None, short = None):
         if not noteID:
-            noteID = len(self.trainingNotes)
+            noteID = len(self.trainingNotes) + 1
             
         if not label:
             label = self.lowercaseLetters[len(self.trainingNotes)]
             
         if not short:
-            short = "note {num}".format(num = str(len(self.trainingNotes)))
+            short = "note {num}".format(num = str(len(self.trainingNotes) + 1))
             
-        note = {}
-        note["id"] = noteID
-        note["label"] = label
-        note["short"] = short
-        note["note"] = note
-        self.trainingNotes.append(note)
+        data = [
+                noteID,
+                label,
+                short,
+                note,
+            ]
+        self.trainingNotes.append(data)
         
-    def deleteTrainingNote(self, key, value):
-        for item in self.trainingNotes:
-            try:
-                if item[key] == value:
-                    index = self.trainingNotes.index(item)
-                    del self.trainingNotes[index]
-            except KeyError:
-                continue
+    def deleteTrainingNote(self, index):
+        try:
+            del self.trainingNotes[index]
+        except IndexError:
+            return
 
 if __name__ == "__main__":
+    
     item = CustomModelItem("test")
     item.fetchAlternativesFromDatabase("database/test_database.db")
     item.fetchNotesFromDatabase("database/test_database.db")
     
-    oldNotes = item.trainingNotes
-    
-    test = item.commitNotesToDatabase("database/test_database.db")
-        

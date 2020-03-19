@@ -21,7 +21,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.scrollArea = CustomScrollArea(self.widget)
         self.layout = CustomBoxLayout(QtWidgets.QBoxLayout.BottomToTop, self.widget)
         
-        self.model = CustomSqlModel()
+        self.model = CustomSqlModel("database/test_database.db")
         
         self.view = QtWidgets.QTableView()
         self.view.setModel(self.model)
@@ -37,7 +37,7 @@ class MainWindow(QtWidgets.QMainWindow):
         
         QMainWindow {
             background-image: url(figures/nature/leaf.jpg);
-            background-position: center center;
+            background-position: bottm center;
             background-origin: content;
         }
         

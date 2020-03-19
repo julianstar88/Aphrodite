@@ -5,18 +5,9 @@ Created on Wed Mar 18 16:20:29 2020
 @author: Julian
 """
 
-l = []
+l = [1,2,3,4]
 
-for i in range(6):
-    index = i+1
-    d = {"id":index, 
-         "label":str(index),
-         "short": "short %d" % (index),
-         "note": "test note %d" % (index)
-         }
-    l.append(d)
-
-values = list(l[0].values())
+del l[5]
 
     
 
