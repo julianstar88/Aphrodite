@@ -11,6 +11,7 @@ from PyQt5 import QtWidgets
 
 from CustomComponents import CustomBoxLayout, CustomScrollArea
 from CustomModel import CustomSqlModel
+from CustomTableView import CustomModelView
 
 class MainWindow(QtWidgets.QMainWindow):
     
@@ -23,7 +24,7 @@ class MainWindow(QtWidgets.QMainWindow):
         
         self.model = CustomSqlModel("database/test_database.db")
         
-        self.view = QtWidgets.QTableView()
+        self.view = CustomModelView()
         self.view.setModel(self.model)
         self.layout.addWidget(self.view)
         
@@ -31,7 +32,7 @@ class MainWindow(QtWidgets.QMainWindow):
         
         self.setWindowTitle("Example")
         self.setGeometry(300,300,800,500)
-        self.setCentralWidget(self.scrollArea)
+        self.setCentralWidget(self.view)
         
         self.setStyleSheet("""
         
@@ -41,11 +42,9 @@ class MainWindow(QtWidgets.QMainWindow):
             background-origin: content;
         }
         
-        QScrollArea {
-            background-color: rgba(255,255,255,0);
+        QTableView {
+            background-color: rgba(160,160,160,0.3);    
         }
-        
-        QTableView {}
         
         QHeaderView {}
         

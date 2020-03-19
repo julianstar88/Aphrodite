@@ -9,7 +9,7 @@ import sqlite3
 
 from CustomComponents import CustomModelItem
 
-from PyQt5 import QtGui, QtCore
+from PyQt5 import QtGui
 
 class CustomSqlModel(QtGui.QStandardItemModel):
     
@@ -17,6 +17,8 @@ class CustomSqlModel(QtGui.QStandardItemModel):
         super().__init__(*args)
         self.database = database
         self.data = list()
+        
+        self.__populateModel()
         
         
     def __populateModel(self):
@@ -34,6 +36,9 @@ class CustomSqlModel(QtGui.QStandardItemModel):
             
         self.setRowCount = len(self.data)
         self.setColumnCount = len(self.data[0])
+        
+        for row in self.data:
+            self.appendRow(row)
         
     
             

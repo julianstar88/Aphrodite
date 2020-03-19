@@ -6,3 +6,11 @@ Created on Tue Mar 17 23:54:54 2020
 """
 
 
+from PyQt5 import QtWidgets
+
+class CustomModelView(QtWidgets.QTableView):
+    
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.verticalHeader().hide()
+        

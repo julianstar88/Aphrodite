@@ -24,7 +24,7 @@ class CustomScrollArea(QtWidgets.QScrollArea):
 class CustomModelItem(QtGui.QStandardItem):
     
     def __init__(self, displayData, *args):
-        super().__init__(*args)
+        super().__init__(displayData, *args)
         self.displayData = displayData
         self.trainingAlternatives = list()
         self.trainingNotes = list()
