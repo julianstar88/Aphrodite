@@ -6,7 +6,7 @@ Created on Thu Mar 19 22:38:45 2020
 """
 
 from PyQt5 import QtWidgets, QtCore
-from HelperBaseClasses import createCanvas, createQPixmap
+from HelperModules import createCanvas, createQPixmap
 
 class CustomHeader(QtWidgets.QHeaderView):
     """

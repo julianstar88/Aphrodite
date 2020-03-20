@@ -27,7 +27,8 @@ def createCanvas(mathText, color = "none", fontSize = 15, dpi = 100,
     renderer = canvas.get_renderer()
 
     ax.set_axis_off()
-    t = ax.text(0,0,mathText,
+    t = ax.text(0, 0,
+                mathText,
                 fontsize = fontSize,
                 fontstyle = fontStyle,
                 fontweight = fontWeight,
@@ -41,6 +42,9 @@ def createCanvas(mathText, color = "none", fontSize = 15, dpi = 100,
     fwidth = (text_bbox.width + 20)/ dpi
 
     fig.set_size_inches(fwidth, fheight)
+
+    # vertical centering of text in figure
+    t.set_position((1.5/dpi, fheight/2))
 
     return canvas
 

@@ -58,12 +58,16 @@ class MainWindow(QtWidgets.QMainWindow):
         }
 
         QTableView {
-            background-color: rgba(160,160,160,0.3);
+            background-color: rgba(255,255,255,0.2);
         }
 
-        QHeaderView {}
+        QHeaderView {
+            background-color: rgba(51,153,255,0);
+        }
 
-        QHeaderView::section {}
+        QHeaderView::section {
+            background-color: rgba(51,153,255,0);
+        }
 
         """)
 
