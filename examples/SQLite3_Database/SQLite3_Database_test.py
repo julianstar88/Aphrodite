@@ -192,6 +192,7 @@ if __name__ == '__main__':
     db.createTable("training_alternatives", columnNames)
 
     columnNames = (("id", "INT"),
+                   ("excerciseID", "INT"),
                    ("label", "TEXT"),
                    ("short", "TEXT"),
                    ("note", "TEXT"))
@@ -211,11 +212,11 @@ if __name__ == '__main__':
 
     trainingAlternatives = [
             [1, 1, "1", "Bankdrücken KH", "Bankdrücken KH", "4", "RBDA", "BDA1", "BDA2", "BDA3", "BDA4", "BDA5", "BDA6"],
-            [1, 6, "2", "SH Maschine", "Seitenheben Maschine", "4", "RSHA", "SHA1", "SHA2", "SHA3", "SHA4", "SHA5", "SHA6"]]
+            [2, 3, "2", "SH Maschine", "Seitenheben Maschine", "4", "RSHA", "SHA1", "SHA2", "SHA3", "SHA4", "SHA5", "SHA6"]]
     db.addManyEntries("training_alternatives", trainingAlternatives)
 
     trainingNotes = [
-            [1, "a", "note 1", "test training note 1"],
-            [2, "b", "note 2", "test training note 2"]]
+            [1, 2, "a", "note 1", "test training note 1"],
+            [2, 2, "b", "note 2", "test training note 2"]]
     db.addManyEntries("training_notes", trainingNotes)
 

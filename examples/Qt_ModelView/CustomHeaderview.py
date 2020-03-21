@@ -6,7 +6,7 @@ Created on Thu Mar 19 22:38:45 2020
 """
 
 from PyQt5 import QtWidgets, QtCore
-from HelperModules import createCanvas, createQPixmap
+# from HelperModules import createCanvas, createQPixmap
 
 class CustomHeader(QtWidgets.QHeaderView):
     """
@@ -18,6 +18,12 @@ class CustomHeader(QtWidgets.QHeaderView):
         super().__init__(QtCore.Qt.Horizontal, parent)
         self.qpixmaps = list()
 
+    # def __setResizeMode(self):
+    #     for i in range(len(self.qpixmaps)):
+    #         if i == 0:
+    #             self.setSectionResizeMode(i, QtWidgets.QHeaderView.Interactive)
+    #         else:
+    #             self.setSectionResizeMode(i, QtWidgets.QHeaderView.Stretch)
 
     def paintSection(self, painter, rect, index):
 

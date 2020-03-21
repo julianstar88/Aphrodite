@@ -29,24 +29,20 @@ class CustomSqlModel(QtGui.QStandardItemModel):
             data = c.fetchall()
         con.close()
 
+        CustomModelItem.fetchAlternativesFromDatabase(self.database)
+        CustomModelItem.fetchNotesFromDatabase(self.database)
+
         for row in data:
-            row = row[1:]
-            l = list()
-            for i, item in enumerate(row):
-                if i == 0:
-                    modelItem = CustomModelItem(item)
-                    modelItem.fetchAlternativesFromDatabase(self.database)
-                    modelItem.fetchNotesFromDatabase(self.database)
-                    l.append(modelItem)
-                else:
-                    modelItem = CustomModelItem(item)
-                    l.append(modelItem)
-            self.data.append(l)
-             # l = [CustomModelItem(item) for item in row[1:]]
+
+              l = [CustomModelItem(item) for item in row[1:]]
+              self.data.append(l)
 
         for row in self.data:
             self.appendRow(row)
 
     def data(self, index, role):
+
+        item = self.itemFromIndex(index)
+
         return super().data(index, role)
 

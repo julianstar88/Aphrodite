@@ -6,7 +6,7 @@ Created on Tue Mar 17 23:54:54 2020
 """
 
 
-from PyQt5 import QtWidgets, QtGui, QtCore
+from PyQt5 import QtWidgets, QtCore
 from CustomHeaderview import CustomHeader
 from HelperModules import createCanvas, createQPixmap
 from CustomComponents import CustomLabel
@@ -21,6 +21,7 @@ class CustomModelView(QtWidgets.QTableView):
 
         self.__setHorizontalHeaderLabels(headerLabels, fontSize, fontWeight)
         self.__renderItemToPixmap()
+        self.__setResizeMode()
 
 
     def __setHorizontalHeaderLabels(self, headerLabels, fontSize, fontWeight):
@@ -34,29 +35,49 @@ class CustomModelView(QtWidgets.QTableView):
 
         self.horizontalHeader().qpixmaps = qpixmaps
 
+    def __setResizeMode(self):
+        for i in range(self.model().columnCount()):
+            if i == 0:
+                self.horizontalHeader().setSectionResizeMode(i, QtWidgets.QHeaderView.Interactive)
+            else:
+                self.horizontalHeader().setSectionResizeMode(i, QtWidgets.QHeaderView.Stretch)
+
     def __renderItemToPixmap(self):
         for row in range(self.model().rowCount()):
             item = self.model().item(row, column = 0)
             index = self.model().indexFromItem(item)
             text = item.displayData
 
-            labels = [item[2] for item in item.trainingAlternatives]
-            values = "%s~" * len(labels)
-            values = values[:-1]
-            values = values % tuple(labels)
-            superScripts = "^{%s}" % (values)
+            exerciseID = row + 1
 
-            labels = [item[1] for item in item.trainingNotes]
-            values = "%s~" * len(labels)
-            values = values[:-1]
-            values = values % tuple(labels)
-            subScripts = "_{%s}" % (values)
+            alternatives = [item[2] for item in item.trainingAlternatives if exerciseID == item[1]]
+            if alternatives:
+                values = "%s~" * len(alternatives)
+                values = values[:-1]
+                values = values % tuple(alternatives)
+                superScripts = "^{%s}" % (values)
+            else:
+                superScripts = ""
 
-            mathText = "{itemText}${superScripts}{subScripts}$".format(
-                    itemText = text,
-                    superScripts = superScripts,
-                    subScripts = subScripts
-                )
+            notes = [item[2] for item in item.trainingNotes if exerciseID == item[1]]
+            if notes:
+                values = "%s~" * len(notes)
+                values = values[:-1]
+                values = values % tuple(notes)
+                subScripts = "_{%s}" % (values)
+            else:
+                subScripts = ""
+
+            if alternatives or notes:
+                mathText = "{itemText}${superScripts}{subScripts}$".format(
+                        itemText = text,
+                        superScripts = superScripts,
+                        subScripts = subScripts
+                    )
+            else:
+                mathText = "{itemText}".format(
+                        itemText = text,
+                    )
 
             canvas = createCanvas(mathText, fontSize = 10)
             qpixmap = createQPixmap(canvas)

@@ -5,12 +5,10 @@ Created on Tue Mar 17 23:56:40 2020
 @author: Julian
 """
 
-import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
-from matplotlib.text import Text
 from matplotlib.backends.backend_qt5agg import FigureCanvas
 
-from PyQt5 import QtCore, QtGui
+from PyQt5 import QtGui
 
 def createCanvas(mathText, color = "none", fontSize = 15, dpi = 100,
                   fontStyle = "normal", fontWeight = "normal",
