@@ -13,8 +13,8 @@ from PyQt5 import QtGui
 
 class CustomSqlModel(QtGui.QStandardItemModel):
 
-    def __init__(self, database, *args):
-        super().__init__(*args)
+    def __init__(self, database):
+        super().__init__()
         self.database = database
         self.data = list()
 
@@ -30,11 +30,23 @@ class CustomSqlModel(QtGui.QStandardItemModel):
         con.close()
 
         for row in data:
-            l = [CustomModelItem(item) for item in row[1:]]
+            row = row[1:]
+            l = list()
+            for i, item in enumerate(row):
+                if i == 0:
+                    modelItem = CustomModelItem(item)
+                    modelItem.fetchAlternativesFromDatabase(self.database)
+                    modelItem.fetchNotesFromDatabase(self.database)
+                    l.append(modelItem)
+                else:
+                    modelItem = CustomModelItem(item)
+                    l.append(modelItem)
             self.data.append(l)
-
-        self.setRowCount = len(self.data)
-        self.setColumnCount = len(self.data[0])
+             # l = [CustomModelItem(item) for item in row[1:]]
 
         for row in self.data:
             self.appendRow(row)
+
+    def data(self, index, role):
+        return super().data(index, role)
+
