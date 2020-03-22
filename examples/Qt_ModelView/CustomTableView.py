@@ -22,6 +22,7 @@ class CustomModelView(QtWidgets.QTableView):
         self.__setHorizontalHeaderLabels(headerLabels, fontSize, fontWeight)
         self.__renderItemToPixmap()
         self.__setResizeMode()
+        self.__resizeTable()
 
 
     def __setHorizontalHeaderLabels(self, headerLabels, fontSize, fontWeight):
@@ -85,7 +86,35 @@ class CustomModelView(QtWidgets.QTableView):
             label.item = item
             item.setData("", role = QtCore.Qt.DisplayRole)
             self.setIndexWidget(index, label)
-        self.resizeColumnsToContents()
+        self.resizeColumnToContents(0)
 
     def __resizeTable(self):
-        pass
+        self.resizeRowsToContents()
+        horizontalHeader = self.horizontalHeader()
+        verticalHeader = self.verticalHeader()
+        headerHeight = horizontalHeader.qpixmaps[0].size().height()
+
+        vsize = []
+        for i in range(verticalHeader.count()):
+            vsize.append(verticalHeader.sectionSize(i))
+        vsize = max(vsize)
+        verticalHeader.setMinimumSectionSize(vsize)
+
+        hsize = []
+        for i in range(horizontalHeader.count()):
+            hsize.append(horizontalHeader.sectionSize(i))
+        hsize = max(hsize)
+        horizontalHeader.setMinimumSectionSize(hsize)
+
+        tableHeight = verticalHeader.count() * vsize
+        tableWidth = horizontalHeader.count() * hsize
+        generalHeight = headerHeight + tableHeight
+
+        self.setMaximumHeight(generalHeight)
+        self.setMinimumHeight(generalHeight)
+        self.setMinimumWidth(tableWidth)
+
+        self.horizontalScrollBar().setDisabled(True)
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.verticalScrollBar().setDisabled(True)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)

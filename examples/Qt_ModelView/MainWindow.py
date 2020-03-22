@@ -28,12 +28,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 "Exercise",
                 "Sets",
                 "Repetitions",
-                "Week$_1$",
-                "Week$_2$",
-                "Week$_3$",
-                "Week$_4$",
-                "Week$_5$",
-                "Week$_6$"
+                "Week 1",
+                "Week 2",
+                "Week 3",
+                "Week 4",
+                "Week 5",
+                "Week 6"
             ]
 
         self.view = CustomModelView(self.model,

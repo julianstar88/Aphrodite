@@ -27,7 +27,7 @@ class CustomLabel(QtWidgets.QLabel):
         super().__init__()
         self.item = None
         self.setPixmap(QPixmap)
-        # self.autoFillBackground = True
+        self.autoFillBackground = True
 
 class CustomModelItem(QtGui.QStandardItem):
 

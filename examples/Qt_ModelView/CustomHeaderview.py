@@ -18,13 +18,6 @@ class CustomHeader(QtWidgets.QHeaderView):
         super().__init__(QtCore.Qt.Horizontal, parent)
         self.qpixmaps = list()
 
-    # def __setResizeMode(self):
-    #     for i in range(len(self.qpixmaps)):
-    #         if i == 0:
-    #             self.setSectionResizeMode(i, QtWidgets.QHeaderView.Interactive)
-    #         else:
-    #             self.setSectionResizeMode(i, QtWidgets.QHeaderView.Stretch)
-
     def paintSection(self, painter, rect, index):
 
         if not rect.isValid():
