@@ -54,6 +54,9 @@ def createQPixmap(canvas):
     return qpixmap
 
 class evaluateClickEvent():
+
+    ObjectType = "evaluateClickEvent"
+
     pass
 
 

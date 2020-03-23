@@ -9,7 +9,7 @@ import sys
 
 from PyQt5 import QtWidgets
 
-from CustomComponents import CustomBoxLayout, CustomScrollArea
+from CustomComponents import CustomBoxLayout, CustomScrollArea, CustomWidget
 from CustomModel import CustomSqlModel
 from CustomTableView import CustomModelView
 
@@ -18,9 +18,9 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.widget = QtWidgets.QWidget()
-        self.scrollArea = CustomScrollArea(self.widget)
-        self.layout = CustomBoxLayout(QtWidgets.QBoxLayout.BottomToTop, self.widget)
+        self.scrollArea = CustomScrollArea()
+        self.widget = CustomWidget(self.scrollArea)
+        self.layout = CustomBoxLayout(QtWidgets.QBoxLayout.TopToBottom, self.widget)
 
         self.model = CustomSqlModel("database/test_database.db")
 
@@ -39,7 +39,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.view = CustomModelView(self.model,
                                     headerLabels,
                                     fontSize = 15,
-                                    fontWeight = "normal")
+                                    fontWeight = "normal",
+                                    parent = self.scrollArea
+                                )
 
         self.layout.addWidget(self.view)
 

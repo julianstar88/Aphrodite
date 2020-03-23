@@ -11,36 +11,33 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 
 class CustomBoxLayout(QtWidgets.QBoxLayout):
 
-    def __init__(self, *args):
-        super().__init__(*args)
+    ObjectType = "CustomBoxLayout"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.setSizeConstraint(QtWidgets.QBoxLayout.SetMinimumSize)
-
-class CustomScrollArea(QtWidgets.QScrollArea):
-
-    def __init__(self, *args):
-        super().__init__(*args)
-        self.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
 
 class CustomLabel(QtWidgets.QLabel):
 
-    def __init__(self, QPixmap):
-        super().__init__()
+    ObjectType = "CustomLabel"
+
+    def __init__(self, QPixmap, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.item = None
         self.setPixmap(QPixmap)
         self.autoFillBackground = True
 
 class CustomModelItem(QtGui.QStandardItem):
 
+    ObjectType = "CustomModelItem"
+
     trainingAlternatives = list()
     trainingNotes = list()
     lowercaseLetters = string.ascii_lowercase
 
-    def __init__(self, displayData):
-        super().__init__(displayData)
+    def __init__(self, displayData, *args, **kwargs):
+        super().__init__(displayData, *args, **kwargs)
         self.displayData = displayData
-        # self.trainingAlternatives = list()
-        # self.trainingNotes = list()
-        # self.lowercaseLetters = string.ascii_lowercase
 
     @staticmethod
     def fetchAlternativesFromDatabase(database):
@@ -195,6 +192,25 @@ class CustomModelItem(QtGui.QStandardItem):
             del type(self).trainingNotes[index]
         except IndexError:
             return
+
+class CustomScrollArea(QtWidgets.QScrollArea):
+
+    ObjectType = "CustomScrollArea"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
+        policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        self.setSizePolicy(policy)
+
+
+
+class CustomWidget(QtWidgets.QWidget):
+
+    ObjectType = "CustomWidget"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
 if __name__ == "__main__":
 

@@ -14,6 +14,8 @@ class CustomHeader(QtWidgets.QHeaderView):
 
     """
 
+    ObjectType = "CustomHeader"
+
     def __init__(self, parent):
         super().__init__(QtCore.Qt.Horizontal, parent)
         self.qpixmaps = list()

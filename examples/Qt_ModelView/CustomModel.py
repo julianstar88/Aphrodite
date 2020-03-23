@@ -13,8 +13,10 @@ from PyQt5 import QtGui
 
 class CustomSqlModel(QtGui.QStandardItemModel):
 
-    def __init__(self, database):
-        super().__init__()
+    ObjectType = "CustomSqlModel"
+
+    def __init__(self, database, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.database = database
         self.data = list()
 

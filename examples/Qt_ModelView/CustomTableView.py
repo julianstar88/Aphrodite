@@ -13,11 +13,18 @@ from CustomComponents import CustomLabel
 
 class CustomModelView(QtWidgets.QTableView):
 
-    def __init__(self, model, headerLabels, fontSize = 15, fontWeight = "normal"):
-        super().__init__()
+    ObjectType = "CustomModelView"
+
+    def __init__(self, model, headerLabels, fontSize = 15, fontWeight = "normal", parent = None,
+                 *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
         self.setModel(model)
         self.setHorizontalHeader(CustomHeader(self))
         self.verticalHeader().hide()
+
+        if parent:
+            self.setParent(parent)
 
         self.__setHorizontalHeaderLabels(headerLabels, fontSize, fontWeight)
         self.__renderItemToPixmap()
@@ -118,3 +125,6 @@ class CustomModelView(QtWidgets.QTableView):
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.verticalScrollBar().setDisabled(True)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+
+        self.parent().setWidget(self)
+        self.parent().setMinimumSize(QtCore.QSize(tableWidth, generalHeight))
