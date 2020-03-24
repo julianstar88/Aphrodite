@@ -9,7 +9,7 @@ import sqlite3
 
 from CustomComponents import CustomModelItem
 
-from PyQt5 import QtGui
+from PyQt5 import QtGui, QtCore
 
 class CustomSqlModel(QtGui.QStandardItemModel):
 
@@ -45,6 +45,11 @@ class CustomSqlModel(QtGui.QStandardItemModel):
     def data(self, index, role):
 
         item = self.itemFromIndex(index)
+        col = item.column()
+
+        if col > 0:
+            brush = QtGui.QBrush(QtGui.QColor(160,160,160,120), QtCore.Qt.SolidPattern)
+            item.setBackground(brush)
 
         return super().data(index, role)
 

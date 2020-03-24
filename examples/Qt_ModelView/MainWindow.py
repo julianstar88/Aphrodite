@@ -18,8 +18,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.scrollArea = CustomScrollArea()
-        self.widget = CustomWidget(self.scrollArea)
+        self.widget = CustomWidget()
+        self.scrollArea = CustomScrollArea(self.widget)
         self.layout = CustomBoxLayout(QtWidgets.QBoxLayout.TopToBottom, self.widget)
 
         self.model = CustomSqlModel("database/test_database.db")
@@ -43,13 +43,37 @@ class MainWindow(QtWidgets.QMainWindow):
                                     parent = self.scrollArea
                                 )
 
+        self.view2 = CustomModelView(self.model,
+                                    headerLabels,
+                                    fontSize = 15,
+                                    fontWeight = "normal",
+                                    parent = self.scrollArea
+                                )
+
+        self.view3 = CustomModelView(self.model,
+                                    headerLabels,
+                                    fontSize = 15,
+                                    fontWeight = "normal",
+                                    parent = self.scrollArea
+                                )
+
+        self.view4 = CustomModelView(self.model,
+                                    headerLabels,
+                                    fontSize = 15,
+                                    fontWeight = "normal",
+                                    parent = self.scrollArea
+                                )
+
         self.layout.addWidget(self.view)
+        self.layout.addWidget(self.view2)
+        self.layout.addWidget(self.view3)
+        self.layout.addWidget(self.view4)
 
         self.status = self.statusBar()
 
         self.setWindowTitle("Example")
         self.setGeometry(300,300,800,500)
-        self.setCentralWidget(self.view)
+        self.setCentralWidget(self.scrollArea)
 
         self.setStyleSheet("""
 
@@ -60,15 +84,20 @@ class MainWindow(QtWidgets.QMainWindow):
         }
 
         QTableView {
-            background-color: rgba(255,255,255,0.2);
+            background-color: rgba(255,255,255,40%);
+            gridline-color: gray;
         }
 
         QHeaderView {
-            background-color: rgba(51,153,255,0);
+            background-color: rgba(51,153,255,0%);
         }
 
         QHeaderView::section {
-            background-color: rgba(51,153,255,0);
+            background-color: rgba(51,153,255,0%);
+        }
+
+        QScrollArea {
+            background-color: rgba(255,255,255,0%);
         }
 
         """)

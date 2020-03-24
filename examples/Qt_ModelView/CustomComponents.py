@@ -15,7 +15,7 @@ class CustomBoxLayout(QtWidgets.QBoxLayout):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.setSizeConstraint(QtWidgets.QBoxLayout.SetMinimumSize)
+        self.setSizeConstraint(QtWidgets.QBoxLayout.SetMinAndMaxSize)
 
 class CustomLabel(QtWidgets.QLabel):
 
@@ -25,7 +25,7 @@ class CustomLabel(QtWidgets.QLabel):
         super().__init__(*args, **kwargs)
         self.item = None
         self.setPixmap(QPixmap)
-        self.autoFillBackground = True
+        self.setAutoFillBackground(False)
 
 class CustomModelItem(QtGui.QStandardItem):
 
@@ -197,13 +197,11 @@ class CustomScrollArea(QtWidgets.QScrollArea):
 
     ObjectType = "CustomScrollArea"
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, widget):
+        super().__init__()
+        self.setWidget(widget)
         self.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
-        policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
-        self.setSizePolicy(policy)
-
-
+        self.setWidgetResizable(True)
 
 class CustomWidget(QtWidgets.QWidget):
 
@@ -211,6 +209,14 @@ class CustomWidget(QtWidgets.QWidget):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.setAttribute(QtCore.Qt.WA_StyledBackground, True)
+        self.setStyleSheet("""
+
+        CustomWidget {
+            background-color: rgba(255,255,255,0%);
+        }
+
+        """)
 
 if __name__ == "__main__":
 

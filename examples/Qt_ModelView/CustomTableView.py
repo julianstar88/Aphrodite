@@ -125,6 +125,3 @@ class CustomModelView(QtWidgets.QTableView):
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.verticalScrollBar().setDisabled(True)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-
-        self.parent().setWidget(self)
-        self.parent().setMinimumSize(QtCore.QSize(tableWidth, generalHeight))
