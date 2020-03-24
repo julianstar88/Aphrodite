@@ -1,6 +1,6 @@
 # project related files
 *.ini
-*.ini.bak
+*.bak
 
 # compiled file
 *.pyc
