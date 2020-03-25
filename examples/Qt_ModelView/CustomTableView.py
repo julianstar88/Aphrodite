@@ -41,10 +41,15 @@ class CustomModelView(QtWidgets.QTableView):
         qpixmaps = list()
 
         if not headerLabels:
-            headerLabels = [""] * self.model().columnCount()
+            headerLabels = ["I"] * self.model().columnCount()
+            color = "none"
+        else:
+            color = "black"
 
         for i, label in enumerate(headerLabels):
-            canvas = createCanvas(label, fontSize = fontSize, fontWeight = fontWeight)
+            canvas = createCanvas(label, fontSize = fontSize, fontWeight = fontWeight,
+                                  fontColor = color)
+
             pixmap = createQPixmap(canvas)
             qpixmaps.append(pixmap)
             self.setColumnWidth(i, pixmap.size().width())

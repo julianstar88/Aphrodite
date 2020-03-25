@@ -12,6 +12,7 @@ from PyQt5 import QtGui
 
 def createCanvas(mathText, color = "none", fontSize = 15, dpi = 100,
                   fontStyle = "normal", fontWeight = "normal",
+                  fontColor = "black",
                   horizontalAlignment = "left",
                   verticalAlignment = "bottom"):
 
@@ -27,6 +28,7 @@ def createCanvas(mathText, color = "none", fontSize = 15, dpi = 100,
     ax.set_axis_off()
     t = ax.text(0, 0,
                 mathText,
+                color = fontColor,
                 fontsize = fontSize,
                 fontstyle = fontStyle,
                 fontweight = fontWeight,
