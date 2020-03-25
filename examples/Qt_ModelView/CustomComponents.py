@@ -49,7 +49,9 @@ class CustomModelItem(QtGui.QStandardItem):
             data = c.fetchall()
         con.close()
         data = [list(item) for item in data]
-        CustomModelItem.trainingAlternatives.extend(data)
+        for l in data:
+            if l not in CustomModelItem.trainingAlternatives:
+                CustomModelItem.trainingAlternatives.append(l)
 
     @staticmethod
     def fetchNotesFromDatabase(database):
@@ -61,7 +63,9 @@ class CustomModelItem(QtGui.QStandardItem):
             data = c.fetchall()
         con.close()
         data = [list(item) for item in data]
-        CustomModelItem.trainingNotes.extend(data)
+        for l in data:
+            if l not in CustomModelItem.trainingNotes:
+                CustomModelItem.trainingNotes.append(l)
 
     def commitAlternativesToDatabase(self, database, table):
         con = sqlite3.connect(database)
@@ -79,8 +83,10 @@ class CustomModelItem(QtGui.QStandardItem):
                 label TEXT,
                 short TEXT,
                 alternativ TEXT,
-                Warm Up TEXT,
-                Repetition TEXT,
+                Sets TEXT,
+                Repititions TEXT,
+                Repetitions TEXT,
+                Warm_Up TEXT,
                 Week_1 TEXT,
                 Week_2 TEXT,
                 Week_3 TEXT,

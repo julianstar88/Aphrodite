@@ -43,7 +43,13 @@ class CustomHeader(QtWidgets.QHeaderView):
 
         qpixmap = self.qpixmaps[index]
 
-        xpix = (rect.width() - qpixmap.size().width()) / 2 + rect.x()
+        # for horizontal Centering
+        # xpix = (rect.width() - qpixmap.size().width()) / 2 + rect.x()
+
+        # for left alignment
+        xpix = rect.x()
+
+        # for vertical centering
         ypix = (rect.height() - qpixmap.size().height()) / 2
 
         rect = QtCore.QRect(xpix, ypix, qpixmap.size().width(),

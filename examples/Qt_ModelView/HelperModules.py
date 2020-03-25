@@ -37,7 +37,7 @@ def createCanvas(mathText, color = "none", fontSize = 15, dpi = 100,
     text_bbox = t.get_window_extent(renderer)
 
     fheight = (text_bbox.height + 20) / dpi
-    fwidth = (text_bbox.width + 20)/ dpi
+    fwidth = (text_bbox.width + 5)/ dpi
 
     fig.set_size_inches(fwidth, fheight)
 
@@ -57,7 +57,8 @@ class evaluateClickEvent():
 
     ObjectType = "evaluateClickEvent"
 
-    pass
+    def __init__(self):
+        print("clicked")
 
 
 if __name__ == "__main__":

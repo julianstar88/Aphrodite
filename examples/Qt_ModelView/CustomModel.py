@@ -15,10 +15,15 @@ class CustomSqlModel(QtGui.QStandardItemModel):
 
     ObjectType = "CustomSqlModel"
 
-    def __init__(self, database, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, database, table = "training_routine", parent = None,
+                 tableStartIndex = 1, valueStartIndex = 1):
+
+        super().__init__(parent=parent)
         self.database = database
+        self.table = table
         self.data = list()
+        self.tableStartIndex = tableStartIndex
+        self.valueStartIndex = valueStartIndex
 
         self.__populateModel()
 
@@ -26,7 +31,7 @@ class CustomSqlModel(QtGui.QStandardItemModel):
         con = sqlite3.connect(self.database)
         with con:
             c = con.cursor()
-            sqlCommand = "SELECT * FROM training_routine"
+            sqlCommand = "SELECT * FROM {tableName}".format(tableName = self.table)
             c.execute(sqlCommand)
             data = c.fetchall()
         con.close()
@@ -35,9 +40,8 @@ class CustomSqlModel(QtGui.QStandardItemModel):
         CustomModelItem.fetchNotesFromDatabase(self.database)
 
         for row in data:
-
-              l = [CustomModelItem(item) for item in row[1:]]
-              self.data.append(l)
+            l = [CustomModelItem(item) for item in row[self.tableStartIndex:]]
+            self.data.append(l)
 
         for row in self.data:
             self.appendRow(row)
@@ -47,7 +51,7 @@ class CustomSqlModel(QtGui.QStandardItemModel):
         item = self.itemFromIndex(index)
         col = item.column()
 
-        if col > 0:
+        if col >= self.valueStartIndex:
             brush = QtGui.QBrush(QtGui.QColor(160,160,160,120), QtCore.Qt.SolidPattern)
             item.setBackground(brush)
 

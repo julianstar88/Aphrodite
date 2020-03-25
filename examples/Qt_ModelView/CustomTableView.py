@@ -9,31 +9,39 @@ Created on Tue Mar 17 23:54:54 2020
 from PyQt5 import QtWidgets, QtCore
 from CustomHeaderview import CustomHeader
 from HelperModules import createCanvas, createQPixmap
-from CustomComponents import CustomLabel
+from CustomComponents import CustomLabel, CustomModelItem
 
 class CustomModelView(QtWidgets.QTableView):
 
     ObjectType = "CustomModelView"
 
-    def __init__(self, model, headerLabels, fontSize = 15, fontWeight = "normal", parent = None,
-                 *args, **kwargs):
+    def __init__(self, model, headerLabels = None, parent = None, fontSize = 15, fontWeight = "normal",
+                 fontStyle = "normal", exerciseNameColumn = 0, labelMode = "main", *args, **kwargs):
 
         super().__init__(*args, **kwargs)
         self.setModel(model)
+        self.model().setParent(self)
         self.setHorizontalHeader(CustomHeader(self))
         self.verticalHeader().hide()
+        self.exerciseNameColumn = exerciseNameColumn
 
         if parent:
             self.setParent(parent)
 
-        self.__setHorizontalHeaderLabels(headerLabels, fontSize, fontWeight)
-        self.__renderItemToPixmap()
+        self.__setHorizontalHeaderLabels(headerLabels, fontSize, fontWeight, fontStyle)
         self.__setResizeMode()
-        self.__resizeTable()
+
+        self.renderItemToPixmap(labelMode)
+        self.resizeTable()
+
+        self.clicked.connect(self.onSingleClick)
 
 
-    def __setHorizontalHeaderLabels(self, headerLabels, fontSize, fontWeight):
+    def __setHorizontalHeaderLabels(self, headerLabels, fontSize, fontWeight, fontStyle):
         qpixmaps = list()
+
+        if not headerLabels:
+            headerLabels = [""] * self.model().columnCount()
 
         for i, label in enumerate(headerLabels):
             canvas = createCanvas(label, fontSize = fontSize, fontWeight = fontWeight)
@@ -46,18 +54,16 @@ class CustomModelView(QtWidgets.QTableView):
     def __setResizeMode(self):
         for i in range(self.model().columnCount()):
             if i == 0:
-                self.horizontalHeader().setSectionResizeMode(i, QtWidgets.QHeaderView.Interactive)
+                self.horizontalHeader().setSectionResizeMode(i, QtWidgets.QHeaderView.Fixed)
             else:
                 self.horizontalHeader().setSectionResizeMode(i, QtWidgets.QHeaderView.Stretch)
 
-    def __renderItemToPixmap(self):
-        for row in range(self.model().rowCount()):
-            item = self.model().item(row, column = 0)
-            index = self.model().indexFromItem(item)
+    def __createLabelText(self, item, mode):
+        row = item.row()
+        exerciseID = row + 1
+
+        if mode == "main":
             text = item.displayData
-
-            exerciseID = row + 1
-
             alternatives = [item[2] for item in item.trainingAlternatives if exerciseID == item[1]]
             if alternatives:
                 values = "%s~" * len(alternatives)
@@ -77,45 +83,56 @@ class CustomModelView(QtWidgets.QTableView):
                 subScripts = ""
 
             if alternatives or notes:
-                mathText = "{itemText}${superScripts}{subScripts}$".format(
+                labelText = "{itemText}${superScripts}{subScripts}$".format(
                         itemText = text,
                         superScripts = superScripts,
                         subScripts = subScripts
                     )
+                return labelText
             else:
-                mathText = "{itemText}".format(
+                labelText = "{itemText}".format(
                         itemText = text,
                     )
+                return labelText
 
-            canvas = createCanvas(mathText, fontSize = 10)
+        elif mode == "alternative":
+            for alternative in item.trainingAlternatives:
+                if exerciseID == alternative[0]:
+                    labelText = "{label}) {itemText}".format(
+                            label = alternative[2],
+                            itemText = alternative[4],
+                        )
+                    return labelText
+        else:
+            return
+
+    def renderItemToPixmap(self, labelMode):
+
+        for row in range(self.model().rowCount()):
+            item = self.model().item(row, column = self.exerciseNameColumn)
+            index = self.model().indexFromItem(item)
+
+            labelText = self.__createLabelText(item, labelMode)
+
+            canvas = createCanvas(labelText, fontSize = 10)
             qpixmap = createQPixmap(canvas)
             label = CustomLabel(qpixmap)
             label.item = item
             item.setData("", role = QtCore.Qt.DisplayRole)
+
             self.setIndexWidget(index, label)
+
         self.resizeColumnToContents(0)
 
-    def __resizeTable(self):
-        self.resizeRowsToContents()
+    def resizeTable(self):
+
         horizontalHeader = self.horizontalHeader()
         verticalHeader = self.verticalHeader()
         headerHeight = horizontalHeader.qpixmaps[0].size().height()
 
-        vsize = []
-        for i in range(verticalHeader.count()):
-            vsize.append(verticalHeader.sectionSize(i))
-        vsize = max(vsize)
-        verticalHeader.setMinimumSectionSize(vsize)
-
-        hsize = []
-        for i in range(horizontalHeader.count()):
-            hsize.append(horizontalHeader.sectionSize(i))
-        hsize = max(hsize)
-        horizontalHeader.setMinimumSectionSize(hsize)
-
-        tableHeight = verticalHeader.count() * vsize
-        tableWidth = horizontalHeader.count() * hsize
-        generalHeight = headerHeight + tableHeight
+        tableHeight = verticalHeader.length()
+        tableWidth = horizontalHeader.length()
+        generalHeight = 2*headerHeight + tableHeight
 
         self.setMaximumHeight(generalHeight)
         self.setMinimumHeight(generalHeight)
@@ -125,3 +142,13 @@ class CustomModelView(QtWidgets.QTableView):
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.verticalScrollBar().setDisabled(True)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+
+    # Slots
+    def onSingleClick(self, index):
+        item = self.model().itemFromIndex(index)
+        row = item.row()
+        col = item.column()
+        string = "single click: ({},{})".format(row, col)
+        print(CustomModelItem.trainingAlternatives)
+
+

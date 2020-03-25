@@ -166,6 +166,7 @@ if __name__ == '__main__':
                     ("Exercise", "TEXT"),
                     ("Sets", "TEXT"),
                     ("Repetitions", "TEXT"),
+                    ("Warm_Up", "TEXT"),
                     ("Week_1", "TEXT"),
                     ("Week_2", "TEXT"),
                     ("Week_3", "TEXT"),
@@ -181,7 +182,8 @@ if __name__ == '__main__':
                    ("short", "TEXT"),
                    ("alternative", "TEXT"),
                    ("Sets", "TEXT"),
-                   ("Repetition", "TEXT"),
+                   ("Repetitions", "TEXT"),
+                   ("Warm_Up", "TEXT"),
                    ("Week_1", "TEXT"),
                    ("Week_2", "TEXT"),
                    ("Week_3", "TEXT"),
@@ -201,22 +203,24 @@ if __name__ == '__main__':
 
 
     training = [
-        [1, "Bankdruecken", "4", "RBD", "BD1", "BD2", "BD3", "BD4", "BD5", "BD6"],
-        [2, "Klimmzuege", "4", "RKZ", "KZ1", "KL2", "KL3", "KL4", "KL5", "KL6"],
-        [3, "Kniebeugen", "4", "RKB", "KB1", "KB2", "KB3", "KB4", "KN5", "KB6"],
-        [4, "Bizeps SZ-Hantel", "4", "RBZ", "BZ1", "BZ2", "BZ3", "BZ4", "BZ5", "BZ6"],
-        [5, "Trizeps Seilzug", "4", "RTZ", "TZ1", "TZ2", "TZ3", "TZ4", "TZ5", "TZ6"],
-        [6, "Seitenheben KH", "4", "RSH", "SH1", "SH2", "SH3", "SH4", "SH5", "SH6"]]
+        [1, "Bankdrücken KH", "4", "RBD", "WBD", "BD1", "BD2", "BD3", "BD4", "BD5", "BD6"],
+        [2, "Klimmzüge", "4", "RKZ", "WKZ", "KZ1", "KL2", "KL3", "KL4", "KL5", "KL6"],
+        [3, "Kniebeugen", "4", "RKB", "WKB", "KB1", "KB2", "KB3", "KB4", "KN5", "KB6"],
+        [4, "Bizeps KH", "4", "RBZ", "WBZ", "BZ1", "BZ2", "BZ3", "BZ4", "BZ5", "BZ6"],
+        [5, "Trizeps Seilzug", "4", "RTZ", "WTZ", "TZ1", "TZ2", "TZ3", "TZ4", "TZ5", "TZ6"],
+        [6, "Seitenheben KH", "4", "RSH", "WSH", "SH1", "SH2", "SH3", "SH4", "SH5", "SH6"]]
 
     db.addManyEntries("training_routine", training)
 
     trainingAlternatives = [
-            [1, 1, "1", "Bankdrücken KH", "Bankdrücken KH", "4", "RBDA", "BDA1", "BDA2", "BDA3", "BDA4", "BDA5", "BDA6"],
-            [2, 3, "2", "SH Maschine", "Seitenheben Maschine", "4", "RSHA", "SHA1", "SHA2", "SHA3", "SHA4", "SHA5", "SHA6"]]
+            [1, 1, "1", "Bankdrücken LH", "Bankdrücken LH", "4", "RBDA", "WBDA", "BDA1", "BDA2", "BDA3", "BDA4", "BDA5", "BDA6"],
+            [2, 5, "2", "TZ Dips", "Trizeps Dips", "4", "RSHA", "WSHA", "SHA1", "SHA2", "SHA3", "SHA4", "SHA5", "SHA6"],
+            [3, 6, "3", "SH Maschine", "Seitenheben Maschine", "4", "RSHA", "WSHA", "SHA1", "SHA2", "SHA3", "SHA4", "SHA5", "SHA6"],
+        ]
     db.addManyEntries("training_alternatives", trainingAlternatives)
 
     trainingNotes = [
             [1, 2, "a", "note 1", "test training note 1"],
-            [2, 2, "b", "note 2", "test training note 2"]]
+            [2, 4, "b", "note 2", "test training note 2"]]
     db.addManyEntries("training_notes", trainingNotes)
 
