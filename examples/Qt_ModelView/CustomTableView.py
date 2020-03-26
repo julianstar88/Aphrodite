@@ -151,9 +151,5 @@ class CustomModelView(QtWidgets.QTableView):
     # Slots
     def onSingleClick(self, index):
         item = self.model().itemFromIndex(index)
-        row = item.row()
-        col = item.column()
-        string = "single click: ({},{})".format(row, col)
-        print(CustomModelItem.trainingAlternatives)
 
 

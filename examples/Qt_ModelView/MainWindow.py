@@ -48,19 +48,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 "Week 6"
             ]
 
-        headerLabels2 = [
-                "Exercise",
-                "Sets",
-                "Reps",
-                "Warm Up",
-                "Week 1",
-                "Week 2",
-                "Week 3",
-                "Week 4",
-                "Week 5",
-                "Week 6"
-            ]
-
         self.view = CustomModelView(self.model,
                                     headerLabels,
                                     fontSize = 15,

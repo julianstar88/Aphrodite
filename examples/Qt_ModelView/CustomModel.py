@@ -43,17 +43,28 @@ class CustomSqlModel(QtGui.QStandardItemModel):
             l = [CustomModelItem(item) for item in row[self.tableStartIndex:]]
             self.data.append(l)
 
+
         for row in self.data:
             self.appendRow(row)
 
-    def data(self, index, role):
+        self.dataChanged.connect(self.onDataChanged)
 
-        item = self.itemFromIndex(index)
-        col = item.column()
+    # def data(self, index, role):
 
-        if col >= self.valueStartIndex:
-            brush = QtGui.QBrush(QtGui.QColor(160,160,160,120), QtCore.Qt.SolidPattern)
-            item.setBackground(brush)
+    #     item = self.itemFromIndex(index)
+    #     col = item.column()
 
-        return super().data(index, role)
+    #     if col >= self.valueStartIndex:
+    #         brush = QtGui.QBrush(QtGui.QColor(160,160,160,120), QtCore.Qt.SolidPattern)
+    #         item.setBackground(brush)
+
+    #     return super().data(index, role)
+
+    # slots
+    def onDataChanged(self, arg1, arg2, arg3):
+        row1 = arg1.row()
+        col1 = arg1.column()
+        string = "arg1: ({},{})".format(row1, col1)
+
+        print(string)
 
