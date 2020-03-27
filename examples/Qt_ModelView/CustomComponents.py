@@ -39,33 +39,52 @@ class CustomModelItem(QtGui.QStandardItem):
         super().__init__(displayData, *args, **kwargs)
         self.displayData = displayData
 
-    @staticmethod
-    def fetchAlternativesFromDatabase(database):
-        con = sqlite3.connect(database)
-        with con:
-            c = con.cursor()
-            sqlCommand = "SELECT * FROM training_alternatives"
-            c.execute(sqlCommand)
-            data = c.fetchall()
-        con.close()
-        data = [list(item) for item in data]
-        for l in data:
-            if l not in CustomModelItem.trainingAlternatives:
-                CustomModelItem.trainingAlternatives.append(l)
+    def addTrainingAlternative(self, exerciseID, alternativeExercise, warmUp, repetition,
+                               w1, w2, w3, w4, w5, w6,
+                               alternativeID = None, label = None, short = None):
+        if not alternativeID:
+            alternativeID = len(type(self).trainingAlternatives) + 1
 
-    @staticmethod
-    def fetchNotesFromDatabase(database):
-        con = sqlite3.connect(database)
-        with con:
-            c = con.cursor()
-            sqlCommand = "SELECT * FROM training_notes"
-            c.execute(sqlCommand)
-            data = c.fetchall()
-        con.close()
-        data = [list(item) for item in data]
-        for l in data:
-            if l not in CustomModelItem.trainingNotes:
-                CustomModelItem.trainingNotes.append(l)
+        if not label:
+            label = "{num}".format(num = str(len(type(self).trainingAlternatives) + 1))
+
+        if not short:
+            short = "alternative {num}".format(num = str(len(type(self).trainingAlternatives) + 1))
+
+        data = [
+                alternativeID,
+                exerciseID,
+                label,
+                short,
+                alternativeExercise,
+                warmUp,
+                repetition,
+                w1,
+                w2,
+                w3,
+                w4,
+                w5,
+                w6,
+                ]
+        type(self).trainingAlternatives.append(data)
+
+    def addTrainingNote(self, note, noteID = None, label = None, short = None):
+        if not noteID:
+            noteID = len(type(self).trainingNotes) + 1
+
+        if not label:
+            label = type(self).lowercaseLetters[len(type(self).trainingNotes)]
+
+        if not short:
+            short = "note {num}".format(num = str(len(type(self).trainingNotes) + 1))
+
+        data = [
+                noteID,
+                label,
+                short,
+                note,
+            ]
+        type(self).trainingNotes.append(data)
 
     def commitAlternativesToDatabase(self, database, table):
         con = sqlite3.connect(database)
@@ -140,64 +159,52 @@ class CustomModelItem(QtGui.QStandardItem):
 
         con.close()
 
-    def addTrainingAlternative(self, exerciseID, alternativeExercise, warmUp, repetition,
-                               w1, w2, w3, w4, w5, w6,
-                               alternativeID = None, label = None, short = None):
-        if not alternativeID:
-            alternativeID = len(type(self).trainingAlternatives) + 1
-
-        if not label:
-            label = "{num}".format(num = str(len(type(self).trainingAlternatives) + 1))
-
-        if not short:
-            short = "alternative {num}".format(num = str(len(type(self).trainingAlternatives) + 1))
-
-        data = [
-                alternativeID,
-                exerciseID,
-                label,
-                short,
-                alternativeExercise,
-                warmUp,
-                repetition,
-                w1,
-                w2,
-                w3,
-                w4,
-                w5,
-                w6,
-                ]
-        type(self).trainingAlternatives.append(data)
-
     def deleteTrainingAlternativ(self, index):
             try:
                 del type(self).trainingAlternatives[index]
             except IndexError:
                 return
 
-    def addTrainingNote(self, note, noteID = None, label = None, short = None):
-        if not noteID:
-            noteID = len(type(self).trainingNotes) + 1
-
-        if not label:
-            label = type(self).lowercaseLetters[len(type(self).trainingNotes)]
-
-        if not short:
-            short = "note {num}".format(num = str(len(type(self).trainingNotes) + 1))
-
-        data = [
-                noteID,
-                label,
-                short,
-                note,
-            ]
-        type(self).trainingNotes.append(data)
-
     def deleteTrainingNote(self, index):
         try:
             del type(self).trainingNotes[index]
         except IndexError:
             return
+
+    @staticmethod
+    def fetchAlternativesFromDatabase(database):
+        con = sqlite3.connect(database)
+        with con:
+            c = con.cursor()
+            sqlCommand = "SELECT * FROM training_alternatives"
+            c.execute(sqlCommand)
+            data = c.fetchall()
+        con.close()
+        data = [list(item) for item in data]
+        for l in data:
+            if l not in CustomModelItem.trainingAlternatives:
+                CustomModelItem.trainingAlternatives.append(l)
+
+    @staticmethod
+    def fetchNotesFromDatabase(database):
+        con = sqlite3.connect(database)
+        with con:
+            c = con.cursor()
+            sqlCommand = "SELECT * FROM training_notes"
+            c.execute(sqlCommand)
+            data = c.fetchall()
+        con.close()
+        data = [list(item) for item in data]
+        for l in data:
+            if l not in CustomModelItem.trainingNotes:
+                CustomModelItem.trainingNotes.append(l)
+
+    def setData(self, value, role, defaultPurpose = True):
+        super().setData(value, role)
+        self.model().itemChanged.emit(self, defaultPurpose)
+
+    def type():
+        return 1001
 
 class CustomScrollArea(QtWidgets.QScrollArea):
 
@@ -223,6 +230,19 @@ class CustomWidget(QtWidgets.QWidget):
         }
 
         """)
+
+class standardEditorWidget(QtWidgets.QWidget):
+
+    def __init__(self, parent = None):
+        super().__init__(parent)
+        self.setFocusPolicy(QtCore.Qt.StrongFocus)
+        self.setAutoFillBackground(True)
+
+        self.layout = QtWidgets.QVBoxLayout(self)
+        self.label = QtWidgets.QLabel("test:", self)
+        self.edit = QtWidgets.QLineEdit("Enter test message", self)
+        self.layout.addWidget(self.label)
+        self.layout.addWidget(self.edit)
 
 if __name__ == "__main__":
 

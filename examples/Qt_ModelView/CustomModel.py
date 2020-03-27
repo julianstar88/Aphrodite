@@ -14,11 +14,12 @@ from PyQt5 import QtGui, QtCore
 class CustomSqlModel(QtGui.QStandardItemModel):
 
     ObjectType = "CustomSqlModel"
+    itemChanged = QtCore.pyqtSignal(CustomModelItem, bool)
 
     def __init__(self, database, table = "training_routine", parent = None,
                  tableStartIndex = 1, valueStartIndex = 1):
 
-        super().__init__(parent=parent)
+        super().__init__(parent)
         self.database = database
         self.table = table
         self.data = list()
@@ -26,6 +27,8 @@ class CustomSqlModel(QtGui.QStandardItemModel):
         self.valueStartIndex = valueStartIndex
 
         self.__populateModel()
+
+        self.itemChanged.connect(self.onItemChanged)
 
     def __populateModel(self):
         con = sqlite3.connect(self.database)
@@ -47,24 +50,21 @@ class CustomSqlModel(QtGui.QStandardItemModel):
         for row in self.data:
             self.appendRow(row)
 
-        self.dataChanged.connect(self.onDataChanged)
+    def data(self, index, role):
 
-    # def data(self, index, role):
+        item = self.itemFromIndex(index)
+        col = item.column()
 
-    #     item = self.itemFromIndex(index)
-    #     col = item.column()
+        if col >= self.valueStartIndex:
+            brush = QtGui.QBrush(QtGui.QColor(160,160,160,120), QtCore.Qt.SolidPattern)
+            item.setBackground(brush)
 
-    #     if col >= self.valueStartIndex:
-    #         brush = QtGui.QBrush(QtGui.QColor(160,160,160,120), QtCore.Qt.SolidPattern)
-    #         item.setBackground(brush)
-
-    #     return super().data(index, role)
+        return super().data(index, role)
 
     # slots
-    def onDataChanged(self, arg1, arg2, arg3):
-        row1 = arg1.row()
-        col1 = arg1.column()
-        string = "arg1: ({},{})".format(row1, col1)
+    def onItemChanged(self, item, defaultPurpose):
+        if defaultPurpose:
+            return
+        print(item, defaultPurpose)
 
-        print(string)
 

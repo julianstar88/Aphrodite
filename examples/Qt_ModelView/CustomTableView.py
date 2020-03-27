@@ -10,6 +10,7 @@ from PyQt5 import QtWidgets, QtCore
 from CustomHeaderview import CustomHeader
 from HelperModules import createCanvas, createQPixmap
 from CustomComponents import CustomLabel, CustomModelItem
+from CustomDelegate import CustomItemDelegate
 
 class CustomModelView(QtWidgets.QTableView):
 
@@ -24,6 +25,7 @@ class CustomModelView(QtWidgets.QTableView):
         self.setHorizontalHeader(CustomHeader(self))
         self.verticalHeader().hide()
         self.exerciseNameColumn = exerciseNameColumn
+        self.setItemDelegate(CustomItemDelegate(self))
 
         if parent:
             self.setParent(parent)
