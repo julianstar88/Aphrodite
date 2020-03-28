@@ -233,14 +233,15 @@ class CustomWidget(QtWidgets.QWidget):
 
 class standardEditorWidget(QtWidgets.QWidget):
 
-    def __init__(self, parent = None):
+    def __init__(self, message, parent = None):
         super().__init__(parent)
+        self.message = message
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.setAutoFillBackground(True)
 
         self.layout = QtWidgets.QVBoxLayout(self)
-        self.label = QtWidgets.QLabel("test:", self)
-        self.edit = QtWidgets.QLineEdit("Enter test message", self)
+        self.label = QtWidgets.QLabel(self.message, self)
+        self.edit = QtWidgets.QLineEdit("Enter new Value", self)
         self.layout.addWidget(self.label)
         self.layout.addWidget(self.edit)
 

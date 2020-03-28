@@ -9,7 +9,7 @@ Created on Tue Mar 17 23:54:54 2020
 from PyQt5 import QtWidgets, QtCore
 from CustomHeaderview import CustomHeader
 from HelperModules import createCanvas, createQPixmap
-from CustomComponents import CustomLabel, CustomModelItem
+from CustomComponents import CustomLabel
 from CustomDelegate import CustomItemDelegate
 
 class CustomModelView(QtWidgets.QTableView):
@@ -145,10 +145,10 @@ class CustomModelView(QtWidgets.QTableView):
         self.setMinimumHeight(generalHeight)
         self.setMinimumWidth(tableWidth)
 
-        self.horizontalScrollBar().setDisabled(True)
-        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.verticalScrollBar().setDisabled(True)
-        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        # self.horizontalScrollBar().setDisabled(True)
+        # self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        # self.verticalScrollBar().setDisabled(True)
+        # self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 
     # Slots
     def onSingleClick(self, index):
