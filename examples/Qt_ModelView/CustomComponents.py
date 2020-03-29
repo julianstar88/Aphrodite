@@ -6,6 +6,7 @@ Created on Tue Mar 17 23:57:11 2020
 """
 import sqlite3
 import string
+import sys
 
 from PyQt5 import QtWidgets, QtCore, QtGui
 
@@ -26,6 +27,35 @@ class CustomEventFilter(QtCore.QObject):
     def eventFilter(self, obj, event):
         print(event.type())
         return False
+
+class CustomExerciseEditorWidget(QtWidgets.QWidget):
+
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.alternativeGroup = QtWidgets.QGroupBox("Alternatives", self)
+        self.noteGroup = QtWidgets.QGroupBox("Notes", self)
+
+        self.alternativeEdit = QtWidgets.QLineEdit("Add Trainingalternatives", self)
+        self.noteEdit = QtWidgets.QLineEdit("Add Trainingnotes", self)
+
+        self.mainLayout = QtWidgets.QVBoxLayout(self)
+        self.alternativeLayout = QtWidgets.QVBoxLayout(self.alternativeGroup)
+        self.noteLayout = QtWidgets.QVBoxLayout(self.noteGroup)
+
+        self.mainLayout.addWidget(self.alternativeGroup)
+        self.mainLayout.addWidget(self.alternativeEdit)
+        self.mainLayout.addStretch(100)
+        self.mainLayout.addWidget(self.noteGroup)
+        self.mainLayout.addWidget(self.noteEdit)
+
+        for i in range(3):
+            string = "Trainingalternative" + " " + str(i)
+            self.alternativeLayout.addWidget(QtWidgets.QLabel(string,
+                                          self.alternativeGroup))
+
+            string = "Trainingnote" + " " + str(i)
+            self.noteLayout.addWidget(QtWidgets.QLabel(string,
+                                           self.noteGroup))
 
 class CustomLabel(QtWidgets.QLabel):
 
@@ -226,6 +256,20 @@ class CustomScrollArea(QtWidgets.QScrollArea):
         self.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
         self.setWidgetResizable(True)
 
+class CustomStandardEditorWidget(QtWidgets.QWidget):
+
+    def __init__(self, message, parent = None):
+        super().__init__(parent)
+        self.message = message
+        self.setFocusPolicy(QtCore.Qt.StrongFocus)
+        self.setAutoFillBackground(True)
+
+        self.layout = QtWidgets.QVBoxLayout(self)
+        self.label = QtWidgets.QLabel(self.message, self)
+        self.edit = QtWidgets.QLineEdit("Enter new Value", self)
+        self.layout.addWidget(self.label)
+        self.layout.addWidget(self.edit)
+
 class CustomWidget(QtWidgets.QWidget):
 
     ObjectType = "CustomWidget"
@@ -241,22 +285,18 @@ class CustomWidget(QtWidgets.QWidget):
 
         """)
 
-class standardEditorWidget(QtWidgets.QWidget):
-
-    def __init__(self, message, parent = None):
-        super().__init__(parent)
-        self.message = message
-        self.setFocusPolicy(QtCore.Qt.StrongFocus)
-        self.setAutoFillBackground(True)
-
-        self.layout = QtWidgets.QVBoxLayout(self)
-        self.label = QtWidgets.QLabel(self.message, self)
-        self.edit = QtWidgets.QLineEdit("Enter new Value", self)
-        self.layout.addWidget(self.label)
-        self.layout.addWidget(self.edit)
-
 if __name__ == "__main__":
 
-    item = CustomModelItem("test")
-    item.fetchAlternativesFromDatabase("database/test_database.db")
-    item.fetchNotesFromDatabase("database/test_database.db")
+    class MainWindow(QtWidgets.QMainWindow):
+        def __init__(self, *args):
+            super().__init__(*args)
+            self.t = CustomExerciseEditorWidget(self)
+
+            self.setCentralWidget(self.t)
+            self.show()
+
+    qapp = QtWidgets.QApplication(sys.argv)
+
+    app = MainWindow()
+
+    sys.exit(qapp.exec_())

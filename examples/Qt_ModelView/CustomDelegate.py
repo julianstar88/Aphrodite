@@ -6,7 +6,7 @@ Created on Fri Mar 27 00:46:05 2020
 """
 
 from PyQt5 import QtWidgets, QtCore
-from CustomComponents import standardEditorWidget
+from CustomComponents import CustomStandardEditorWidget
 
 class CustomItemDelegate(QtWidgets.QStyledItemDelegate):
 
@@ -21,7 +21,7 @@ class CustomItemDelegate(QtWidgets.QStyledItemDelegate):
 
     def createEditor(self, parent, option, index):
         message = self.__createMessage(index)
-        editor = standardEditorWidget(message, parent=parent)
+        editor = CustomStandardEditorWidget(message, parent=parent)
         return editor
 
     def __createMessage(self, index):

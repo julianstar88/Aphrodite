@@ -156,8 +156,7 @@ class CustomModelView(QtWidgets.QTableView):
         elif event.button() == 2: # right click
             self.rightClicked.emit(index)
 
-        else:
-            super().mouseReleaseEvent(event)
+        super().mouseReleaseEvent(event)
 
     def renderItemToPixmap(self, labelMode):
 
