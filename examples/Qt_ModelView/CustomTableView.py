@@ -14,6 +14,7 @@ from CustomDelegate import CustomItemDelegate
 class CustomModelView(QtWidgets.QTableView):
 
     ObjectType = "CustomModelView"
+    leftDoubleClicked = QtCore.pyqtSignal("QModelIndex")
     leftClicked = QtCore.pyqtSignal("QModelIndex")
     rightClicked = QtCore.pyqtSignal("QModelIndex")
 
@@ -27,6 +28,12 @@ class CustomModelView(QtWidgets.QTableView):
         self.verticalHeader().hide()
         self.exerciseNameColumn = exerciseNameColumn
 
+        #click mode evaluation
+        self.timer = QtCore.QTimer()
+        self.timer.setSingleShot(True)
+        self.timer.setInterval(200)
+        self.clickMode = str()
+
         self.setItemDelegate(CustomItemDelegate(self))
 
         if parent:
@@ -39,34 +46,32 @@ class CustomModelView(QtWidgets.QTableView):
         self.resizeTable()
 
         self.leftClicked.connect(self.onSingleLeftClick)
+        self.leftDoubleClicked.connect(self.onDoubleLeftClick)
         self.rightClicked.connect(self.onRightClick)
 
+    def __clickModeEvaluation(self, index):
 
-    def __setHorizontalHeaderLabels(self, headerLabels, fontSize, fontWeight, fontStyle):
-        qpixmaps = list()
+        def __onTimeOut():
 
-        if not headerLabels:
-            headerLabels = ["I"] * self.model().columnCount()
-            color = "none"
-        else:
-            color = "black"
+            if self.clickMode == "single":
+                self.leftClicked.emit(index)
 
-        for i, label in enumerate(headerLabels):
-            canvas = createCanvas(label, fontSize = fontSize, fontWeight = fontWeight,
-                                  fontColor = color)
+            elif self.clickMode == "double":
+                self.leftDoubleClicked.emit(index)
 
-            pixmap = createQPixmap(canvas)
-            qpixmaps.append(pixmap)
-            self.setColumnWidth(i, pixmap.size().width())
-
-        self.horizontalHeader().qpixmaps = qpixmaps
-
-    def __setResizeMode(self):
-        for i in range(self.model().columnCount()):
-            if i == 0:
-                self.horizontalHeader().setSectionResizeMode(i, QtWidgets.QHeaderView.Fixed)
             else:
-                self.horizontalHeader().setSectionResizeMode(i, QtWidgets.QHeaderView.Stretch)
+                pass
+
+            self.timer.disconnect()
+
+        self.timer.timeout.connect(__onTimeOut)
+
+        if self.timer.isActive():
+            self.clickMode = "double"
+
+        else:
+            self.timer.start()
+            self.clickMode = "single"
 
     def __createLabelText(self, item, mode):
         row = item.row()
@@ -116,12 +121,41 @@ class CustomModelView(QtWidgets.QTableView):
         else:
             return
 
+    def __setHorizontalHeaderLabels(self, headerLabels, fontSize, fontWeight, fontStyle):
+        qpixmaps = list()
+
+        if not headerLabels:
+            headerLabels = ["I"] * self.model().columnCount()
+            color = "none"
+        else:
+            color = "black"
+
+        for i, label in enumerate(headerLabels):
+            canvas = createCanvas(label, fontSize = fontSize, fontWeight = fontWeight,
+                                  fontColor = color)
+
+            pixmap = createQPixmap(canvas)
+            qpixmaps.append(pixmap)
+            self.setColumnWidth(i, pixmap.size().width())
+
+        self.horizontalHeader().qpixmaps = qpixmaps
+
+    def __setResizeMode(self):
+        for i in range(self.model().columnCount()):
+            if i == 0:
+                self.horizontalHeader().setSectionResizeMode(i, QtWidgets.QHeaderView.Fixed)
+            else:
+                self.horizontalHeader().setSectionResizeMode(i, QtWidgets.QHeaderView.Stretch)
+
     def mouseReleaseEvent(self, event):
         index = self.indexAt(event.pos())
+
         if event.button() == 1: # left click
-            self.leftClicked.emit(index)
+            self.__clickModeEvaluation(index)
+
         elif event.button() == 2: # right click
             self.rightClicked.emit(index)
+
         else:
             super().mouseReleaseEvent(event)
 
@@ -161,6 +195,8 @@ class CustomModelView(QtWidgets.QTableView):
     def onSingleLeftClick(self, index):
         print("single left click")
 
+    def onDoubleLeftClick(self, index):
+        print("double left click")
 
     def onRightClick(self, index):
         print("right click")

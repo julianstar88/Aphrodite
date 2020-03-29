@@ -24,7 +24,8 @@ class CustomEventFilter(QtCore.QObject):
 
 
     def eventFilter(self, obj, event):
-        return super().eventFilter(obj, event)
+        print(event.type())
+        return False
 
 class CustomLabel(QtWidgets.QLabel):
 

@@ -55,12 +55,6 @@ def createQPixmap(canvas):
     qpixmap = QtGui.QPixmap(qimage)
     return qpixmap
 
-class EvaluateClickEvent():
-
-    ObjectType = "evaluateClickEvent"
-
-    def __init__(self):
-        print("clicked")
 
 if __name__ == "__main__":
 
