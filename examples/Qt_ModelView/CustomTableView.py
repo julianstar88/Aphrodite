@@ -5,7 +5,6 @@ Created on Tue Mar 17 23:54:54 2020
 @author: Julian
 """
 
-
 from PyQt5 import QtWidgets, QtCore
 from CustomHeaderview import CustomHeader
 from HelperModules import createCanvas, createQPixmap
@@ -15,6 +14,8 @@ from CustomDelegate import CustomItemDelegate
 class CustomModelView(QtWidgets.QTableView):
 
     ObjectType = "CustomModelView"
+    leftClicked = QtCore.pyqtSignal("QModelIndex")
+    rightClicked = QtCore.pyqtSignal("QModelIndex")
 
     def __init__(self, model, headerLabels = None, parent = None, fontSize = 15, fontWeight = "normal",
                  fontStyle = "normal", exerciseNameColumn = 0, labelMode = "main", *args, **kwargs):
@@ -25,6 +26,7 @@ class CustomModelView(QtWidgets.QTableView):
         self.setHorizontalHeader(CustomHeader(self))
         self.verticalHeader().hide()
         self.exerciseNameColumn = exerciseNameColumn
+
         self.setItemDelegate(CustomItemDelegate(self))
 
         if parent:
@@ -36,7 +38,8 @@ class CustomModelView(QtWidgets.QTableView):
         self.renderItemToPixmap(labelMode)
         self.resizeTable()
 
-        self.clicked.connect(self.onSingleClick)
+        self.leftClicked.connect(self.onSingleLeftClick)
+        self.rightClicked.connect(self.onRightClick)
 
 
     def __setHorizontalHeaderLabels(self, headerLabels, fontSize, fontWeight, fontStyle):
@@ -113,6 +116,15 @@ class CustomModelView(QtWidgets.QTableView):
         else:
             return
 
+    def mouseReleaseEvent(self, event):
+        index = self.indexAt(event.pos())
+        if event.button() == 1: # left click
+            self.leftClicked.emit(index)
+        elif event.button() == 2: # right click
+            self.rightClicked.emit(index)
+        else:
+            super().mouseReleaseEvent(event)
+
     def renderItemToPixmap(self, labelMode):
 
         for row in range(self.model().rowCount()):
@@ -145,13 +157,10 @@ class CustomModelView(QtWidgets.QTableView):
         self.setMinimumHeight(generalHeight)
         self.setMinimumWidth(tableWidth)
 
-        # self.horizontalScrollBar().setDisabled(True)
-        # self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        # self.verticalScrollBar().setDisabled(True)
-        # self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-
     # Slots
-    def onSingleClick(self, index):
-        item = self.model().itemFromIndex(index)
+    def onSingleLeftClick(self, index):
+        print("single left click")
 
 
+    def onRightClick(self, index):
+        print("right click")

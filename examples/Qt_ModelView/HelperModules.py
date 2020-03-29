@@ -8,7 +8,7 @@ Created on Tue Mar 17 23:56:40 2020
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvas
 
-from PyQt5 import QtGui
+from PyQt5 import QtGui, QtCore
 
 def createCanvas(mathText, color = "none", fontSize = 15, dpi = 100,
                   fontStyle = "normal", fontWeight = "normal",
@@ -55,13 +55,12 @@ def createQPixmap(canvas):
     qpixmap = QtGui.QPixmap(qimage)
     return qpixmap
 
-class evaluateClickEvent():
+class EvaluateClickEvent():
 
     ObjectType = "evaluateClickEvent"
 
     def __init__(self):
         print("clicked")
-
 
 if __name__ == "__main__":
 

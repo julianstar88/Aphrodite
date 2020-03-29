@@ -17,6 +17,15 @@ class CustomBoxLayout(QtWidgets.QBoxLayout):
         super().__init__(*args, **kwargs)
         self.setSizeConstraint(QtWidgets.QBoxLayout.SetMinAndMaxSize)
 
+class CustomEventFilter(QtCore.QObject):
+
+    def __init__(self, *args):
+        super().__init__(*args)
+
+
+    def eventFilter(self, obj, event):
+        return super().eventFilter(obj, event)
+
 class CustomLabel(QtWidgets.QLabel):
 
     ObjectType = "CustomLabel"
