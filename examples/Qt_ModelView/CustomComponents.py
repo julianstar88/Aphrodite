@@ -28,25 +28,33 @@ class CustomEventFilter(QtCore.QObject):
         print(event.type())
         return False
 
-class CustomExerciseEditorWidget(QtWidgets.QWidget):
+class CustomExerciseEditorWidget(QtWidgets.QDialog):
 
     def __init__(self, *args):
         super().__init__(*args)
         self.alternativeGroup = QtWidgets.QGroupBox("Alternatives", self)
         self.noteGroup = QtWidgets.QGroupBox("Notes", self)
+        self.buttonGroup = QtWidgets.QGroupBox(self)
 
         self.alternativeEdit = QtWidgets.QLineEdit("Add Trainingalternatives", self)
         self.noteEdit = QtWidgets.QLineEdit("Add Trainingnotes", self)
+        self.doneButton = QtWidgets.QPushButton("Done", self)
 
         self.mainLayout = QtWidgets.QVBoxLayout(self)
         self.alternativeLayout = QtWidgets.QVBoxLayout(self.alternativeGroup)
         self.noteLayout = QtWidgets.QVBoxLayout(self.noteGroup)
+        self.buttonLayout = QtWidgets.QHBoxLayout(self.buttonGroup)
+
+        self.vspacer = QtWidgets.QSpacerItem(0, 50)
+        self.hspacer = QtWidgets.QSpacerItem(300, 0)
 
         self.mainLayout.addWidget(self.alternativeGroup)
         self.mainLayout.addWidget(self.alternativeEdit)
-        self.mainLayout.addStretch(100)
+        self.mainLayout.addSpacerItem(self.vspacer)
         self.mainLayout.addWidget(self.noteGroup)
         self.mainLayout.addWidget(self.noteEdit)
+        self.mainLayout.addWidget(self.buttonGroup)
+        self.mainLayout.addSpacerItem(self.hspacer)
 
         for i in range(3):
             string = "Trainingalternative" + " " + str(i)
@@ -56,6 +64,10 @@ class CustomExerciseEditorWidget(QtWidgets.QWidget):
             string = "Trainingnote" + " " + str(i)
             self.noteLayout.addWidget(QtWidgets.QLabel(string,
                                            self.noteGroup))
+
+        self.buttonLayout.addSpacerItem(QtWidgets.QSpacerItem(250, 0,
+                                            QtWidgets.QSizePolicy.MinimumExpanding))
+        self.buttonLayout.addWidget(self.doneButton)
 
 class CustomLabel(QtWidgets.QLabel):
 
@@ -290,10 +302,18 @@ if __name__ == "__main__":
     class MainWindow(QtWidgets.QMainWindow):
         def __init__(self, *args):
             super().__init__(*args)
-            self.t = CustomExerciseEditorWidget(self)
+            # self.t = CustomExerciseEditorWidget(self)
 
-            self.setCentralWidget(self.t)
+            # self.setCentralWidget(self.t)
+            # self.show()
+            self.main = QtWidgets.QWidget(self)
+            self.setCentralWidget(self.main)
+            self.setGeometry(100,100,800,500)
+            self.setWindowTitle("Dialog Test")
             self.show()
+
+            self.dialog = CustomExerciseEditorWidget(self)
+            self.dialog.show()
 
     qapp = QtWidgets.QApplication(sys.argv)
 
