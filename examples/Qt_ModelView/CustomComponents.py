@@ -10,6 +10,119 @@ import sys
 
 from PyQt5 import QtWidgets, QtCore, QtGui
 
+class CustomAddAlternativeDialog(QtWidgets.QDialog):
+
+    def __init__(self, *args):
+        super().__init__(*args)
+
+        # 1: Groups
+        self.alternativeGroup = QtWidgets.QWidget(self)
+        self.buttonGroup = QtWidgets.QWidget(self)
+
+        # 2: Layouts
+        self.mainLayout = QtWidgets.QVBoxLayout(self)
+        self.alternativeLayout = QtWidgets.QFormLayout(self.alternativeGroup)
+        self.alternativeLayout.setContentsMargins(0,0,0,10)
+        self.buttonLayout = QtWidgets.QHBoxLayout(self.buttonGroup)
+        self.buttonLayout.setContentsMargins(0,0,0,0)
+
+        # 3: Members
+        self.acceptButton = QtWidgets.QPushButton("OK", self.buttonGroup)
+        self.acceptButton.setDefault(True)
+        self.rejectButton = QtWidgets.QPushButton("Cancel", self.buttonGroup)
+        self.idEdit = QtWidgets.QLineEdit(self.alternativeGroup)
+        self.idEdit.setPlaceholderText("New ID...")
+        self.exerciseIdEdit = QtWidgets.QLineEdit(self.alternativeGroup)
+        self.exerciseIdEdit.setPlaceholderText("New Exercise ID...")
+        self.shortNameEdit = QtWidgets.QLineEdit(self.alternativeGroup)
+        self.shortNameEdit.setPlaceholderText("New Short Name...")
+        self.longNameEdit = QtWidgets.QLineEdit(self.alternativeGroup)
+        self.longNameEdit.setPlaceholderText("New Long Name...")
+
+        # 4: Layout Settings
+        self.mainLayout.addWidget(self.alternativeGroup)
+        self.mainLayout.addWidget(self.buttonGroup)
+
+        self.alternativeLayout.addRow("ID:", self.idEdit)
+        self.alternativeLayout.addRow("Exercise ID:", self.exerciseIdEdit)
+        self.alternativeLayout.addRow("Short Name:", self.shortNameEdit)
+        self.alternativeLayout.addRow("Long Name:", self.longNameEdit)
+
+        self.buttonLayout.addStretch()
+        self.buttonLayout.addWidget(self.acceptButton)
+        self.buttonLayout.addWidget(self.rejectButton)
+
+        # 5: Connectios
+        self.acceptButton.clicked.connect(self.accept)
+        self.rejectButton.clicked.connect(self.reject)
+
+        # 6: Show Dialog
+        self.exec()
+
+class CustomAddNoteDialog(QtWidgets.QDialog):
+
+    def __init__(self, *args):
+        super().__init__(*args)
+
+        # 1: Groups
+        self.noteGroup = QtWidgets.QWidget(self)
+        self.buttonGroup = QtWidgets.QWidget(self)
+
+        # 2: Layouts
+        self.mainLayout = QtWidgets.QVBoxLayout(self)
+        self.noteLayout = QtWidgets.QFormLayout(self.noteGroup)
+        self.noteLayout.setContentsMargins(0,0,0,0)
+        self.buttonLayout = QtWidgets.QHBoxLayout(self.buttonGroup)
+        self.buttonLayout.setContentsMargins(0,0,0,0)
+
+        # 3: Members
+        self.exerciseIdEdit = QtWidgets.QLineEdit(self.noteGroup)
+        self.exerciseIdEdit.setPlaceholderText("New Exercise ID...")
+        self.shortNameEdit = QtWidgets.QLineEdit(self.noteGroup)
+        self.shortNameEdit.setPlaceholderText("New Shrot Name...")
+        self.descriptionEdit = QtWidgets.QTextEdit(self.noteGroup)
+        self.descriptionEdit.setPlaceholderText("Enter Description of Trainingnote here...")
+        self.acceptButton = QtWidgets.QPushButton("OK", self.buttonGroup)
+        self.rejectButton = QtWidgets.QPushButton("Cancel", self.buttonGroup)
+
+        # 4: Layout Settings
+        self.mainLayout.addWidget(self.noteGroup)
+        self.mainLayout.addWidget(self.buttonGroup)
+
+        self.noteLayout.addRow("Exercise ID:", self.exerciseIdEdit)
+        self.noteLayout.addRow("Short Name:", self.shortNameEdit)
+        self.noteLayout.addRow("Description:", self.descriptionEdit)
+
+        self.buttonLayout.addStretch()
+        self.buttonLayout.addWidget(self.acceptButton)
+        self.buttonLayout.addWidget(self.rejectButton)
+
+        # 5: Connections
+        self.acceptButton.clicked.connect(self.accept)
+        self.rejectButton.clicked.connect(self.reject)
+
+        # 6: Help
+        self.__setHelp()
+
+        # 7: Show Dialog
+        self.exec()
+
+    def __setHelp(self):
+        # Exercise ID
+        whatsThis = """
+        Enter the Exercise ID for the new Trainingnote.
+
+        The Exercise ID is a unique Number specifying to which Exercise this
+        Note belongs. The new Note (as well as a generated subscript)
+        will be added to the Trainingroutine. The Value entered must be a integer!
+        """
+
+        toolTip = """
+            Enter the Exercise ID for the new Trainingnote
+        """
+        self.exerciseIdEdit.setWhatsThis(whatsThis)
+        self.exerciseIdEdit.setToolTip(toolTip)
+
 class CustomBoxLayout(QtWidgets.QBoxLayout):
 
     ObjectType = "CustomBoxLayout"
@@ -27,47 +140,6 @@ class CustomEventFilter(QtCore.QObject):
     def eventFilter(self, obj, event):
         print(event.type())
         return False
-
-class CustomExerciseEditorWidget(QtWidgets.QDialog):
-
-    def __init__(self, *args):
-        super().__init__(*args)
-        self.alternativeGroup = QtWidgets.QGroupBox("Alternatives", self)
-        self.noteGroup = QtWidgets.QGroupBox("Notes", self)
-        self.buttonGroup = QtWidgets.QGroupBox(self)
-
-        self.alternativeEdit = QtWidgets.QLineEdit("Add Trainingalternatives", self)
-        self.noteEdit = QtWidgets.QLineEdit("Add Trainingnotes", self)
-        self.doneButton = QtWidgets.QPushButton("Done", self)
-
-        self.mainLayout = QtWidgets.QVBoxLayout(self)
-        self.alternativeLayout = QtWidgets.QVBoxLayout(self.alternativeGroup)
-        self.noteLayout = QtWidgets.QVBoxLayout(self.noteGroup)
-        self.buttonLayout = QtWidgets.QHBoxLayout(self.buttonGroup)
-
-        self.vspacer = QtWidgets.QSpacerItem(0, 50)
-        self.hspacer = QtWidgets.QSpacerItem(300, 0)
-
-        self.mainLayout.addWidget(self.alternativeGroup)
-        self.mainLayout.addWidget(self.alternativeEdit)
-        self.mainLayout.addSpacerItem(self.vspacer)
-        self.mainLayout.addWidget(self.noteGroup)
-        self.mainLayout.addWidget(self.noteEdit)
-        self.mainLayout.addWidget(self.buttonGroup)
-        self.mainLayout.addSpacerItem(self.hspacer)
-
-        for i in range(3):
-            string = "Trainingalternative" + " " + str(i)
-            self.alternativeLayout.addWidget(QtWidgets.QLabel(string,
-                                          self.alternativeGroup))
-
-            string = "Trainingnote" + " " + str(i)
-            self.noteLayout.addWidget(QtWidgets.QLabel(string,
-                                           self.noteGroup))
-
-        self.buttonLayout.addSpacerItem(QtWidgets.QSpacerItem(250, 0,
-                                            QtWidgets.QSizePolicy.MinimumExpanding))
-        self.buttonLayout.addWidget(self.doneButton)
 
 class CustomLabel(QtWidgets.QLabel):
 
@@ -302,18 +374,19 @@ if __name__ == "__main__":
     class MainWindow(QtWidgets.QMainWindow):
         def __init__(self, *args):
             super().__init__(*args)
-            # self.t = CustomExerciseEditorWidget(self)
 
-            # self.setCentralWidget(self.t)
-            # self.show()
             self.main = QtWidgets.QWidget(self)
             self.setCentralWidget(self.main)
             self.setGeometry(100,100,800,500)
             self.setWindowTitle("Dialog Test")
             self.show()
 
-            self.dialog = CustomExerciseEditorWidget(self)
-            self.dialog.show()
+            self.dialog = CustomAddNoteDialog(self)
+            if self.dialog.result():
+                sys.exit()
+            else:
+                sys.exit()
+
 
     qapp = QtWidgets.QApplication(sys.argv)
 
