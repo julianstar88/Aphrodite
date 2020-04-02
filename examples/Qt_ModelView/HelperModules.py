@@ -8,7 +8,7 @@ Created on Tue Mar 17 23:56:40 2020
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvas
 
-from PyQt5 import QtGui, QtCore
+from PyQt5 import QtGui, QtWidgets
 
 def createCanvas(mathText, color = "none", fontSize = 15, dpi = 100,
                   fontStyle = "normal", fontWeight = "normal",
@@ -54,6 +54,25 @@ def createQPixmap(canvas):
     qimage = QtGui.QImage(buf, size[0], size[1], QtGui.QImage.Format_ARGB32)
     qpixmap = QtGui.QPixmap(qimage)
     return qpixmap
+
+class GraphicalRoutineEditor(QtWidgets.QTableView):
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.model = QtGui.QStandardItemModel(0, 10, self)
+        self.model.setHorizontalHeaderLabels(["Excercise",
+                                              "Sets",
+                                              "Reps",
+                                              "Warm Up",
+                                              "Week 1",
+                                              "Week 2",
+                                              "Week 3",
+                                              "Week 4",
+                                              "Week 5",
+                                              "Week 6"])
+        self.setModel(self.model)
+
+
 
 
 if __name__ == "__main__":

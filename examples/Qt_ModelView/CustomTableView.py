@@ -79,7 +79,7 @@ class CustomModelView(QtWidgets.QTableView):
 
         if mode == "main":
             text = item.displayData
-            alternatives = [item[2] for item in item.trainingAlternatives if exerciseID == item[1]]
+            alternatives = [item[1] for item in item.trainingAlternatives if exerciseID == item[0]]
             if alternatives:
                 values = "%s~" * len(alternatives)
                 values = values[:-1]
@@ -88,7 +88,7 @@ class CustomModelView(QtWidgets.QTableView):
             else:
                 superScripts = ""
 
-            notes = [item[2] for item in item.trainingNotes if exerciseID == item[1]]
+            notes = [item[1] for item in item.trainingNotes if exerciseID == item[0]]
             if notes:
                 values = "%s~" * len(notes)
                 values = values[:-1]
@@ -111,13 +111,13 @@ class CustomModelView(QtWidgets.QTableView):
                 return labelText
 
         elif mode == "alternative":
-            for alternative in item.trainingAlternatives:
-                if exerciseID == alternative[0]:
-                    labelText = "{label}) {itemText}".format(
-                            label = alternative[2],
-                            itemText = alternative[4],
-                        )
-                    return labelText
+            alternative = item.trainingAlternatives[row]
+            labelText = "{label}) {itemText}".format(
+                    label = alternative[1],
+                    itemText = alternative[3],
+                )
+            return labelText
+
         else:
             return
 

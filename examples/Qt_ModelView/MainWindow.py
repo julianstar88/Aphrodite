@@ -25,13 +25,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.model = CustomSqlModel(
                 "database/test_database.db",
                 table = "training_routine",
-                tableStartIndex = 1,
+                tableStartIndex = 0,
             )
 
         self.model2 = CustomSqlModel(
                 "database/test_database.db",
                 table = "training_alternatives",
-                tableStartIndex = 4,
+                tableStartIndex = 3,
             )
 
 
