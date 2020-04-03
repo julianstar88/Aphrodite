@@ -487,9 +487,11 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
 
     def __init__(self, *args):
         super().__init__(*args)
+        self.setGeometry(200,100,800,500)
         self.setWindowTitle("Create a new Trainingroutine")
         self.data = {"exerciseDefaultNumber":0,
                      "exercises":[
+                             None,
                              "Bankdürcken",
                              "Klimmzüge",
                              "Kniebeugen",
@@ -526,6 +528,7 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
         self.mainLayout.addWidget(self.buttonGroup)
 
         self.inputLayout.setContentsMargins(0,0,0,0)
+        self.inputLayout.addStretch()
         self.inputLayout.addRow("Name", self.nameEdit)
         self.inputLayout.addRow("Trainingmode", self.modeEdit)
         self.inputLayout.addRow("Nuber of Exercises", self.numberEdit)
@@ -554,7 +557,9 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
         diff = value-oldValue
         model = self.editor.model()
         if diff < 0:
-            model.removeRows(oldValue, diff)
+            for i in range(oldValue, value-1, -1):
+                model.removeRow(i)
+                self.editor.rowCountChanged(oldValue, value)
         else:
             for i in range(diff):
                 items = [QtGui.QStandardItem(None) for item in range(model.columnCount())]
@@ -595,6 +600,10 @@ class CustomSpinBox(QtWidgets.QSpinBox):
 
     def setOldValue(self, value):
         self.__oldValue = value
+
+    def wheelEvent(self, event):
+        self.setOldValue(self.value())
+        super().wheelEvent(event)
 
 class CustomStandardEditorWidget(QtWidgets.QWidget):
 

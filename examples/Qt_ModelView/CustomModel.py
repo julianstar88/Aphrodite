@@ -26,11 +26,26 @@ class CustomSqlModel(QtGui.QStandardItemModel):
         self.tableStartIndex = tableStartIndex
         self.valueStartIndex = valueStartIndex
 
-        self.__populateModel()
-
         self.itemChanged.connect(self.onItemChanged)
 
-    def __populateModel(self):
+    def data(self, index, role):
+
+        item = self.itemFromIndex(index)
+        col = item.column()
+
+        if col >= self.valueStartIndex:
+            brush = QtGui.QBrush(QtGui.QColor(160,160,160,120), QtCore.Qt.SolidPattern)
+            item.setBackground(brush)
+
+        return super().data(index, role)
+
+    def onItemChanged(self, item, defaultPurpose):
+        if defaultPurpose:
+            return
+        print(item, defaultPurpose)
+
+
+    def populateModel(self):
         con = sqlite3.connect(self.database)
         with con:
             c = con.cursor()
@@ -46,25 +61,6 @@ class CustomSqlModel(QtGui.QStandardItemModel):
             l = [CustomModelItem(item) for item in row[self.tableStartIndex:]]
             self.data.append(l)
 
-
         for row in self.data:
             self.appendRow(row)
-
-    def data(self, index, role):
-
-        item = self.itemFromIndex(index)
-        col = item.column()
-
-        if col >= self.valueStartIndex:
-            brush = QtGui.QBrush(QtGui.QColor(160,160,160,120), QtCore.Qt.SolidPattern)
-            item.setBackground(brush)
-
-        return super().data(index, role)
-
-    # slots
-    def onItemChanged(self, item, defaultPurpose):
-        if defaultPurpose:
-            return
-        print(item, defaultPurpose)
-
 

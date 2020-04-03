@@ -71,6 +71,14 @@ class GraphicalRoutineEditor(QtWidgets.QTableView):
                                               "Week 5",
                                               "Week 6"])
         self.setModel(self.model())
+        self.setColumnResizeMode()
+
+    def setColumnResizeMode(self):
+        for i in range(self.model().columnCount()):
+            if i == 0:
+                self.horizontalHeader().setSectionResizeMode(i, QtWidgets.QHeaderView.Fixed)
+            else:
+                self.horizontalHeader().setSectionResizeMode(i, QtWidgets.QHeaderView.Stretch)
 
     def model(self):
         return self.__model
