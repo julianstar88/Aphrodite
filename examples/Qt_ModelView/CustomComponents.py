@@ -488,6 +488,14 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
     def __init__(self, *args):
         super().__init__(*args)
         self.setWindowTitle("Create a new Trainingroutine")
+        self.data = {"exerciseDefaultNumber":0,
+                     "exercises":[
+                             "Bankdürcken",
+                             "Klimmzüge",
+                             "Kniebeugen",
+                             "Seitenheben",
+                         ]
+                     }
 
         # 1: Groups
         self.inputGroup = QtWidgets.QWidget(self)
@@ -503,8 +511,9 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
         # 3: Members
         self.nameEdit = QtWidgets.QLineEdit(self.inputGroup)
         self.modeEdit = QtWidgets.QComboBox(self.inputGroup)
-        self.numberEdit = QtWidgets.QSpinBox(self.inputGroup)
+        self.numberEdit = CustomSpinBox(self.inputGroup)
         self.numberEdit.setMinimum(0)
+        self.numberEdit.setValue(self.data["exerciseDefaultNumber"])
         self.numberEdit.setMaximum(20)
         self.editor = GraphicalRoutineEditor(parent = self.editorGroup)
         self.acceptButton = QtWidgets.QPushButton("OK", self.buttonGroup)
@@ -541,7 +550,20 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
         self.exec()
 
     def onExerciseNumChanged(self, value):
-        pass
+        oldValue = self.numberEdit.oldValue()
+        diff = value-oldValue
+        model = self.editor.model()
+        if diff < 0:
+            model.removeRows(oldValue, diff)
+        else:
+            for i in range(diff):
+                items = [QtGui.QStandardItem(None) for item in range(model.columnCount())]
+                model.appendRow(items)
+            for i in range(oldValue, value+1, 1):
+                index = model.index(i, 0)
+                combo = QtWidgets.QComboBox(self.editor)
+                combo.insertItems(0, self.data["exercises"])
+                self.editor.setIndexWidget(index, combo)
 
 class CustomScrollArea(QtWidgets.QScrollArea):
 
@@ -552,6 +574,27 @@ class CustomScrollArea(QtWidgets.QScrollArea):
         self.setWidget(widget)
         self.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
         self.setWidgetResizable(True)
+
+class CustomSpinBox(QtWidgets.QSpinBox):
+
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.__oldValue = None
+        self.setKeyboardTracking(False)
+
+    def keyPressEvent(self, event):
+        self.setOldValue(self.value())
+        super().keyPressEvent(event)
+
+    def mousePressEvent(self, event):
+        self.setOldValue(self.value())
+        super().mousePressEvent(event)
+
+    def oldValue(self):
+        return self.__oldValue
+
+    def setOldValue(self, value):
+        self.__oldValue = value
 
 class CustomStandardEditorWidget(QtWidgets.QWidget):
 

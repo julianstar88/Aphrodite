@@ -59,8 +59,8 @@ class GraphicalRoutineEditor(QtWidgets.QTableView):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.model = QtGui.QStandardItemModel(0, 10, self)
-        self.model.setHorizontalHeaderLabels(["Excercise",
+        self.__model = QtGui.QStandardItemModel(0, 10, self)
+        self.__model.setHorizontalHeaderLabels(["Excercise",
                                               "Sets",
                                               "Reps",
                                               "Warm Up",
@@ -70,7 +70,10 @@ class GraphicalRoutineEditor(QtWidgets.QTableView):
                                               "Week 4",
                                               "Week 5",
                                               "Week 6"])
-        self.setModel(self.model)
+        self.setModel(self.model())
+
+    def model(self):
+        return self.__model
 
 
 
