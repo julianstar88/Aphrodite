@@ -33,9 +33,11 @@ class CustomAddAlternativeDialog(QtWidgets.QDialog):
         # 3: Members
         self.acceptButton = QtWidgets.QPushButton("OK", self.buttonGroup)
         self.acceptButton.setDefault(True)
+        self.acceptButton.setEnabled(False)
         self.rejectButton = QtWidgets.QPushButton("Cancel", self.buttonGroup)
         self.exerciseIdEdit = QtWidgets.QLineEdit(self.alternativeGroup)
         self.exerciseIdEdit.setPlaceholderText("New Exercise ID...")
+        self.exerciseIdEdit.setValidator(QtGui.QIntValidator(self.exerciseIdEdit))
         self.shortNameEdit = QtWidgets.QLineEdit(self.alternativeGroup)
         self.shortNameEdit.setPlaceholderText("New Short Name...")
         self.longNameEdit = QtWidgets.QLineEdit(self.alternativeGroup)
@@ -54,6 +56,8 @@ class CustomAddAlternativeDialog(QtWidgets.QDialog):
         self.buttonLayout.addWidget(self.rejectButton)
 
         # 5: Connectios
+        self.exerciseIdEdit.textEdited.connect(self.onExerciseIdChanged)
+
         self.acceptButton.clicked.connect(self.accept)
         self.rejectButton.clicked.connect(self.reject)
 
@@ -143,6 +147,12 @@ class CustomAddAlternativeDialog(QtWidgets.QDialog):
         """
         self.longNameEdit.setWhatsThis(whatsThis)
         self.longNameEdit.setToolTip(toolTip)
+
+    def onExerciseIdChanged(self, value):
+        if self.exerciseIdEdit.text() == "":
+            self.acceptButton.setEnabled(False)
+        else:
+            self.acceptButton.setEnabled(True)
 
 class CustomAddNoteDialog(QtWidgets.QDialog):
 
@@ -484,6 +494,7 @@ class CustomModelItem(QtGui.QStandardItem):
 class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
 
     ObjectType = "CustomNewTrainingroutineDialog"
+    customDataChanged = QtCore.pyqtSignal()
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -501,6 +512,7 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
                              "Running",
                          ]
                      }
+        self.toCommit = {"routine":None, "alternatives":list()}
 
         # 1: Groups
         self.inputGroup = QtWidgets.QWidget(self)
@@ -534,6 +546,7 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
                 "Delete Alternative",
                 self.inputSubGroup2
             )
+        self.deleteAlternativeButton.setEnabled(False)
         self.editor = GraphicalRoutineEditor(parent = self.editorGroup)
         self.acceptButton = QtWidgets.QPushButton("OK", self.buttonGroup)
         self.acceptButton.setDefault(True)
@@ -582,6 +595,8 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
 
         self.addAlternativeButton.clicked.connect(self.onAddAlternative)
         self.deleteAlternativeButton.clicked.connect(self.onDeleteAlternative)
+
+        self.customDataChanged.connect(self.onAlternativeCountChanged)
 
         self.acceptButton.clicked.connect(self.accept)
         self.rejectButton.clicked.connect(self.reject)
@@ -700,12 +715,12 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
         </head>
 
         <p>
-            <b>Add a new Trainingnote to the current Trainingroutine.</b>
+            <b>Delete an added Trainingalternative.</b>
         </p>
         """
         toolTip = """
         <p style='text-align:left'>
-        Add a new Trainingnote to the current Trainingroutine
+        Delete an added Trainingalternative
         </p>
         """
         self.deleteAlternativeButton.setWhatsThis(whatsThis)
@@ -735,9 +750,27 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
         self.editor.setToolTip(toolTip)
 
     def onAddAlternative(self):
-        pass
+        dialog = CustomAddAlternativeDialog(self)
+        if dialog.result():
+            data = [
+                    eval(dialog.exerciseIdEdit.text()),
+                    dialog.shortNameEdit.text(),
+                    dialog.longNameEdit.text()
+                ]
+            self.toCommit["alternatives"].append(data)
+            self.customDataChanged.emit()
+        else:
+            pass
+
+    def onAlternativeCountChanged(self):
+        if len(self.toCommit["alternatives"]) == 0:
+            self.deleteAlternativeButton.setEnabled(False)
+        else:
+            self.deleteAlternativeButton.setEnabled(True)
 
     def onDeleteAlternative(self):
+        # implement a CustomDeleteAlternativeDialog
+        # (also but for a different purpose: CustomDeleteNoteDialog)
         pass
 
     def onExerciseNumChanged(self, value):
@@ -842,7 +875,14 @@ if __name__ == "__main__":
 
             self.dialog = CustomNewTrainingroutineDialog(self)
             if self.dialog.result():
-                sys.exit()
+                data = [
+                        self.dialog.nameEdit.text(),
+                        self.dialog.modeEdit.currentText(),
+                        self.dialog.numberEdit.value(),
+                        self.dialog.editor.model()
+                    ]
+                self.dialog.toCommit["routine"] = data
+                print(self.dialog.toCommit)
             else:
                 sys.exit()
 
