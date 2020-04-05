@@ -487,7 +487,6 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
 
     def __init__(self, *args):
         super().__init__(*args)
-        self.setGeometry(200,100,800,500)
         self.setWindowTitle("Create a new Trainingroutine")
         self.data = {"exerciseDefaultNumber":0,
                      "exercises":[
@@ -496,27 +495,45 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
                              "Klimmzüge",
                              "Kniebeugen",
                              "Seitenheben",
+                         ],
+                     "modes":[
+                             "Gym",
+                             "Running",
                          ]
                      }
 
         # 1: Groups
         self.inputGroup = QtWidgets.QWidget(self)
+        self.inputSubGroup1 = QtWidgets.QWidget(self.inputGroup)
+        self.inputSubGroup2 = QtWidgets.QWidget(self.inputGroup)
         self.editorGroup = QtWidgets.QWidget(self)
         self.buttonGroup = QtWidgets.QWidget(self)
 
         # 2: Layouts
         self.mainLayout = QtWidgets.QVBoxLayout(self)
-        self.inputLayout = QtWidgets.QFormLayout(self.inputGroup)
+        self.inputLayout = QtWidgets.QHBoxLayout(self.inputGroup)
+        self.inputSubLayout1 = QtWidgets.QFormLayout(self.inputSubGroup1)
+        self.inputSubLayout2 = QtWidgets.QGridLayout(self.inputSubGroup2)
         self.editorLayout = QtWidgets.QVBoxLayout(self.editorGroup)
         self.buttonLayout = QtWidgets.QHBoxLayout(self.buttonGroup)
 
         # 3: Members
-        self.nameEdit = QtWidgets.QLineEdit(self.inputGroup)
-        self.modeEdit = QtWidgets.QComboBox(self.inputGroup)
-        self.numberEdit = CustomSpinBox(self.inputGroup)
+        self.nameEdit = QtWidgets.QLineEdit(self.inputSubGroup1)
+        self.nameEdit.setPlaceholderText("Enter new Name here...")
+        self.modeEdit = QtWidgets.QComboBox(self.inputSubGroup1)
+        self.modeEdit.insertItems(0,self.data["modes"])
+        self.numberEdit = CustomSpinBox(self.inputSubGroup1)
         self.numberEdit.setMinimum(0)
         self.numberEdit.setValue(self.data["exerciseDefaultNumber"])
         self.numberEdit.setMaximum(20)
+        self.addAlternativeButton = QtWidgets.QPushButton(
+                "Add Alternative",
+                self.inputSubGroup2
+            )
+        self.deleteAlternativeButton = QtWidgets.QPushButton(
+                "Delete Alternative",
+                self.inputSubGroup2
+            )
         self.editor = GraphicalRoutineEditor(parent = self.editorGroup)
         self.acceptButton = QtWidgets.QPushButton("OK", self.buttonGroup)
         self.acceptButton.setDefault(True)
@@ -527,11 +544,26 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
         self.mainLayout.addWidget(self.editorGroup)
         self.mainLayout.addWidget(self.buttonGroup)
 
-        self.inputLayout.setContentsMargins(0,0,0,0)
+        self.inputLayout.addWidget(self.inputSubGroup1)
         self.inputLayout.addStretch()
-        self.inputLayout.addRow("Name", self.nameEdit)
-        self.inputLayout.addRow("Trainingmode", self.modeEdit)
-        self.inputLayout.addRow("Nuber of Exercises", self.numberEdit)
+        self.inputLayout.addWidget(self.inputSubGroup2)
+
+        self.inputSubLayout1.setContentsMargins(0,0,0,0)
+        self.inputSubLayout1.addRow("Name", self.nameEdit)
+        self.inputSubLayout1.addRow("Trainingmode", self.modeEdit)
+        self.inputSubLayout1.addRow("Nuber of Exercises", self.numberEdit)
+
+        self.inputSubLayout2.setContentsMargins(0,0,0,0)
+        self.inputSubLayout2.addWidget(self.addAlternativeButton,0,0)
+        self.inputSubLayout2.addWidget(self.deleteAlternativeButton,1,0)
+        self.inputSubLayout2.addItem(
+                QtWidgets.QSpacerItem(
+                        0,self.addAlternativeButton.sizeHint().height(),
+                        QtWidgets.QSizePolicy.Minimum,
+                        QtWidgets.QSizePolicy.Minimum
+                    ),
+                2,0
+            )
 
         self.editorLayout.setContentsMargins(0,0,0,0)
         self.editorLayout.addWidget(self.editor)
@@ -541,16 +573,172 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
         self.buttonLayout.addWidget(self.acceptButton)
         self.buttonLayout.addWidget(self.rejectButton)
 
-        # 5: Connections
+        # 5: PushButton Modality
+        self.acceptButton.setEnabled(False)
+
+        # 6: Connections
+        self.nameEdit.textEdited.connect(self.onNameEditValueChanged)
         self.numberEdit.valueChanged.connect(self.onExerciseNumChanged)
+
+        self.addAlternativeButton.clicked.connect(self.onAddAlternative)
+        self.deleteAlternativeButton.clicked.connect(self.onDeleteAlternative)
 
         self.acceptButton.clicked.connect(self.accept)
         self.rejectButton.clicked.connect(self.reject)
 
-        # 6: Help
+        # 7: Help
+        self.__setHelp()
 
-        # 7: Show Help
+        # 8: Window Geometry
+        # width = self.editor.horizontalHeader().length()
+        # self.setGeometry(200,100,width,500)
+        self.setGeometry(200,100,800,500)
+
+        # 9: Show Dialog
         self.exec()
+
+    def __setHelp(self):
+        # Name
+        whatsThis = """
+        <head>
+        <style>
+            p {text-align:left}
+        </style>
+        </head>
+
+        <p>
+            <b>Enter the Name for the new Trainingroutine.</b>
+        </p>
+
+        <p>
+        The Value entered must be a <i>character vector</i> or a <i>string scalar</i>!
+        </p>
+        """
+        toolTip = """
+        <p style='text-align:left'>
+        Enter the Name for the new Trainingroutine
+        </p>
+        """
+        self.nameEdit.setWhatsThis(whatsThis)
+        self.nameEdit.setToolTip(toolTip)
+
+        # Training Mode
+        whatsThis = """
+        <head>
+        <style>
+            p {text-align:left}
+        </style>
+        </head>
+
+        <p>
+            <b>Set the appropriate Training Mode.</b>
+        </p>
+
+        <p>
+        At This time only the Gym mode is supported.
+        </p>
+        """
+        toolTip = """
+        <p style='text-align:left'>
+        Set the appropraite Training Mode
+        </p>
+        """
+        self.modeEdit.setWhatsThis(whatsThis)
+        self.modeEdit.setToolTip(toolTip)
+
+        # Number of Exercises
+        whatsThis = """
+        <head>
+        <style>
+            p {text-align:left}
+        </style>
+        </head>
+
+        <p>
+            <b>Enter the Number of Excercises for the new Trainingroutine.</b>
+        </p>
+
+        <p>
+
+        The Value entered must be an <i>integer</i>!
+        </p>
+        """
+        toolTip = """
+        <p style='text-align:left'>
+        Enter the Number of Excercises for the new Trainingroutine
+        </p>
+        """
+        self.numberEdit.setWhatsThis(whatsThis)
+        self.numberEdit.setToolTip(toolTip)
+
+        # Add Alternative Button
+        whatsThis = """
+        <head>
+        <style>
+            p {text-align:left}
+        </style>
+        </head>
+
+        <p>
+            <b>Add a new Trainingalternative to the current Trainingroutine.</b>
+        </p>
+        """
+        toolTip = """
+        <p style='text-align:left'>
+        Add a new Trainingalternative to the current Trainingroutine
+        </p>
+        """
+        self.addAlternativeButton.setWhatsThis(whatsThis)
+        self.addAlternativeButton.setToolTip(toolTip)
+
+        # Delete Alternative Button
+        whatsThis = """
+        <head>
+        <style>
+            p {text-align:left}
+        </style>
+        </head>
+
+        <p>
+            <b>Add a new Trainingnote to the current Trainingroutine.</b>
+        </p>
+        """
+        toolTip = """
+        <p style='text-align:left'>
+        Add a new Trainingnote to the current Trainingroutine
+        </p>
+        """
+        self.deleteAlternativeButton.setWhatsThis(whatsThis)
+        self.deleteAlternativeButton.setToolTip(toolTip)
+
+        # Editor
+        whatsThis = """
+        <head>
+        <style>
+            p {text-align:left}
+        </style>
+        </head>
+
+        <p>
+            <b>Editor:</b>
+        </p>
+        <p>
+        The Editor shows the Blueprint for the new Trainingroutine.
+        </p>
+        """
+        toolTip = """
+        <p style='text-align:left'>
+        The Editor shows the Blueprint for the new Trainingroutine
+        </p>
+        """
+        self.editor.setWhatsThis(whatsThis)
+        self.editor.setToolTip(toolTip)
+
+    def onAddAlternative(self):
+        pass
+
+    def onDeleteAlternative(self):
+        pass
 
     def onExerciseNumChanged(self, value):
         oldValue = self.numberEdit.oldValue()
@@ -569,6 +757,12 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
                 combo = QtWidgets.QComboBox(self.editor)
                 combo.insertItems(0, self.data["exercises"])
                 self.editor.setIndexWidget(index, combo)
+
+    def onNameEditValueChanged(self, value):
+        if self.nameEdit.text() == "":
+            self.acceptButton.setEnabled(False)
+        else:
+            self.acceptButton.setEnabled(True)
 
 class CustomScrollArea(QtWidgets.QScrollArea):
 
