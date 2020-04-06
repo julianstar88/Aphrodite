@@ -294,6 +294,20 @@ class CustomBoxLayout(QtWidgets.QBoxLayout):
         super().__init__(*args, **kwargs)
         self.setSizeConstraint(QtWidgets.QBoxLayout.SetMinAndMaxSize)
 
+class CustomDeleteAlternativeDialog(QtWidgets.QDialog):
+
+    # TODO: Implement the Delete Functionality
+
+    def __init__(self, *args):
+        super().__init__(*args)
+
+class CustomDeleteNoteDialog(QtWidgets.QDialog):
+
+    # TODO: Implement the Delete Functionality
+
+    def __init__(self, *args):
+        super().__init__(*args)
+
 class CustomEventFilter(QtCore.QObject):
 
     def __init__(self, *args):
@@ -339,7 +353,6 @@ class CustomModelItem(QtGui.QStandardItem):
             short = "alternative {num}".format(num = str(len(type(self).trainingAlternatives) + 1))
 
         data = [
-                alternativeID,
                 exerciseID,
                 label,
                 short,
@@ -542,12 +555,14 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
                 "Add Alternative",
                 self.inputSubGroup2
             )
-        self.deleteAlternativeButton = QtWidgets.QPushButton(
-                "Delete Alternative",
+        self.deleteAlternativesButton = QtWidgets.QPushButton(
+                "Delete Alternatives",
                 self.inputSubGroup2
             )
-        self.deleteAlternativeButton.setEnabled(False)
+        self.deleteAlternativesButton.setEnabled(False)
         self.editor = GraphicalRoutineEditor(parent = self.editorGroup)
+        self.alternativeEditor = GraphicalRoutineEditor(parent = self.editorGroup)
+        self.alternativeEditor.setHidden(True)
         self.acceptButton = QtWidgets.QPushButton("OK", self.buttonGroup)
         self.acceptButton.setDefault(True)
         self.rejectButton = QtWidgets.QPushButton("Cancel", self.buttonGroup)
@@ -557,6 +572,7 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
         self.mainLayout.addWidget(self.editorGroup)
         self.mainLayout.addWidget(self.buttonGroup)
 
+        self.inputLayout.setContentsMargins(0,0,0,0)
         self.inputLayout.addWidget(self.inputSubGroup1)
         self.inputLayout.addStretch()
         self.inputLayout.addWidget(self.inputSubGroup2)
@@ -568,7 +584,7 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
 
         self.inputSubLayout2.setContentsMargins(0,0,0,0)
         self.inputSubLayout2.addWidget(self.addAlternativeButton,0,0)
-        self.inputSubLayout2.addWidget(self.deleteAlternativeButton,1,0)
+        self.inputSubLayout2.addWidget(self.deleteAlternativesButton,1,0)
         self.inputSubLayout2.addItem(
                 QtWidgets.QSpacerItem(
                         0,self.addAlternativeButton.sizeHint().height(),
@@ -580,6 +596,7 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
 
         self.editorLayout.setContentsMargins(0,0,0,0)
         self.editorLayout.addWidget(self.editor)
+        self.editorLayout.addWidget(self.alternativeEditor)
 
         self.buttonLayout.setContentsMargins(0,0,0,0)
         self.buttonLayout.addStretch()
@@ -594,7 +611,7 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
         self.numberEdit.valueChanged.connect(self.onExerciseNumChanged)
 
         self.addAlternativeButton.clicked.connect(self.onAddAlternative)
-        self.deleteAlternativeButton.clicked.connect(self.onDeleteAlternative)
+        self.deleteAlternativesButton.clicked.connect(self.onDeleteAlternatives)
 
         self.customDataChanged.connect(self.onAlternativeCountChanged)
 
@@ -723,8 +740,8 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
         Delete an added Trainingalternative
         </p>
         """
-        self.deleteAlternativeButton.setWhatsThis(whatsThis)
-        self.deleteAlternativeButton.setToolTip(toolTip)
+        self.deleteAlternativesButton.setWhatsThis(whatsThis)
+        self.deleteAlternativesButton.setToolTip(toolTip)
 
         # Editor
         whatsThis = """
@@ -749,6 +766,25 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
         self.editor.setWhatsThis(whatsThis)
         self.editor.setToolTip(toolTip)
 
+    def appendAlternative(self, data):
+        model = self.alternativeEditor.model()
+        items = [QtGui.QStandardItem(None) for item in range(model.columnCount())]
+        text = "{num}) {name}".format(num = data[0], name = data[2])
+        items[0].setData(text, role = QtCore.Qt.DisplayRole)
+        model.appendRow(items)
+        self.alternativeEditor.setHidden(False)
+
+    def deleteAlternatives(self):
+        model = self.alternativeEditor.model()
+        oldRows = model.rowCount()
+        for i in range(model.rowCount()):
+            model.removeRow(i)
+        self.alternativeEditor.rowCountChanged(oldRows, 0)
+        self.alternativeEditor.setHidden(True)
+        self.toCommit["alternatives"] = []
+        self.customDataChanged.emit()
+
+
     def onAddAlternative(self):
         dialog = CustomAddAlternativeDialog(self)
         if dialog.result():
@@ -757,6 +793,7 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
                     dialog.shortNameEdit.text(),
                     dialog.longNameEdit.text()
                 ]
+            self.appendAlternative(data)
             self.toCommit["alternatives"].append(data)
             self.customDataChanged.emit()
         else:
@@ -764,14 +801,12 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
 
     def onAlternativeCountChanged(self):
         if len(self.toCommit["alternatives"]) == 0:
-            self.deleteAlternativeButton.setEnabled(False)
+            self.deleteAlternativesButton.setEnabled(False)
         else:
-            self.deleteAlternativeButton.setEnabled(True)
+            self.deleteAlternativesButton.setEnabled(True)
 
-    def onDeleteAlternative(self):
-        # implement a CustomDeleteAlternativeDialog
-        # (also but for a different purpose: CustomDeleteNoteDialog)
-        pass
+    def onDeleteAlternatives(self):
+        self.deleteAlternatives()
 
     def onExerciseNumChanged(self, value):
         oldValue = self.numberEdit.oldValue()
