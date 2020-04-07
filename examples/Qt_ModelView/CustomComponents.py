@@ -368,18 +368,13 @@ class CustomModelItem(QtGui.QStandardItem):
                 ]
         type(self).trainingAlternatives.append(data)
 
-    def addTrainingNote(self, note, noteID = None, label = None, short = None):
-        if not noteID:
-            noteID = len(type(self).trainingNotes) + 1
+    def addTrainingNote(self, exerciseID, short, note, label = None,):
 
         if not label:
             label = type(self).lowercaseLetters[len(type(self).trainingNotes)]
 
-        if not short:
-            short = "note {num}".format(num = str(len(type(self).trainingNotes) + 1))
-
         data = [
-                noteID,
+                exerciseID,
                 label,
                 short,
                 note,
@@ -402,7 +397,6 @@ class CustomModelItem(QtGui.QStandardItem):
                 short TEXT,
                 alternativ TEXT,
                 Sets TEXT,
-                Repititions TEXT,
                 Repetitions TEXT,
                 Warm_Up TEXT,
                 Week_1 TEXT,
@@ -438,6 +432,7 @@ class CustomModelItem(QtGui.QStandardItem):
 
             # 2: create a new table
             values = """
+                        exerciseID INT,
                         label TEXT,
                         short TEXT,
                         note TEXT

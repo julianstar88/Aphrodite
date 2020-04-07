@@ -16,7 +16,7 @@ class CustomSqlModel(QtGui.QStandardItemModel):
     ObjectType = "CustomSqlModel"
     itemChanged = QtCore.pyqtSignal(CustomModelItem, bool)
 
-    def __init__(self, database, table = "training_routine", parent = None,
+    def __init__(self, database = None, table = "training_routine", parent = None,
                  tableStartIndex = 1, valueStartIndex = 1):
 
         super().__init__(parent)
@@ -27,6 +27,25 @@ class CustomSqlModel(QtGui.QStandardItemModel):
         self.valueStartIndex = valueStartIndex
 
         self.itemChanged.connect(self.onItemChanged)
+
+    def commitTableToDatabase(self):
+        con = sqlite3.connect(self.database)
+        with con:
+            c = con.cursor()
+
+            sqlCommand = "DROP FROM {name}".format(
+                    name = self.table
+                )
+            c.execute(sqlCommand)
+
+            sqlCommand = "SELECT * FROM {name} WHERE id = 1".format(
+                    name = self.table
+                )
+            c.execute(sqlCommand)
+            data = c.fetchall()
+            print(data)
+
+        # TODO: insert new <table> into databse
 
     def data(self, index, role):
 

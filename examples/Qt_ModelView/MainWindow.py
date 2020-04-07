@@ -23,14 +23,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.layout = CustomBoxLayout(QtWidgets.QBoxLayout.TopToBottom, self.widget)
 
         self.model = CustomSqlModel(
-                "database/test_database.db",
+                database = "database/test_database.db",
                 table = "training_routine",
                 tableStartIndex = 0,
             )
         self.model.populateModel()
 
         self.model2 = CustomSqlModel(
-                "database/test_database.db",
+                database = "database/test_database.db",
                 table = "training_alternatives",
                 tableStartIndex = 3,
             )

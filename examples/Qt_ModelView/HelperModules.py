@@ -4,6 +4,7 @@ Created on Tue Mar 17 23:56:40 2020
 
 @author: Julian
 """
+# from CustomModel import CustomSqlModel
 
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvas
@@ -60,6 +61,7 @@ class GraphicalRoutineEditor(QtWidgets.QTableView):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.__model = QtGui.QStandardItemModel(0, 10, self)
+        # self.__nodel = CustomSqlModel()
         self.__model.setHorizontalHeaderLabels(["Excercise",
                                               "Sets",
                                               "Reps",
