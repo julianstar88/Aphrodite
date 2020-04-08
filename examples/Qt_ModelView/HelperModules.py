@@ -4,14 +4,36 @@ Created on Tue Mar 17 23:56:40 2020
 
 @author: Julian
 """
-# from CustomModel import CustomSqlModel
+import sqlite3
 
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvas
 
 from PyQt5 import QtGui, QtWidgets
 
-def createCanvas(mathText, color = "none", fontSize = 15, dpi = 100,
+def CommitTableToDatabase(database, table):
+
+    # TODO: Obsolete
+
+    con = sqlite3.connect(database)
+    with con:
+        c = con.cursor()
+
+        sqlCommand = "DROP FROM {name}".format(
+                name = table
+            )
+        c.execute(sqlCommand)
+
+        sqlCommand = "SELECT * FROM {name} WHERE id = 1".format(
+                name = table
+            )
+        c.execute(sqlCommand)
+        data = c.fetchall()
+        print(data)
+
+    # TODO: insert new <table> into databse
+
+def CreateCanvas(mathText, color = "none", fontSize = 15, dpi = 100,
                   fontStyle = "normal", fontWeight = "normal",
                   fontColor = "black",
                   horizontalAlignment = "left",
@@ -49,8 +71,11 @@ def createCanvas(mathText, color = "none", fontSize = 15, dpi = 100,
 
     return canvas
 
+def CreateDatabase(database):
+    # TODO: Obsolete
+    pass
 
-def createQPixmap(canvas):
+def CreateQPixmap(canvas):
     buf, size = canvas.print_to_buffer()
     qimage = QtGui.QImage(buf, size[0], size[1], QtGui.QImage.Format_ARGB32)
     qpixmap = QtGui.QPixmap(qimage)
@@ -61,7 +86,6 @@ class GraphicalRoutineEditor(QtWidgets.QTableView):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.__model = QtGui.QStandardItemModel(0, 10, self)
-        # self.__nodel = CustomSqlModel()
         self.__model.setHorizontalHeaderLabels(["Excercise",
                                               "Sets",
                                               "Reps",
@@ -85,9 +109,5 @@ class GraphicalRoutineEditor(QtWidgets.QTableView):
     def model(self):
         return self.__model
 
-
-
-
 if __name__ == "__main__":
-
-    canvas = createCanvas("test$^2$")
+    pass

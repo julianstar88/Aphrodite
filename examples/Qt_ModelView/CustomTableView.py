@@ -7,7 +7,7 @@ Created on Tue Mar 17 23:54:54 2020
 
 from PyQt5 import QtWidgets, QtCore
 from CustomHeaderview import CustomHeader
-from HelperModules import createCanvas, createQPixmap
+from HelperModules import CreateCanvas, CreateQPixmap
 from CustomComponents import CustomLabel
 from CustomDelegate import CustomItemDelegate
 
@@ -131,10 +131,10 @@ class CustomModelView(QtWidgets.QTableView):
             color = "black"
 
         for i, label in enumerate(headerLabels):
-            canvas = createCanvas(label, fontSize = fontSize, fontWeight = fontWeight,
+            canvas = CreateCanvas(label, fontSize = fontSize, fontWeight = fontWeight,
                                   fontColor = color)
 
-            pixmap = createQPixmap(canvas)
+            pixmap = CreateQPixmap(canvas)
             qpixmaps.append(pixmap)
             self.setColumnWidth(i, pixmap.size().width())
 
@@ -166,8 +166,8 @@ class CustomModelView(QtWidgets.QTableView):
 
             labelText = self.__createLabelText(item, labelMode)
 
-            canvas = createCanvas(labelText, fontSize = 10)
-            qpixmap = createQPixmap(canvas)
+            canvas = CreateCanvas(labelText, fontSize = 10)
+            qpixmap = CreateQPixmap(canvas)
             label = CustomLabel(qpixmap)
             label.item = item
             item.setData("", role = QtCore.Qt.DisplayRole)

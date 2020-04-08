@@ -6,9 +6,14 @@ Created on Tue Mar 17 23:57:11 2020
 """
 import sqlite3
 import string
+
+import os
 import sys
+path = os.getcwd()
+sys.path.append("C:/Users/Julian/Documents/Python/Projekte/Aphrodite/examples/SQLite3_Database")
 
 from HelperModules import GraphicalRoutineEditor
+from Database import database
 
 from PyQt5 import QtWidgets, QtCore, QtGui
 
@@ -520,7 +525,7 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
                              "Running",
                          ]
                      }
-        self.toCommit = {"routine":None, "alternatives":list()}
+        self.toCommit = {"training_routine":None, "training_alternatives":list()}
 
         # 1: Groups
         self.inputGroup = QtWidgets.QWidget(self)
@@ -611,6 +616,7 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
         self.customDataChanged.connect(self.onAlternativeCountChanged)
 
         self.acceptButton.clicked.connect(self.accept)
+        self.acceptButton.clicked.connect(self.onAcceptButtonClicked)
         self.rejectButton.clicked.connect(self.reject)
 
         # 7: Help
@@ -764,7 +770,7 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
     def appendAlternative(self, data):
         model = self.alternativeEditor.model()
         items = [QtGui.QStandardItem(None) for item in range(model.columnCount())]
-        text = "{num}) {name}".format(num = data[0], name = data[2])
+        text = "{num}) {name}".format(num = data[0], name = data[3])
         items[0].setData(text, role = QtCore.Qt.DisplayRole)
         model.appendRow(items)
         self.alternativeEditor.setHidden(False)
@@ -772,30 +778,42 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
     def deleteAlternatives(self):
         model = self.alternativeEditor.model()
         oldRows = model.rowCount()
-        for i in range(model.rowCount()):
+        print(model.rowCount())
+        for i in range(model.rowCount(), -1, -1):
             model.removeRow(i)
+        print(model.rowCount())
         self.alternativeEditor.rowCountChanged(oldRows, 0)
         self.alternativeEditor.setHidden(True)
-        self.toCommit["alternatives"] = []
+        self.toCommit["training_alternatives"] = []
         self.customDataChanged.emit()
 
+    def onAcceptButtonClicked(self):
+        data = [
+                self.nameEdit.text(),
+                self.modeEdit.currentText(),
+                self.numberEdit.value(),
+                self.editor.model()
+            ]
+        self.toCommit["training_routine"] = data
 
     def onAddAlternative(self):
         dialog = CustomAddAlternativeDialog(self)
         if dialog.result():
             data = [
                     eval(dialog.exerciseIdEdit.text()),
+                    str(len(self.toCommit["training_alternatives"])+1),
                     dialog.shortNameEdit.text(),
-                    dialog.longNameEdit.text()
+                    dialog.longNameEdit.text(),
                 ]
             self.appendAlternative(data)
-            self.toCommit["alternatives"].append(data)
+            data.append(self.alternativeEditor.model())
+            self.toCommit["training_alternatives"].append(data)
             self.customDataChanged.emit()
         else:
             pass
 
     def onAlternativeCountChanged(self):
-        if len(self.toCommit["alternatives"]) == 0:
+        if len(self.toCommit["training_alternatives"]) == 0:
             self.deleteAlternativesButton.setEnabled(False)
         else:
             self.deleteAlternativesButton.setEnabled(True)
@@ -905,14 +923,67 @@ if __name__ == "__main__":
 
             self.dialog = CustomNewTrainingroutineDialog(self)
             if self.dialog.result():
-                data = [
-                        self.dialog.nameEdit.text(),
-                        self.dialog.modeEdit.currentText(),
-                        self.dialog.numberEdit.value(),
-                        self.dialog.editor.model()
-                    ]
-                self.dialog.toCommit["routine"] = data
-                print(self.dialog.toCommit)
+                dbCreator = database("database")
+                dbName = self.dialog.toCommit["training_routine"][0]
+                columnNames = ( ("Exercise", "TEXT"),
+                                ("Sets", "TEXT"),
+                                ("Repetitions", "TEXT"),
+                                ("Warm_Up", "TEXT"),
+                                ("Week_1", "TEXT"),
+                                ("Week_2", "TEXT"),
+                                ("Week_3", "TEXT"),
+                                ("Week_4", "TEXT"),
+                                ("Week_5", "TEXT"),
+                                ("Week_6", "TEXT"))
+                dbCreator.createTable(dbName,
+                                      "training_routine",
+                                      columnNames
+                                      )
+
+                columnNames = (
+                        ("exerciseID", "INT"),
+                        ("label", "TEXT"),
+                        ("short", "TEXT"),
+                        ("alternative", "TEXT"),
+                        ("Sets", "TEXT"),
+                        ("Repetitions", "TEXT"),
+                        ("Warm_Up", "TEXT"),
+                        ("Week_1", "TEXT"),
+                        ("Week_2", "TEXT"),
+                        ("Week_3", "TEXT"),
+                        ("Week_4", "TEXT"),
+                        ("Week_5", "TEXT"),
+                        ("Week_6", "TEXT")
+                    )
+                dbCreator.createTable(dbName,
+                                      "training_alternatives",
+                                      columnNames
+                                      )
+
+                for i in range(len(self.dialog.toCommit["training_alternatives"])):
+                    data = self.dialog.toCommit["training_alternatives"][i][0:4]
+                    model = self.dialog.toCommit["training_alternatives"][i][4]
+                    values = []
+                    for n in range(1,model.columnCount(),1):
+                        values.append(model.item(i,n).data(role = QtCore.Qt.DisplayRole))
+                    insert = [data[0], data[1], data[2], data[3]]
+                    insert.extend(values)
+                    dbCreator.addEntry(dbName,
+                                       "training_alternatives",
+                                       insert)
+
+                columnNames = (
+                        ("exerciseID", "INT"),
+                        ("label", "TEXT"),
+                        ("short", "TEXT"),
+                        ("note", "TEXT")
+                    )
+                dbCreator.createTable(dbName,
+                                      "training_notes",
+                                      columnNames
+                                      )
+
+                # sys.exit()
             else:
                 sys.exit()
 
