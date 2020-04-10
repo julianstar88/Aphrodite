@@ -27,6 +27,7 @@ class CustomModelView(QtWidgets.QTableView):
         self.setHorizontalHeader(CustomHeader(self))
         self.verticalHeader().hide()
         self.exerciseNameColumn = exerciseNameColumn
+        self.setColumnHidden(self.model().columnCount()-1, True)
 
         #click mode evaluation
         self.timer = QtCore.QTimer()

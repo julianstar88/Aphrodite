@@ -7,12 +7,14 @@ Created on Tue Mar 17 23:57:11 2020
 import sqlite3
 import string
 
+import functools
+
 import os
 import sys
 path = os.getcwd()
 sys.path.append("C:/Users/Julian/Documents/Python/Projekte/Aphrodite/examples/SQLite3_Database")
 
-from HelperModules import GraphicalRoutineEditor
+from HelperModules import GraphicalRoutineEditor, CreateCanvas, CreateQPixmap
 from Database import database
 
 from PyQt5 import QtWidgets, QtCore, QtGui
@@ -299,6 +301,65 @@ class CustomBoxLayout(QtWidgets.QBoxLayout):
         super().__init__(*args, **kwargs)
         self.setSizeConstraint(QtWidgets.QBoxLayout.SetMinAndMaxSize)
 
+class CustomComboBox(QtWidgets.QComboBox):
+
+    ObjectType = "CustomComboBox"
+    customDataChanged = QtCore.pyqtSignal("QModelIndex", list, str)
+
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.text = {
+                "exercises_gym":[
+                        "Bankdrücken KH",
+                        "Bankdürcken LH",
+                        "Klimmzüge",
+                        "Kniebeugen",
+                        "Seitenheben KH",
+                        "Seitenheben M",
+                    ],
+                "exercises_running":[
+                        "2K Interval",
+                        "4K Interval",
+                        "8K Interval",
+                        "10K Interval",
+                        "15K Interval",
+                        "20K Interval",
+                        "Halfmarathon",
+                        "Long Distance"
+                    ],
+                "modes":[
+                        "gym",
+                        "interval",
+                        "distance"
+                    ]
+            }
+
+    def insertItems(self, index, itemList, mode):
+        if mode:
+            if mode == "gym":
+                itemList = self.text["exercises_gym"]
+            elif mode == "intervall":
+                itemList = self.text["exercises_running"]
+            elif mode == "distance":
+                itemList = self.text["exercises_running"]
+            elif mode == "modes":
+                itemList = self.text["modes"]
+
+        super().insertItems(index, itemList)
+
+    def keyPressEvent(self, event):
+        print(event)
+        super().keyPressEvent(event)
+
+    def mousePressEvent(self, event):
+        print(event)
+        super().mousePressEvent(event)
+
+    def wheelEvent(self, event):
+        print(self.parent().model())
+        super().wheelEvent(event)
+
+
 class CustomDeleteAlternativeDialog(QtWidgets.QDialog):
 
     # TODO: Implement the Delete Functionality
@@ -512,19 +573,8 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
     def __init__(self, *args):
         super().__init__(*args)
         self.setWindowTitle("Create a new Trainingroutine")
-        self.data = {"exerciseDefaultNumber":0,
-                     "exercises":[
-                             None,
-                             "Bankdürcken",
-                             "Klimmzüge",
-                             "Kniebeugen",
-                             "Seitenheben",
-                         ],
-                     "modes":[
-                             "Gym",
-                             "Running",
-                         ]
-                     }
+        self.data = {"exerciseDefaultNumber":0}
+
         self.toCommit = {"training_routine":None, "training_alternatives":list()}
 
         # 1: Groups
@@ -545,8 +595,8 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
         # 3: Members
         self.nameEdit = QtWidgets.QLineEdit(self.inputSubGroup1)
         self.nameEdit.setPlaceholderText("Enter new Name here...")
-        self.modeEdit = QtWidgets.QComboBox(self.inputSubGroup1)
-        self.modeEdit.insertItems(0,self.data["modes"])
+        self.modeEdit = CustomComboBox(self.inputSubGroup1)
+        self.modeEdit.insertItems(0, [], mode = "modes")
         self.numberEdit = CustomSpinBox(self.inputSubGroup1)
         self.numberEdit.setMinimum(0)
         self.numberEdit.setValue(self.data["exerciseDefaultNumber"])
@@ -623,9 +673,9 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
         self.__setHelp()
 
         # 8: Window Geometry
-        # width = self.editor.horizontalHeader().length()
-        # self.setGeometry(200,100,width,500)
-        self.setGeometry(200,100,800,500)
+        width = self.editor.horizontalHeader().length()
+        self.setGeometry(200,100,width,500)
+        # self.setGeometry(200,100,800,500)
 
         # 9: Show Dialog
         self.exec()
@@ -778,10 +828,8 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
     def deleteAlternatives(self):
         model = self.alternativeEditor.model()
         oldRows = model.rowCount()
-        print(model.rowCount())
         for i in range(model.rowCount(), -1, -1):
             model.removeRow(i)
-        print(model.rowCount())
         self.alternativeEditor.rowCountChanged(oldRows, 0)
         self.alternativeEditor.setHidden(True)
         self.toCommit["training_alternatives"] = []
@@ -822,6 +870,7 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
         self.deleteAlternatives()
 
     def onExerciseNumChanged(self, value):
+
         oldValue = self.numberEdit.oldValue()
         diff = value-oldValue
         model = self.editor.model()
@@ -834,10 +883,19 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
                 items = [QtGui.QStandardItem(None) for item in range(model.columnCount())]
                 model.appendRow(items)
             for i in range(oldValue, value+1, 1):
+                index = model.index(i, 10)
+                comboMode = CustomComboBox(self.editor)
+                comboMode.insertItems(0, [], mode = "modes")
+                self.editor.setIndexWidget(index, comboMode)
+
                 index = model.index(i, 0)
-                combo = QtWidgets.QComboBox(self.editor)
-                combo.insertItems(0, self.data["exercises"])
-                self.editor.setIndexWidget(index, combo)
+                comboAlt = CustomComboBox(self.editor)
+                comboAlt.insertItems(0, [], mode = "gym")
+                self.editor.setIndexWidget(index, comboAlt)
+
+                comboMode.customDataChanged.connect(
+                        comboAlt.insertItems
+                    )
 
     def onNameEditValueChanged(self, value):
         if self.nameEdit.text() == "":
@@ -889,8 +947,16 @@ class CustomStandardEditorWidget(QtWidgets.QWidget):
         self.setAutoFillBackground(True)
 
         self.layout = QtWidgets.QVBoxLayout(self)
-        self.label = QtWidgets.QLabel(self.message, self)
+        self.label = QtWidgets.QLabel(self)
         self.edit = QtWidgets.QLineEdit("Enter new Value", self)
+
+        canvas = CreateCanvas(
+                self.message,
+                fontSize = 9,
+            )
+        pixmap = CreateQPixmap(canvas)
+        self.label.setPixmap(pixmap)
+
         self.layout.addWidget(self.label)
         self.layout.addWidget(self.edit)
 
@@ -934,11 +1000,27 @@ if __name__ == "__main__":
                                 ("Week_3", "TEXT"),
                                 ("Week_4", "TEXT"),
                                 ("Week_5", "TEXT"),
-                                ("Week_6", "TEXT"))
+                                ("Week_6", "TEXT"),
+                                ("mode", "TEXT"),
+                            )
                 dbCreator.createTable(dbName,
                                       "training_routine",
                                       columnNames
                                       )
+                model = self.dialog.toCommit["training_routine"][3]
+                for i in range(model.rowCount()):
+                    insert = []
+                    for n in range(model.columnCount()):
+                        if n == 0:
+                            index = model.index(i,n)
+                            widget = self.dialog.editor.indexWidget(index)
+                            insert.append(widget.currentText())
+                        else:
+                            text = model.item(i,n).data(role = QtCore.Qt.DisplayRole)
+                            insert.append(text)
+                    dbCreator.addEntry(dbName,
+                                       "training_routine",
+                                       insert)
 
                 columnNames = (
                         ("exerciseID", "INT"),
@@ -953,7 +1035,8 @@ if __name__ == "__main__":
                         ("Week_3", "TEXT"),
                         ("Week_4", "TEXT"),
                         ("Week_5", "TEXT"),
-                        ("Week_6", "TEXT")
+                        ("Week_6", "TEXT"),
+                        ("mode", "TEXT"),
                     )
                 dbCreator.createTable(dbName,
                                       "training_alternatives",
@@ -983,7 +1066,7 @@ if __name__ == "__main__":
                                       columnNames
                                       )
 
-                # sys.exit()
+                sys.exit()
             else:
                 sys.exit()
 

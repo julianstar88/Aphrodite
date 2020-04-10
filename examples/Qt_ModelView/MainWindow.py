@@ -23,14 +23,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.layout = CustomBoxLayout(QtWidgets.QBoxLayout.TopToBottom, self.widget)
 
         self.model = CustomSqlModel(
-                database = "database/test_database.db",
+                database = "database/test_database_2.db",
                 table = "training_routine",
                 tableStartIndex = 0,
             )
         self.model.populateModel()
 
         self.model2 = CustomSqlModel(
-                database = "database/test_database.db",
+                database = "database/test_database_2.db",
                 table = "training_alternatives",
                 tableStartIndex = 3,
             )
@@ -47,11 +47,26 @@ class MainWindow(QtWidgets.QMainWindow):
                 "Week 3",
                 "Week 4",
                 "Week 5",
-                "Week 6"
+                "Week 6",
+                "Mode"
+            ]
+
+        headerLabels2 = [
+                "Alternative",
+                "Sets",
+                "Reps",
+                "Warm Up",
+                "Week 1",
+                "Week 2",
+                "Week 3",
+                "Week 4",
+                "Week 5",
+                "Week 6",
+                "Mode"
             ]
 
         self.view = CustomModelView(self.model,
-                                    headerLabels,
+                                    headerLabels = headerLabels,
                                     fontSize = 15,
                                     fontWeight = "normal",
                                     fontStyle = "normal",
@@ -60,6 +75,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                 )
 
         self.view2 = CustomModelView(self.model2,
+                                    headerLabels = headerLabels2,
                                     fontSize = 15,
                                     fontWeight = "normal",
                                     fontStyle = "normal",

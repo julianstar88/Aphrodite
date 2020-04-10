@@ -26,12 +26,33 @@ class CustomItemDelegate(QtWidgets.QStyledItemDelegate):
 
     def __createMessage(self, index):
         col = index.column()
-        if col == 1:
-            message = "Sets [None]:"
-        elif col == 2:
-            message = "Repetitions [None]:"
+        row = index.row()
+        modeCol = self.parent().model().columnCount()-1
+        modeItem = self.parent().model().item(row, modeCol)
+        mode = modeItem.data(role = QtCore.Qt.DisplayRole)
+        if mode == "gym":
+            if col == 1:
+                message = "Sets:"
+            elif col == 2:
+                message = "Repetitions:"
+            else:
+                message = "$m~([m] = kg)$:"
+        elif mode == "interval":
+            if col == 1:
+                message = "Sets:"
+            elif col == 2:
+                message = "Repetitions:"
+            else:
+                message = "$\\overline{v}~([\\overline{v}] = \\frac{km}{h})$"
+        elif mode == "distance":
+            if col == 1:
+                message = "Sets:"
+            elif col == 2:
+                message = "Repititions:"
+            else:
+                message = "$s~([s] = km):$"
         else:
-            message = "Weight [kg]:"
+            message = "insert value:"
         return message
 
     def editorEvent(self, event, model, option, index):

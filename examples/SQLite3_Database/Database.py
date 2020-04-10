@@ -162,7 +162,7 @@ if __name__ == '__main__':
     # create database
     path = r"C:\Users\Julian\Documents\Python\Projekte\Aphrodite\examples\Qt_ModelView\database"
     db = database(path)
-    dbName = "test_database"
+    dbName = "test_database_2"
 
     columnNames = ( ("Exercise", "TEXT"),
                     ("Sets", "TEXT"),
@@ -173,7 +173,9 @@ if __name__ == '__main__':
                     ("Week_3", "TEXT"),
                     ("Week_4", "TEXT"),
                     ("Week_5", "TEXT"),
-                    ("Week_6", "TEXT"))
+                    ("Week_6", "TEXT"),
+                    ("mode", "TEXT"),
+                )
     db.createTable(dbName, "training_routine", columnNames)
 
     columnNames = (("exerciseID", "INT"),
@@ -188,7 +190,9 @@ if __name__ == '__main__':
                    ("Week_3", "TEXT"),
                    ("Week_4", "TEXT"),
                    ("Week_5", "TEXT"),
-                   ("Week_6", "TEXT"))
+                   ("Week_6", "TEXT"),
+                   ("mode", "TEXT"),
+                  )
     db.createTable(dbName, "training_alternatives", columnNames)
 
 
@@ -200,18 +204,18 @@ if __name__ == '__main__':
 
 
     training = [
-        ["Bankdrücken KH", "4", "RBD", "WBD", "BD1", "BD2", "BD3", "BD4", "BD5", "BD6"],
-        ["Klimmzüge", "4", "RKZ", "WKZ", "KZ1", "KL2", "KL3", "KL4", "KL5", "KL6"],
-        ["Kniebeugen", "4", "RKB", "WKB", "KB1", "KB2", "KB3", "KB4", "KN5", "KB6"],
-        ["Bizeps KH", "4", "RBZ", "WBZ", "BZ1", "BZ2", "BZ3", "BZ4", "BZ5", "BZ6"],
-        ["Trizeps Seilzug", "4", "RTZ", "WTZ", "TZ1", "TZ2", "TZ3", "TZ4", "TZ5", "TZ6"],
-        ["Seitenheben KH", "4", "RSH", "WSH", "SH1", "SH2", "SH3", "SH4", "SH5", "SH6"]]
+        ["Bankdrücken KH", "4", "RBD", "WBD", "BD1", "BD2", "BD3", "BD4", "BD5", "BD6", "gym"],
+        ["Klimmzüge", "4", "RKZ", "WKZ", "KZ1", "KL2", "KL3", "KL4", "KL5", "KL6", "gym"],
+        ["Kniebeugen", "4", "RKB", "WKB", "KB1", "KB2", "KB3", "KB4", "KN5", "KB6", "gym"],
+        ["Bizeps KH", "4", "RBZ", "WBZ", "BZ1", "BZ2", "BZ3", "BZ4", "BZ5", "BZ6", "gym"],
+        ["Trizeps Seilzug", "4", "RTZ", "WTZ", "TZ1", "TZ2", "TZ3", "TZ4", "TZ5", "TZ6", "gym"],
+        ["Seitenheben KH", "4", "RSH", "WSH", "SH1", "SH2", "SH3", "SH4", "SH5", "SH6", "gym"]]
     db.addManyEntries(dbName, "training_routine", training)
 
     trainingAlternatives = [
-            [1, "1", "Bankdrücken LH", "Bankdrücken LH", "4", "RBDA", "WBDA", "BDA1", "BDA2", "BDA3", "BDA4", "BDA5", "BDA6"],
-            [5, "2", "TZ Dips", "Trizeps Dips", "4", "RSHA", "WSHA", "SHA1", "SHA2", "SHA3", "SHA4", "SHA5", "SHA6"],
-            [6, "3", "SH Maschine", "Seitenheben Maschine", "4", "RSHA", "WSHA", "SHA1", "SHA2", "SHA3", "SHA4", "SHA5", "SHA6"],
+            [1, "1", "Bankdrücken LH", "Bankdrücken LH", "4", "RBDA", "WBDA", "BDA1", "BDA2", "BDA3", "BDA4", "BDA5", "BDA6", "gym"],
+            [5, "2", "TZ Dips", "Trizeps Dips", "4", "RSHA", "WSHA", "SHA1", "SHA2", "SHA3", "SHA4", "SHA5", "SHA6", "gym"],
+            [6, "3", "SH Maschine", "Seitenheben Maschine", "4", "RSHA", "WSHA", "SHA1", "SHA2", "SHA3", "SHA4", "SHA5", "SHA6", "gym"],
         ]
     db.addManyEntries(dbName, "training_alternatives", trainingAlternatives)
 

@@ -67,7 +67,8 @@ def CreateCanvas(mathText, color = "none", fontSize = 15, dpi = 100,
     fig.set_size_inches(fwidth, fheight)
 
     # vertical centering of text in figure
-    t.set_position((1.5/dpi, fheight/2))
+    t.set_position((1.5/dpi, fheight/1.5))
+    # t.set_position((1.5/dpi, fheight/2))
 
     return canvas
 
@@ -83,6 +84,8 @@ def CreateQPixmap(canvas):
 
 class GraphicalRoutineEditor(QtWidgets.QTableView):
 
+    ObjectType = "GraphicalRoutineEditor"
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.__model = QtGui.QStandardItemModel(0, 10, self)
@@ -95,7 +98,8 @@ class GraphicalRoutineEditor(QtWidgets.QTableView):
                                               "Week 3",
                                               "Week 4",
                                               "Week 5",
-                                              "Week 6"])
+                                              "Week 6",
+                                              "Mode"])
         self.setModel(self.model())
         self.setColumnResizeMode()
 
