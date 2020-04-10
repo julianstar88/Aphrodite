@@ -7,8 +7,6 @@ Created on Tue Mar 17 23:57:11 2020
 import sqlite3
 import string
 
-import functools
-
 import os
 import sys
 path = os.getcwd()
@@ -25,15 +23,26 @@ class CustomAddAlternativeDialog(QtWidgets.QDialog):
 
     def __init__(self, *args):
         super().__init__(*args)
+        self.setWindowTitle("Create a new Trainingalternative")
+        self.toCommit = {}
 
         # 1: Groups
         self.alternativeGroup = QtWidgets.QWidget(self)
+        self.alternativeSubGroup1 = QtWidgets.QWidget(self)
+        self.alternativeSubGroup2 = QtWidgets.QWidget(self)
+        self.editorGroup = QtWidgets.QWidget(self)
         self.buttonGroup = QtWidgets.QWidget(self)
 
         # 2: Layouts
         self.mainLayout = QtWidgets.QVBoxLayout(self)
-        self.alternativeLayout = QtWidgets.QFormLayout(self.alternativeGroup)
-        self.alternativeLayout.setContentsMargins(0,0,0,10)
+        self.alternativeLayout = QtWidgets.QHBoxLayout(self.alternativeGroup)
+        self.alternativeLayout.setContentsMargins(0,0,0,0)
+        self.alternativeSubLayout1 = QtWidgets.QFormLayout(self.alternativeSubGroup1)
+        self.alternativeSubLayout1.setContentsMargins(0,0,0,0)
+        self.alternativeSubLayout2 = QtWidgets.QVBoxLayout(self.alternativeSubGroup2)
+        self.alternativeSubLayout2.setContentsMargins(0,0,0,0)
+        self.editorLayout = QtWidgets.QVBoxLayout(self.editorGroup)
+        self.editorLayout.setContentsMargins(0,0,0,0)
         self.buttonLayout = QtWidgets.QHBoxLayout(self.buttonGroup)
         self.buttonLayout.setContentsMargins(0,0,0,0)
 
@@ -47,16 +56,22 @@ class CustomAddAlternativeDialog(QtWidgets.QDialog):
         self.exerciseIdEdit.setValidator(QtGui.QIntValidator(self.exerciseIdEdit))
         self.shortNameEdit = QtWidgets.QLineEdit(self.alternativeGroup)
         self.shortNameEdit.setPlaceholderText("New Short Name...")
-        self.longNameEdit = QtWidgets.QLineEdit(self.alternativeGroup)
-        self.longNameEdit.setPlaceholderText("New Long Name...")
+        self.editor = GraphicalRoutineEditor(parent = self.editorGroup)
 
         # 4: Layout Settings
         self.mainLayout.addWidget(self.alternativeGroup)
+        self.mainLayout.addWidget(self.editorGroup)
         self.mainLayout.addWidget(self.buttonGroup)
 
-        self.alternativeLayout.addRow("Exercise ID:", self.exerciseIdEdit)
-        self.alternativeLayout.addRow("Short Name:", self.shortNameEdit)
-        self.alternativeLayout.addRow("Long Name:", self.longNameEdit)
+        self.alternativeLayout.addWidget(self.alternativeSubGroup1)
+        self.alternativeLayout.addStretch()
+        self.alternativeLayout.addStretch()
+        self.alternativeLayout.addWidget(self.alternativeSubGroup2)
+
+        self.alternativeSubLayout1.addRow("Exercise ID:", self.exerciseIdEdit)
+        self.alternativeSubLayout1.addRow("Short Name:", self.shortNameEdit)
+
+        self.editorLayout.addWidget(self.editor)
 
         self.buttonLayout.addStretch()
         self.buttonLayout.addWidget(self.acceptButton)
@@ -64,6 +79,7 @@ class CustomAddAlternativeDialog(QtWidgets.QDialog):
 
         # 5: Connectios
         self.exerciseIdEdit.textEdited.connect(self.onExerciseIdChanged)
+        self.shortNameEdit.textEdited.connect(self.onShortNameChanged)
 
         self.acceptButton.clicked.connect(self.accept)
         self.rejectButton.clicked.connect(self.reject)
@@ -71,7 +87,11 @@ class CustomAddAlternativeDialog(QtWidgets.QDialog):
         # 6: Help
         self.__setHelp()
 
-        # 7: Show Dialog
+        # 7: Window Geometry
+        width = self.editor.horizontalHeader().length()
+        self.setGeometry(200,100,width,300)
+
+        # 8: Show Dialog
         self.exec()
 
     def __setHelp(self):
@@ -129,34 +149,35 @@ class CustomAddAlternativeDialog(QtWidgets.QDialog):
         self.shortNameEdit.setWhatsThis(whatsThis)
         self.shortNameEdit.setToolTip(toolTip)
 
-        # Long Name
-        whatsThis = """
-        <head>
-        <style>
-            p {text-align:left}
-        </style>
-        </head>
+    def onAcceptButtonClicked(self):
+        model = self.editor.model()
+        data = []
+        for i in range(model.columnCount()):
+            index = model.index(0,i)
+            item = model.item(0,i)
+            if i == 0:
+                data.append(model.indexWidget(index).currentText())
+            elif i == len(model.columnCount()-1):
+                data.append(model.indexWidget(index).currentText())
+            else:
+                data.append(item.data(role = QtCore.Qt.DisplayRole))
 
-        <p>
-            <b>Enter the Long Name for the new Trainingalternative.</b>
-        </p>
+        self.toCommit["exerciseID"] = eval(self.exerciseIdEdit.text())
+        self.toCommit["short"] = self.shortNameEdit.text()
+        self.toCommit["alternative"] = data[0]
+        self.toCommit["sets"] = data[1]
+        self.toCommit["repetitions"] = data[2]
+        self.toCommit["warm_up"]
 
-        <p>
-        The Long Name of a Trainingaltervative is the Name, which is will be displayed
-        directly below of the Trainingroutine. The entered Value can ba a
-        <i>chacter vector</i> or a <i>string scalar</i>.
-        </p>
-        """
-        toolTip = """
-        <p style='text-align:left'>
-        Enter the Long Name for the new Trainingalternative
-        </p>
-        """
-        self.longNameEdit.setWhatsThis(whatsThis)
-        self.longNameEdit.setToolTip(toolTip)
 
     def onExerciseIdChanged(self, value):
-        if self.exerciseIdEdit.text() == "":
+        if self.exerciseIdEdit.text() == "" or self.shortNameEdit.text() == "":
+            self.acceptButton.setEnabled(False)
+        else:
+            self.acceptButton.setEnabled(True)
+
+    def onShortNameChanged(self, value):
+        if self.exerciseIdEdit.text() == "" or self.shortNameEdit.text() == "":
             self.acceptButton.setEnabled(False)
         else:
             self.acceptButton.setEnabled(True)
@@ -304,7 +325,6 @@ class CustomBoxLayout(QtWidgets.QBoxLayout):
 class CustomComboBox(QtWidgets.QComboBox):
 
     ObjectType = "CustomComboBox"
-    customDataChanged = QtCore.pyqtSignal("QModelIndex", list, str)
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -334,11 +354,11 @@ class CustomComboBox(QtWidgets.QComboBox):
                     ]
             }
 
-    def insertItems(self, index, itemList, mode):
+    def insertItems(self, index, itemList, mode = None):
         if mode:
             if mode == "gym":
                 itemList = self.text["exercises_gym"]
-            elif mode == "intervall":
+            elif mode == "interval":
                 itemList = self.text["exercises_running"]
             elif mode == "distance":
                 itemList = self.text["exercises_running"]
@@ -347,17 +367,9 @@ class CustomComboBox(QtWidgets.QComboBox):
 
         super().insertItems(index, itemList)
 
-    def keyPressEvent(self, event):
-        print(event)
-        super().keyPressEvent(event)
-
-    def mousePressEvent(self, event):
-        print(event)
-        super().mousePressEvent(event)
-
-    def wheelEvent(self, event):
-        print(self.parent().model())
-        super().wheelEvent(event)
+    def onTextChanged(self, text):
+        self.clear()
+        self.insertItems(0, [], mode = text)
 
 
 class CustomDeleteAlternativeDialog(QtWidgets.QDialog):
@@ -595,8 +607,6 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
         # 3: Members
         self.nameEdit = QtWidgets.QLineEdit(self.inputSubGroup1)
         self.nameEdit.setPlaceholderText("Enter new Name here...")
-        self.modeEdit = CustomComboBox(self.inputSubGroup1)
-        self.modeEdit.insertItems(0, [], mode = "modes")
         self.numberEdit = CustomSpinBox(self.inputSubGroup1)
         self.numberEdit.setMinimum(0)
         self.numberEdit.setValue(self.data["exerciseDefaultNumber"])
@@ -625,24 +635,16 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
         self.inputLayout.setContentsMargins(0,0,0,0)
         self.inputLayout.addWidget(self.inputSubGroup1)
         self.inputLayout.addStretch()
+        self.inputLayout.addStretch()
         self.inputLayout.addWidget(self.inputSubGroup2)
 
         self.inputSubLayout1.setContentsMargins(0,0,0,0)
         self.inputSubLayout1.addRow("Name", self.nameEdit)
-        self.inputSubLayout1.addRow("Trainingmode", self.modeEdit)
         self.inputSubLayout1.addRow("Nuber of Exercises", self.numberEdit)
 
         self.inputSubLayout2.setContentsMargins(0,0,0,0)
         self.inputSubLayout2.addWidget(self.addAlternativeButton,0,0)
         self.inputSubLayout2.addWidget(self.deleteAlternativesButton,1,0)
-        self.inputSubLayout2.addItem(
-                QtWidgets.QSpacerItem(
-                        0,self.addAlternativeButton.sizeHint().height(),
-                        QtWidgets.QSizePolicy.Minimum,
-                        QtWidgets.QSizePolicy.Minimum
-                    ),
-                2,0
-            )
 
         self.editorLayout.setContentsMargins(0,0,0,0)
         self.editorLayout.addWidget(self.editor)
@@ -675,7 +677,6 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
         # 8: Window Geometry
         width = self.editor.horizontalHeader().length()
         self.setGeometry(200,100,width,500)
-        # self.setGeometry(200,100,800,500)
 
         # 9: Show Dialog
         self.exec()
@@ -704,30 +705,6 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
         """
         self.nameEdit.setWhatsThis(whatsThis)
         self.nameEdit.setToolTip(toolTip)
-
-        # Training Mode
-        whatsThis = """
-        <head>
-        <style>
-            p {text-align:left}
-        </style>
-        </head>
-
-        <p>
-            <b>Set the appropriate Training Mode.</b>
-        </p>
-
-        <p>
-        At This time only the Gym mode is supported.
-        </p>
-        """
-        toolTip = """
-        <p style='text-align:left'>
-        Set the appropraite Training Mode
-        </p>
-        """
-        self.modeEdit.setWhatsThis(whatsThis)
-        self.modeEdit.setToolTip(toolTip)
 
         # Number of Exercises
         whatsThis = """
@@ -893,8 +870,8 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
                 comboAlt.insertItems(0, [], mode = "gym")
                 self.editor.setIndexWidget(index, comboAlt)
 
-                comboMode.customDataChanged.connect(
-                        comboAlt.insertItems
+                comboMode.currentTextChanged.connect(
+                        comboAlt.onTextChanged
                     )
 
     def onNameEditValueChanged(self, value):
@@ -991,16 +968,16 @@ if __name__ == "__main__":
             if self.dialog.result():
                 dbCreator = database("database")
                 dbName = self.dialog.toCommit["training_routine"][0]
-                columnNames = ( ("Exercise", "TEXT"),
-                                ("Sets", "TEXT"),
-                                ("Repetitions", "TEXT"),
-                                ("Warm_Up", "TEXT"),
-                                ("Week_1", "TEXT"),
-                                ("Week_2", "TEXT"),
-                                ("Week_3", "TEXT"),
-                                ("Week_4", "TEXT"),
-                                ("Week_5", "TEXT"),
-                                ("Week_6", "TEXT"),
+                columnNames = ( ("exercise", "TEXT"),
+                                ("sets", "TEXT"),
+                                ("repetitions", "TEXT"),
+                                ("warm_up", "TEXT"),
+                                ("week_1", "TEXT"),
+                                ("week_2", "TEXT"),
+                                ("week_3", "TEXT"),
+                                ("week_4", "TEXT"),
+                                ("week_5", "TEXT"),
+                                ("week_6", "TEXT"),
                                 ("mode", "TEXT"),
                             )
                 dbCreator.createTable(dbName,
@@ -1027,15 +1004,15 @@ if __name__ == "__main__":
                         ("label", "TEXT"),
                         ("short", "TEXT"),
                         ("alternative", "TEXT"),
-                        ("Sets", "TEXT"),
-                        ("Repetitions", "TEXT"),
-                        ("Warm_Up", "TEXT"),
-                        ("Week_1", "TEXT"),
-                        ("Week_2", "TEXT"),
-                        ("Week_3", "TEXT"),
-                        ("Week_4", "TEXT"),
-                        ("Week_5", "TEXT"),
-                        ("Week_6", "TEXT"),
+                        ("sets", "TEXT"),
+                        ("repetitions", "TEXT"),
+                        ("warm_up", "TEXT"),
+                        ("week_1", "TEXT"),
+                        ("week_2", "TEXT"),
+                        ("week_3", "TEXT"),
+                        ("week_4", "TEXT"),
+                        ("week_5", "TEXT"),
+                        ("week_6", "TEXT"),
                         ("mode", "TEXT"),
                     )
                 dbCreator.createTable(dbName,
