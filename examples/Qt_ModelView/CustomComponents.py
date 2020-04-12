@@ -57,6 +57,24 @@ class CustomAddAlternativeDialog(QtWidgets.QDialog):
         self.shortNameEdit = QtWidgets.QLineEdit(self.alternativeGroup)
         self.shortNameEdit.setPlaceholderText("New Short Name...")
         self.editor = GraphicalRoutineEditor(parent = self.editorGroup)
+        self.editor.verticalHeader().hide()
+        items = [QtGui.QStandardItem(None) for item in range(self.editor.model().columnCount())]
+        self.editor.model().appendRow(items)
+        index = self.editor.model().index(0, 10)
+        comboMode = CustomComboBox(self.editor)
+        comboMode.insertItems(0, [], mode = "modes")
+        self.editor.setIndexWidget(index, comboMode)
+
+        index = self.editor.model().index(0, 0)
+        comboAlt = CustomComboBox(self.editor)
+        comboAlt.insertItems(0, [], mode = "gym")
+        self.editor.setIndexWidget(index, comboAlt)
+
+        comboMode.currentTextChanged.connect(
+                comboAlt.onTextChanged
+            )
+
+
 
         # 4: Layout Settings
         self.mainLayout.addWidget(self.alternativeGroup)
@@ -82,6 +100,7 @@ class CustomAddAlternativeDialog(QtWidgets.QDialog):
         self.shortNameEdit.textEdited.connect(self.onShortNameChanged)
 
         self.acceptButton.clicked.connect(self.accept)
+        self.acceptButton.clicked.connect(self.onAcceptButtonClicked)
         self.rejectButton.clicked.connect(self.reject)
 
         # 6: Help
@@ -151,23 +170,23 @@ class CustomAddAlternativeDialog(QtWidgets.QDialog):
 
     def onAcceptButtonClicked(self):
         model = self.editor.model()
-        data = []
+        data = [
+                eval(self.exerciseIdEdit.text()),
+                self.shortNameEdit.text()
+            ]
         for i in range(model.columnCount()):
             index = model.index(0,i)
             item = model.item(0,i)
             if i == 0:
-                data.append(model.indexWidget(index).currentText())
-            elif i == len(model.columnCount()-1):
-                data.append(model.indexWidget(index).currentText())
+                data.append(self.editor.indexWidget(index).currentText())
+            elif i == model.columnCount()-1:
+                data.append(self.editor.indexWidget(index).currentText())
             else:
-                data.append(item.data(role = QtCore.Qt.DisplayRole))
-
-        self.toCommit["exerciseID"] = eval(self.exerciseIdEdit.text())
-        self.toCommit["short"] = self.shortNameEdit.text()
-        self.toCommit["alternative"] = data[0]
-        self.toCommit["sets"] = data[1]
-        self.toCommit["repetitions"] = data[2]
-        self.toCommit["warm_up"]
+                text = item.data(role = QtCore.Qt.DisplayRole)
+                if not text:
+                    text = None
+                data.append(text)
+        self.toCommit["alternative_values"] = [data]
 
 
     def onExerciseIdChanged(self, value):
@@ -796,10 +815,18 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
 
     def appendAlternative(self, data):
         model = self.alternativeEditor.model()
-        items = [QtGui.QStandardItem(None) for item in range(model.columnCount())]
-        text = "{num}) {name}".format(num = data[0], name = data[3])
-        items[0].setData(text, role = QtCore.Qt.DisplayRole)
-        model.appendRow(items)
+        for n in range(len(data)):
+            items = [QtGui.QStandardItem(None) for item in range(model.columnCount())]
+            for i in range(model.columnCount()):
+                if i == 0:
+                    text = "{num}) {name}".format(num = data[n][0],
+                                                  name = data[n][3]
+                                            )
+                    items[i].setData(text, role = QtCore.Qt.DisplayRole)
+                else:
+                    text = data[n][3+i]
+                    items[i].setData(text, role = QtCore.Qt.DisplayRole)
+            model.appendRow(items)
         self.alternativeEditor.setHidden(False)
 
     def deleteAlternatives(self):
@@ -813,26 +840,43 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
         self.customDataChanged.emit()
 
     def onAcceptButtonClicked(self):
-        data = [
+        dialogData = [
                 self.nameEdit.text(),
-                self.modeEdit.currentText(),
                 self.numberEdit.value(),
-                self.editor.model()
             ]
+        model = self.editor.model()
+        values = []
+        for i in range(self.editor.model().rowCount()):
+            l = []
+            for n in range(self.editor.model().columnCount()):
+                index = self.editor.model().index(i,n)
+                item = self.editor.model().item(i,n)
+                if n == 0:
+                    widget = self.editor.indexWidget(index)
+                    text = widget.currentText()
+                    l.append(text)
+                elif n == model.columnCount()-1:
+                    widget = self.editor.indexWidget(index)
+                    text = widget.currentText()
+                    l.append(text)
+                else:
+                    text = item.data(role = QtCore.Qt.DisplayRole)
+                    l.append(text)
+            values.append(l)
+        data = {"dialog_data":dialogData,
+                "model":model,
+                "routine_values":values,
+            }
         self.toCommit["training_routine"] = data
 
     def onAddAlternative(self):
         dialog = CustomAddAlternativeDialog(self)
         if dialog.result():
-            data = [
-                    eval(dialog.exerciseIdEdit.text()),
-                    str(len(self.toCommit["training_alternatives"])+1),
-                    dialog.shortNameEdit.text(),
-                    dialog.longNameEdit.text(),
-                ]
+            data = dialog.toCommit["alternative_values"]
+            num = len(self.toCommit["training_alternatives"])
+            data[num].insert(1, str(num+1))
             self.appendAlternative(data)
-            data.append(self.alternativeEditor.model())
-            self.toCommit["training_alternatives"].append(data)
+            self.toCommit["training_alternatives"] = dialog.toCommit
             self.customDataChanged.emit()
         else:
             pass
@@ -967,7 +1011,9 @@ if __name__ == "__main__":
             self.dialog = CustomNewTrainingroutineDialog(self)
             if self.dialog.result():
                 dbCreator = database("database")
-                dbName = self.dialog.toCommit["training_routine"][0]
+                dbName = self.dialog.toCommit["training_routine"]["dialog_data"][0]
+                values = self.dialog.toCommit["training_routine"]["routine_values"]
+                # dbName = self.dialog.toCommit["training_routine"][0]
                 columnNames = ( ("exercise", "TEXT"),
                                 ("sets", "TEXT"),
                                 ("repetitions", "TEXT"),
@@ -984,17 +1030,19 @@ if __name__ == "__main__":
                                       "training_routine",
                                       columnNames
                                       )
-                model = self.dialog.toCommit["training_routine"][3]
-                for i in range(model.rowCount()):
-                    insert = []
-                    for n in range(model.columnCount()):
-                        if n == 0:
-                            index = model.index(i,n)
-                            widget = self.dialog.editor.indexWidget(index)
-                            insert.append(widget.currentText())
-                        else:
-                            text = model.item(i,n).data(role = QtCore.Qt.DisplayRole)
-                            insert.append(text)
+                # model = self.dialog.toCommit["training_routine"][2]
+                # for i in range(model.rowCount()):
+                #     insert = []
+                #     for n in range(model.columnCount()):
+                #         if n == 0:
+                #             index = model.index(i,n)
+                #             widget = self.dialog.editor.indexWidget(index)
+                #             insert.append(widget.currentText())
+                #         else:
+                #             text = model.item(i,n).data(role = QtCore.Qt.DisplayRole)
+                #             insert.append(text)
+                for i in range(len(values)):
+                    insert = values[i]
                     dbCreator.addEntry(dbName,
                                        "training_routine",
                                        insert)
@@ -1021,13 +1069,8 @@ if __name__ == "__main__":
                                       )
 
                 for i in range(len(self.dialog.toCommit["training_alternatives"])):
-                    data = self.dialog.toCommit["training_alternatives"][i][0:4]
-                    model = self.dialog.toCommit["training_alternatives"][i][4]
-                    values = []
-                    for n in range(1,model.columnCount(),1):
-                        values.append(model.item(i,n).data(role = QtCore.Qt.DisplayRole))
-                    insert = [data[0], data[1], data[2], data[3]]
-                    insert.extend(values)
+                    data = self.dialog.toCommit["training_alternatives"]["alternative_values"]
+                    insert = data[0]
                     dbCreator.addEntry(dbName,
                                        "training_alternatives",
                                        insert)
