@@ -186,7 +186,7 @@ class CustomAddAlternativeDialog(QtWidgets.QDialog):
                 if not text:
                     text = None
                 data.append(text)
-        self.toCommit["alternative_values"] = [data]
+        self.toCommit["alternative_values"] = data
 
 
     def onExerciseIdChanged(self, value):
@@ -815,18 +815,17 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
 
     def appendAlternative(self, data):
         model = self.alternativeEditor.model()
-        for n in range(len(data)):
-            items = [QtGui.QStandardItem(None) for item in range(model.columnCount())]
-            for i in range(model.columnCount()):
-                if i == 0:
-                    text = "{num}) {name}".format(num = data[n][0],
-                                                  name = data[n][3]
-                                            )
-                    items[i].setData(text, role = QtCore.Qt.DisplayRole)
-                else:
-                    text = data[n][3+i]
-                    items[i].setData(text, role = QtCore.Qt.DisplayRole)
-            model.appendRow(items)
+        items = [QtGui.QStandardItem(None) for item in range(model.columnCount())]
+        for i in range(model.columnCount()):
+            if i == 0:
+                text = "{num}) {name}".format(num = data[0],
+                                              name = data[3]
+                                        )
+                items[i].setData(text, role = QtCore.Qt.DisplayRole)
+            else:
+                text = data[3+i]
+                items[i].setData(text, role = QtCore.Qt.DisplayRole)
+        model.appendRow(items)
         self.alternativeEditor.setHidden(False)
 
     def deleteAlternatives(self):
@@ -874,9 +873,10 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
         if dialog.result():
             data = dialog.toCommit["alternative_values"]
             num = len(self.toCommit["training_alternatives"])
-            data[num].insert(1, str(num+1))
+            data.insert(1, str(num+1))
+            dialog.toCommit["model"] = self.alternativeEditor.model()
             self.appendAlternative(data)
-            self.toCommit["training_alternatives"] = dialog.toCommit
+            self.toCommit["training_alternatives"].append(dialog.toCommit)
             self.customDataChanged.emit()
         else:
             pass
@@ -1013,7 +1013,6 @@ if __name__ == "__main__":
                 dbCreator = database("database")
                 dbName = self.dialog.toCommit["training_routine"]["dialog_data"][0]
                 values = self.dialog.toCommit["training_routine"]["routine_values"]
-                # dbName = self.dialog.toCommit["training_routine"][0]
                 columnNames = ( ("exercise", "TEXT"),
                                 ("sets", "TEXT"),
                                 ("repetitions", "TEXT"),
@@ -1030,17 +1029,6 @@ if __name__ == "__main__":
                                       "training_routine",
                                       columnNames
                                       )
-                # model = self.dialog.toCommit["training_routine"][2]
-                # for i in range(model.rowCount()):
-                #     insert = []
-                #     for n in range(model.columnCount()):
-                #         if n == 0:
-                #             index = model.index(i,n)
-                #             widget = self.dialog.editor.indexWidget(index)
-                #             insert.append(widget.currentText())
-                #         else:
-                #             text = model.item(i,n).data(role = QtCore.Qt.DisplayRole)
-                #             insert.append(text)
                 for i in range(len(values)):
                     insert = values[i]
                     dbCreator.addEntry(dbName,
@@ -1069,8 +1057,8 @@ if __name__ == "__main__":
                                       )
 
                 for i in range(len(self.dialog.toCommit["training_alternatives"])):
-                    data = self.dialog.toCommit["training_alternatives"]["alternative_values"]
-                    insert = data[0]
+                    data = self.dialog.toCommit["training_alternatives"][i]["alternative_values"]
+                    insert = data
                     dbCreator.addEntry(dbName,
                                        "training_alternatives",
                                        insert)
