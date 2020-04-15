@@ -36,7 +36,6 @@ class MainWindow(QtWidgets.QMainWindow):
             )
         self.model2.populateModel()
 
-
         headerLabels = [
                 "Exercise",
                 "Sets",
