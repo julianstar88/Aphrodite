@@ -296,9 +296,22 @@ def setGrid(ws, cellRange,
                                 )
                         )
 
+def generateRangeExpression(startRow = 0,
+                            endRow = 0,
+                            startColumn = "A",
+                            endColumn = "A"):
+
+    expression = "{startCol}{startRow}:{endCol}{endRow}".format(
+            startCol = startColumn,
+            startRow = startRow,
+            endCol  = endColumn,
+            endRow = endRow
+        )
+    return expression
 
 
 if __name__ == "__main__":
+
     # create Workbook
     converter = ColorConverter()
     converter.interpretation = "openpyxl"
@@ -308,7 +321,6 @@ if __name__ == "__main__":
     # customize worksheet
     ws = wb.active
     ws.title = "Trainingsplan"
-    ws.column_dimensions["A"].width = 25
     ws.page_margins = openpyxl.worksheet.page.PageMargins(
             left = 0.25,
             right = 0.25,
@@ -323,23 +335,44 @@ if __name__ == "__main__":
         )
 
     # header
-    ws.cell(2, 1, value = "Name:").font = Font(
+    ws.cell(2, 1, value = "Name").font = Font(
             b = True
         )
     ws.cell(3, 1, value = "Julian")
-    ws.cell(2, 5, value = "Datum:").font = Font(
+
+    ws.cell(2, 4, value = "Trainingszeitraum").font = Font(
             b = True
         )
-    ws.cell(3, 5, value = "15.04.2020")
-    ws.cell(2, 8, value = "Trainingsmodus:").font = Font(
+    ws.cell(3, 4, value = "Anfang:")
+    ws.cell(3, 6, value = "15.04.2020")
+    ws.cell(4, 4, value = "Ende:")
+    ws.cell(4, 6, value = "15.04.2020")
+
+
+    ws.cell(2, 9, value = "Trainingsmodus").font = Font(
             b = True
         )
-    ws.cell(3, 8, value = "Maximalkraft")
-    ws.merge_cells("H2:I2")
-    ws.merge_cells("H3:I3")
-    setAlignment(ws, "A1:I5")
-    setBorder(ws, "A1:I5")
-    setBackground(ws, "A1:I5",
+    ws.cell(3, 9, value = "Maximalkraft")
+
+    ws.merge_cells("A2:B2")
+    ws.merge_cells("A3:B3")
+    ws.merge_cells("D2:G2")
+    ws.merge_cells("D3:E3")
+    ws.merge_cells("D4:E4")
+    ws.merge_cells("F3:G3")
+    ws.merge_cells("F4:G4")
+    ws.merge_cells("I2:J2")
+    ws.merge_cells("I3:J3")
+    setAlignment(ws, "A1:J5")
+    setAlignment(ws, "D3:E3", horizontal = "left")
+    setAlignment(ws, "D4:E4", horizontal = "left")
+    setAlignment(ws, "F3:G3", horizontal = "right")
+    setAlignment(ws, "F4:G4", horizontal = "right")
+    setBorder(ws, "A1:J2")
+    setBorder(ws, "A3:J5")
+    setBorder(ws, "C2:C3", borderStyle = None)
+    setBorder(ws, "H2:H3", borderStyle = None)
+    setBackground(ws, "A1:J5",
                   fill_type = "solid",
                   fgColor = converter.color("white")
             )
@@ -348,53 +381,83 @@ if __name__ == "__main__":
     ws.cell(6, 1, value = "Übung").font = Font(
             b = True
         )
-    ws.cell(6, 2, value = "Sätze").font = Font(
+    ws.cell(6, 3, value = "Sätze").font = Font(
             b = True
         )
-    ws.cell(6, 3, value = "Whlg.").font = Font(
+    ws.cell(6, 4, value = "Whlg.").font = Font(
             b = True
         )
-    ws.cell(6, 4, value = "W1").font = Font(
+    ws.cell(6, 5, value = "W1").font = Font(
             b = True
         )
-    ws.cell(6, 5, value = "W2").font = Font(
+    ws.cell(6, 6, value = "W2").font = Font(
             b = True
         )
-    ws.cell(6, 6, value = "W3").font = Font(
+    ws.cell(6, 7, value = "W3").font = Font(
             b = True
         )
-    ws.cell(6, 7, value = "W4").font = Font(
+    ws.cell(6, 8, value = "W4").font = Font(
             b = True
         )
-    ws.cell(6, 8, value = "W5").font = Font(
+    ws.cell(6, 9, value = "W5").font = Font(
             b = True
         )
-    ws.cell(6, 9, value = "W6").font = Font(
+    ws.cell(6, 10, value = "W6").font = Font(
             b = True
         )
-    setAlignment(ws, "A6:I6")
-    setBorder(ws, "A6:I6")
-    setBackground(ws, "A6:I6",
+    setAlignment(ws, "A6:J6")
+    setBorder(ws, "A6:J6")
+    setBackground(ws, "A6:J6",
                   fill_type = "solid",
                   fgColor = converter.color("gray")
             )
 
     # table body
-    setAlignment(ws, "A7:A40",
+    startRow = 7
+    endRow = 40
+
+    for i in range(startRow, endRow+1):
+        cellRange = generateRangeExpression(
+                startColumn = "A",
+                endColumn = "B",
+                startRow = i,
+                endRow = i
+            )
+        ws.merge_cells(cellRange)
+
+    setAlignment(ws, generateRangeExpression(
+            startColumn = "A",
+            endColumn = "A",
+            startRow = startRow,
+            endRow = endRow
+        ),
             horizontal = "left",
             vertical = "center"
         )
-    setAlignment(ws, "B7:I40",
+    setAlignment(ws, generateRangeExpression(
+            startColumn = "B",
+            endColumn = "J",
+            startRow = startRow,
+            endRow = endRow
+        ),
             horizontal = "center",
             vertical = "center"
         )
-    borderRange = "A7:I40"
-    backgroundRange = "A7:C40"
-    setBorder(ws, borderRange,
+    setBorder(ws,generateRangeExpression(
+            startColumn = "A",
+            endColumn = "J",
+            startRow = startRow,
+            endRow = endRow
+        ),
               borderStyle = "thick",
               gridStyle = "thin"
         )
-    setBackground(ws, backgroundRange,
+    setBackground(ws, generateRangeExpression(
+            startColumn = "A",
+            endColumn = "D",
+            startRow = startRow,
+            endRow = endRow
+        ),
                   fill_type = "solid",
                   fgColor = converter.color("gray")
         )
