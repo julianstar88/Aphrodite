@@ -7,6 +7,7 @@ Created on Tue Mar  3 22:30:14 2020
 import openpyxl
 import datetime
 import unittest
+import UtilityModules.ExporterUtilityModules as exporterUtils
 from openpyxl.styles import Alignment, Border, Color, Font, PatternFill, Side
 from Utility_Function_Library.converter import ColorConverter
 
@@ -29,6 +30,10 @@ class Exporter():
 
     def routineName(self):
         return self.__routineName
+
+    def routineLayout(self, rows=40):
+        wb = exporterUtils.TamplateLayout(rows)
+        return wb
 
     def trainingPeriode(self):
         return self.__trainingPeriode
@@ -66,7 +71,7 @@ class Exporter():
         if not type(startYear) == int:
             raise TypeError(
                     """input argument '{name}' for <startYear>
-                    does not match {tpye_name}""".format(
+                    does not match {type_name}""".format(
                             name = startYear,
                             type_name = type(123)
                         )
@@ -74,7 +79,7 @@ class Exporter():
         if not type(startMonth) == int:
             raise TypeError(
                     """input argument '{name}' for <startYear>
-                    does not match {tpye_name}""".format(
+                    does not match {type_name}""".format(
                             name = startMonth,
                             type_name = type(123)
                         )
@@ -82,7 +87,7 @@ class Exporter():
         if not type(startDay) == int:
             raise TypeError(
                     """input argument '{name}' for <startYear>
-                    does not match {tpye_name}""".format(
+                    does not match {type_name}""".format(
                             name = startDay,
                             type_name = type(123)
                         )
@@ -90,3 +95,6 @@ class Exporter():
         startDate = datetime.date(startYear, startMonth, startDay)
         endDate = startDate + datetime.timedelta(days = 42)
         self.__trainingPeriode = (startDate, endDate)
+
+if __name__ == "__main__":
+    pass
