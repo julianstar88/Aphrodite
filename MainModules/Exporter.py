@@ -4,42 +4,90 @@ Created on Tue Mar  3 22:30:14 2020
 
 @author: Julian
 """
-import openpyxl
 import datetime
-import unittest
+import pathlib2
 import UtilityModules.ExporterUtilityModules as exporterUtils
-from openpyxl.styles import Alignment, Border, Color, Font, PatternFill, Side
-from Utility_Function_Library.converter import ColorConverter
 
 
 class Exporter():
 
     def __init__(self,
+                 database = None,
+                 exportPath = None,
                  name = None,
                  routineName = None,
                  trainingPeriode = [None, None],
                  trainingMode = None):
 
+        self.__database = database
+        self.__exportPath = exportPath
         self.__name = name
         self.__routineName = routineName
         self.__trainingPeriode = trainingPeriode
         self.__trainingMode = trainingMode
 
+    def database(self):
+        return self.__database
+
+    def exportPath(self):
+        return self.__exportPath
+
     def name(self):
         return self.__name
+
+    def populateRoutine(self, workBook):
+        pass
 
     def routineName(self):
         return self.__routineName
 
-    def routineLayout(self, rows=40):
-        wb = exporterUtils.TamplateLayout(rows)
-        return wb
+    def routineLayout(self, rows = 40):
+        workBook = exporterUtils.TamplateLayout(rows)
+        return workBook
 
     def trainingPeriode(self):
         return self.__trainingPeriode
 
     def trainingMode(self):
         return self.__trainingMode
+
+    def setDatabase(self, databasePath):
+        path = pathlib2.Path(databasePath)
+        if not type(databasePath) == str:
+            raise TypeError(
+                    "input {input_value} for argument 'databasePath' does not match {type_name}".format(
+                            input_value = path,
+                            type_name = type("str")
+                        )
+                )
+        if not path.exists():
+            raise ValueError(
+                    "Database does not exist"
+                )
+        if len(databasePath) == 0:
+            raise ValueError(
+                    "invalid input for argument 'databasePath'"
+                )
+        self.__database = str(path)
+
+    def setExportPath(self, exportPath):
+        path = pathlib2.Path(exportPath)
+        if not type(exportPath) == str:
+            raise TypeError(
+                    "input for argument 'exportPath' does not match {type_name}".format(
+                            input_name = path,
+                            type_name = type("str")
+                        )
+                )
+        if not path.is_dir():
+            raise ValueError(
+                    "input for argument 'exportPath' does not refer to an existing directory"
+                )
+        if len(exportPath) == 0:
+            raise ValueError(
+                    "invalid input for argument 'exportPath'"
+                )
+        self.__exportPath = str(path)
 
     def setName(self, name):
         if not type(name) == str:
@@ -97,4 +145,5 @@ class Exporter():
         self.__trainingPeriode = (startDate, endDate)
 
 if __name__ == "__main__":
-    pass
+    exporter = Exporter()
+    print(exporter.exportPath())

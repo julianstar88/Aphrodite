@@ -480,7 +480,7 @@ def TamplateLayout(endRow):
 
 if __name__ == "__main__":
 
-    wb = TamplateLayout(6.4)
+    wb = TamplateLayout(40)
     ws = wb.active
 
     # save workbook in designated file

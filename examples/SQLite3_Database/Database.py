@@ -33,18 +33,30 @@ class database():
             npath = os.path.normpath(self.__path)
             self.__path = npath
 
-    def __closeConnection(self, connectionObject):
-        connectionObject.close()
 
-    def __establishConnection(self, databaseName):
-        databaseName = databaseName + self.__extension
-        database = os.path.join(self.__path, databaseName)
-        return lite.connect(database)
 
     def addEntry(self, databaseName, tableName, insert):
+        """
+        add a single entry 'insert' to the table named 'tableName' within the database
+        'databaseName'.
+
+        Parameters
+        ----------
+        databaseName : str
+            specify the database.
+        tableName : str
+            specify the table, to wich insert should be added.
+        insert : list
+            list of values added to the talbe 'tableName'.
+
+        Returns
+        -------
+        None.
+
+        """
 
         # establish connection
-        con = self.__establishConnection(databaseName)
+        con = self.establishConnection(databaseName)
 
         # do work
         with con:
@@ -56,12 +68,40 @@ class database():
             c.execute(sql_command, insert)
 
         # close connection
-        self.__closeConnection(con)
+        self.closeConnection(con)
 
     def addManyEntries(self, databaseName, tableName, insert):
+        """
+        add a bulk of rows specified by 'insert' to the table 'tableName' in
+        database 'databaseName'
+
+        Parameters
+        ----------
+        databaseName : str
+            specify the database.
+        tableName : str
+            specify the table, to wich 'insert' should be added.
+        insert : list
+            list of values added to table 'tableName'. The values have to be
+            oreded like this:
+                [
+                    [value11, value12, ..., value1N],
+                    [value21, value22, ..., value2N],
+                        .       .               .
+                        .       .               .
+                        .       .               .
+                    [valueN1, valueN2, ..., valueNN]
+
+                ]
+
+        Returns
+        -------
+        None.
+
+        """
 
         # establish connection
-        con = self.__establishConnection(databaseName)
+        con = self.establishConnection(databaseName)
         with con:
             c = con.cursor()
             values = '?, ' * len(insert[0])
@@ -71,13 +111,75 @@ class database():
             c.executemany(sql_command, insert)
 
         # close connection
-        self.__closeConnection(con)
+        self.closeConnection(con)
+
+    def closeConnection(self, connectionObject):
+        """
+        close a connection specified by 'connectionObject'
+
+        Parameters
+        ----------
+        connectionObject : sqlite3.Connection
+            Connection-Object returnded by sqlite3.conntect().
+
+        Returns
+        -------
+        None.
+
+        """
+        connectionObject.close()
 
     def createDatabase(self, databaseName):
-        self.__establishConnection(databaseName)
+        """
+        generates a database called 'databaseName'
+
+        Parameters
+        ----------
+        databaseName : str
+            specify a database to create. if only a name has been pared, the
+            database will be created in the current working directory. one can
+            also specify 'databaseName' as a path to a certain  directory were
+            the database will be created instead
+
+        Returns
+        -------
+        None.
+
+        """
+        con = self.establishConnection(databaseName)
+        self.closeConnection(con)
 
     def createTable(self, databaseName, tableName, columnNames):
-        con = self.__establishConnection(databaseName)
+        """
+        create a table 'tableName' in the database 'databaseName'. the names of
+        the columns are specified by 'columnNames'
+
+        Parameters
+        ----------
+        databaseName : str
+            specify the database. if 'databaseName' does not exists, the database
+            will be created.
+        tableName : str
+            specify the table, to wich 'insert' should be added.
+        columnNames : tuple
+            a tuple of names, specifying the name and type of each column.
+            the tuple has to look like the following:
+
+                (
+                    ("name1", "type1"),
+                    ("name2", "type2"),
+                    ("nameN", "typeN")
+                )
+
+        the types specified by "type1" to "typeN" have to be sqlite3 conform
+        types
+
+        Returns
+        -------
+        None.
+
+        """
+        con = self.establishConnection(databaseName)
         with con:
             c = con.cursor()
             c.execute("DROP TABLE IF EXISTS {name}".format(name = tableName))
@@ -88,24 +190,62 @@ class database():
             sql_command = "CREATE TABLE {name}({values})".format(name = tableName,
                                                                  values = valueString)
             c.execute(sql_command)
-        self.__closeConnection(con)
+        self.closeConnection(con)
 
     def deleteAllEntries(self, databaseName, tableName):
+        """
+        delete all Entries in the table given by 'tableName' in the database
+        called 'databasename'
+
+        Parameters
+        ----------
+        databaseName : str
+            specify the database. if the 'databaseName' refers to a non existing
+            database, on OperationalError will be raised
+        tableName : str
+            specify the tabel, of which the entries will be deleted. if the
+            table doesn´t exist, an OperationalError will be raised.
+
+        Returns
+        -------
+        None.
+
+        """
 
         # establish connection
-        con = self.__establishConnection(databaseName)
+        con = self.establishConnection(databaseName)
         with con:
             c = con.cursor()
             sql_command = "DELETE FROM {name}".format(name = tableName)
             c.execute(sql_command)
 
         # close connection
-        self.__closeConnection(con)
+        self.closeConnection(con)
 
     def deleteEntry(self, databaseName, tableName, row_id):
+        """
+        delete only on line refered by 'row_id' from a table refered by 'tableName'
+        within the database called 'databaseName'.
+
+        Parameters
+        ----------
+        databaseName : str
+            specify the database. if 'databaseName' does not exist, an OperationalError
+            will be raised
+        tableName : str
+            specify the table were a certain row will be deleted. if 'tableName'
+            does not exist, an OperationalError will be raised
+        row_id : int
+            specify the row which to delete from the table.
+
+        Returns
+        -------
+        None.
+
+        """
 
         # establish connection
-        con = self.__establishConnection(databaseName)
+        con = self.establishConnection(databaseName)
         with con:
             c = con.cursor()
             sql_command = "DELETE FROM {name} WHERE id = {row_id}".format(
@@ -113,12 +253,12 @@ class database():
             c.execute(sql_command)
 
         # close connection
-        self.__closeConnection(con)
+        self.closeConnection(con)
 
     def deleteManyEntries(self, databaseName, tableName, row_id_list):
 
         # establish connection
-        con = self.__establishConnection(databaseName)
+        con = self.establishConnection(databaseName)
         with con:
             c = con.cursor()
             for idx in row_id_list:
@@ -127,12 +267,12 @@ class database():
                 c.execute(sql_command)
 
         # close connection
-        self.__closeConnection(con)
+        self.closeConnection(con)
 
     def data(self, databaseName, tableName):
 
         # establish connection
-        con = self.__establishConnection(databaseName)
+        con = self.establishConnection(databaseName)
         with con:
             c = con.cursor()
             sql_command = "SELECT * FROM {name}".format(name = tableName)
@@ -140,9 +280,15 @@ class database():
             data = c.fetchall()
 
         # close connection
-        self.__closeConnection(con)
+        self.closeConnection(con)
 
         return data
+
+    def establishConnection(self, databaseName):
+        databaseName = databaseName + self.__extension
+        database = os.path.join(self.__path, databaseName)
+        return lite.connect(database)
+
 
     def extension(self):
         return self.__extension

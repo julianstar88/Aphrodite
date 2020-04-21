@@ -5,20 +5,47 @@ Created on Thu Apr 16 14:37:34 2020
 @author: Julian
 """
 
-
 import unittest
+import examples.SQLite3_Database.Database as db
 import datetime
 import openpyxl
+import os
+import pathlib2
 from MainModules.Exporter import Exporter
 
 class ExporterProperties(unittest.TestCase):
 
     def setUp(self):
+        self.raiseTypeErrors = [
+                123,
+                123.123,
+                [],
+                (),
+                {},
+            ]
+        self.raiseValueErrors = [
+                "randomParent/randomPath/randomFile",
+                ""
+            ]
+        pathObj = pathlib2.Path().cwd() / "temp_test_database.db"
+        self.path = str(pathObj)
+        self.db = db.database(pathObj.parent)
+        self.db.createDatabase("temp_test_database")
         self.exporter = Exporter()
 
     def test_instance(self):
         self.assertIsInstance(
                 self.exporter, Exporter
+            )
+
+    def test_database_getter(self):
+        self.assertEqual(
+                self.exporter.database(), None
+            )
+
+    def test_exportPath_getter(self):
+        self.assertEqual(
+                self.exporter.exportPath(), None
             )
 
     def test_name_getter(self):
@@ -39,47 +66,56 @@ class ExporterProperties(unittest.TestCase):
     def test_name_setter(self):
         self.exporter.setName("Test Name")
         self.assertEqual(self.exporter.name(), "Test Name")
+        for val in self.raiseTypeErrors:
+            with self.subTest(val = val):
+                self.assertRaises(
+                        TypeError, self.exporter.setName, val
+                    )
         self.assertRaises(
-                TypeError, self.exporter.setName, 123
+                ValueError, self.exporter.setName, self.raiseValueErrors[1]
             )
-        self.assertRaises(
-                TypeError, self.exporter.setName, 123.123
+
+    def test_database_setter(self):
+        self.exporter.setDatabase(self.path)
+        self.assertEqual(
+                self.exporter.database(), self.path
             )
-        self.assertRaises(
-                TypeError, self.exporter.setName, []
+        for val in self.raiseTypeErrors:
+            with self.subTest(val = val):
+                self.assertRaises(TypeError, self.exporter.setDatabase, val)
+        for val in self.raiseValueErrors:
+            with self.subTest(val = val):
+                self.assertRaises(ValueError, self.exporter.setDatabase, val)
+
+    def test_exportPath_setter(self):
+        pathObj = pathlib2.Path().cwd()
+        self.exporter.setExportPath(str(pathObj))
+        self.assertEqual(
+                self.exporter.exportPath(), str(pathObj)
             )
-        self.assertRaises(
-                TypeError, self.exporter.setName, ()
-            )
-        self.assertRaises(
-                TypeError, self.exporter.setName, {}
-            )
-        self.assertRaises(
-                ValueError, self.exporter.setName, ""
-            )
+        for val in self.raiseTypeErrors:
+            with self.subTest(val = val):
+                self.assertRaises(
+                        TypeError, self.exporter.setExportPath, val
+                    )
+        for val in self.raiseValueErrors:
+            with self.subTest(val = val):
+                self.assertRaises(
+                        ValueError, self.exporter.setExportPath, val
+                    )
 
     def test_routineName_setter(self):
         self.exporter.setRoutineName("Test Name")
         self.assertEqual(
                 self.exporter.routineName(), "Test Name"
             )
+        for val in self.raiseTypeErrors:
+            with self.subTest(val = val):
+                self.assertRaises(
+                        TypeError, self.exporter.setRoutineName, val
+                    )
         self.assertRaises(
-                TypeError, self.exporter.setRoutineName, 123
-            )
-        self.assertRaises(
-                TypeError, self.exporter.setRoutineName, 123.123
-            )
-        self.assertRaises(
-                TypeError, self.exporter.setRoutineName, []
-            )
-        self.assertRaises(
-                TypeError, self.exporter.setRoutineName, ()
-            )
-        self.assertRaises(
-                TypeError, self.exporter.setRoutineName, {}
-            )
-        self.assertRaises(
-                ValueError, self.exporter.setRoutineName, ""
+                ValueError, self.exporter.setRoutineName, self.raiseValueErrors[1]
             )
 
     def test_trainingPeriode_setter(self):
@@ -120,20 +156,24 @@ class ExporterProperties(unittest.TestCase):
                         TypeError, self.exporter.setTrainingPeriode, 1, 2, value
                     )
 
+    def tearDown(self):
+        os.remove(self.path)
+
 class TrainingRoutineLayout(unittest.TestCase):
 
     def setUp(self):
         self.columnCount = 10
         self.rowCountValues = [6, 10, 20, 40, 60]
+        self.exporter = Exporter()
 
     def test_workbook_validity(self):
-        wb = Exporter().routineLayout(self.rowCountValues[1])
+        wb = self.exporter.routineLayout(self.rowCountValues[1])
         self.assertIsInstance(wb, openpyxl.Workbook)
 
     def test_layout_dimenstions(self):
         for rowCount in self.rowCountValues:
 
-            wb = Exporter().routineLayout(rowCount)
+            wb = self.exporter.routineLayout(rowCount)
             ws = wb.active
 
             with self.subTest(rowCount = rowCount):
@@ -148,7 +188,7 @@ class TrainingRoutineLayout(unittest.TestCase):
                         self.assertEqual(cell.border.right.style, "thick")
 
     def test_layout_elements(self):
-        wb = Exporter().routineLayout(self.rowCountValues[1])
+        wb = self.exporter.routineLayout(self.rowCountValues[1])
         ws = wb.active
 
         cell = ws["A2"]
@@ -221,7 +261,7 @@ class TrainingRoutineLayout(unittest.TestCase):
         witheCols = [5, 6, 7, 8, 9, 10]
 
         for rowCount in self.rowCountValues:
-            wb = Exporter().routineLayout(rowCount)
+            wb = self.exporter.routineLayout(rowCount)
             ws = wb.active
 
             with self.subTest(rowCount = rowCount):
@@ -263,6 +303,13 @@ class TrainingRoutineLayout(unittest.TestCase):
                                     else:
                                         self.assertEqual(cell.border.bottom.style, "thick")
                                         self.assertEqual(cell.border.right.style, "thin")
+
+    def test_routine_population(self):
+        wb = self.exporter.routineLayout()
+        self.exporter.setName("Aphrodite")
+        self.exporter.populateRoutine(wb)
+        ws = wb.active
+
 
 
 if __name__ == "__main__":
