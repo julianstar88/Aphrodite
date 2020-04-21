@@ -10,16 +10,120 @@ import os, os.path
 
 class database():
     """
-    Create a SQlite3 database file with the name 'databaseName'.
+    database obects  provide an easy api for working with sqlite3 databases
+    and tables. one can create and modify tables. it´s possible to
+    create more than one database, by specifying a new database with one
+    database-object either by specifying a new path via 'setPath' or by
+    invoking the creataDatabase-method with a new database name. the data in a
+    table can be retrieved via the data-method (this method fetches all
+    avaliable data in a table). to add an new row or an bulk of rows to a table
+    one can simply use the method addEntry or addManyEntries respectively. in
+    this sense one can use deleteEntry or deleteManyEntries/deleteAllEntries
+    do delete one row ora bulk of rows/all rows.
 
-    Input parameter:
-        - databaseName: name of the generated database-file type: str
-        - tableName: name of the table in a database-file type: str
-        - columnNames: name and type of the colums in form of an tupel
-            (("name", "type"), ("name", "type"),...)
+    Properties
+    ----------
+    - extension : str
+        the extension specifies the file-type the database will be
+    - path : str
+        a path to the target directory, where the database will be stored
 
-    Output:
-        - A db-file named 'databaseName'
+    Public Methods
+    --------------
+    - addEntry : databaseName, tableName, insert
+        add a single entry 'insert' to 'tableName' in 'databaseName'
+
+    - addManyEntries : databaseName, tableName, insert
+        add a bulk of entries in 'insert' to 'tableName' in 'databaseName'
+
+    - closeConnection : connectionObject
+        close a sqlite3.connection object specified by 'connectionObject'
+
+    - createTable : databaseName, tableName, columnNames
+        create a table 'tableName' in 'databaseName' with columns specified
+        in 'columnNames'
+
+    - deleteAllEntries : databaseName, tableName
+        delete all rows in 'tableName' in 'databaseName'
+
+    - deleteManyEntries : databaseName, tableName, row_id_list
+        delete only certain rows specified by 'row_id_list' from
+        'tableName' in 'databaseName'
+
+    - data : databaseName, tableName
+        get all data from 'tableName' in 'databaseName'
+
+    - establishConnection : databaseName
+        establish a connection to 'databaseName'
+
+    - extension : None
+        getter for the 'extension' property
+
+    - path : None
+        getter for the 'path' property
+
+    - setExtension : extension
+        setter for the 'extension' property
+
+    - setPath : path
+        setter for the 'path' property
+
+    Protected Methods
+    -----------------
+    __init__ : path = None, extension = ".db"
+        constructor of a database-Objet
+
+    __checkPath :  None
+        checks input for the property: path. if 'path' remains none, new
+        databases are going to be created in the current working directory
+
+    Exmple Usage
+    ------------
+    db = database(path)
+
+    dbName = "test_database_2"
+
+    columnNames = (
+                    ("exercise", "TEXT"),
+
+                    ("sets", "TEXT"),
+
+                    ("repetitions", "TEXT"),
+
+                    ("warm_up", "TEXT"),
+
+                    ("week_1", "TEXT"),
+
+                    ("week_2", "TEXT"),
+
+                    ("week_3", "TEXT"),
+
+                    ("week_4", "TEXT"),
+
+                    ("week_5", "TEXT"),
+
+                    ("week_6", "TEXT"),
+
+                    ("mode", "TEXT"),
+                )
+
+    db.createTable(dbName, "training_routine", columnNames)
+
+    training = [
+        ["Bankdrücken KH", "4", "RBD", "WBD", "BD1", "BD2", "BD3", "BD4", "BD5", "BD6", "gym"],
+
+        ["Klimmzüge", "4", "RKZ", "WKZ", "KZ1", "KL2", "KL3", "KL4", "KL5", "KL6", "gym"],
+
+        ["Kniebeugen", "4", "RKB", "WKB", "KB1", "KB2", "KB3", "KB4", "KN5", "KB6", "gym"],
+
+        ["Bizeps KH", "4", "RBZ", "WBZ", "BZ1", "BZ2", "BZ3", "BZ4", "BZ5", "BZ6", "gym"],
+
+        ["Trizeps Seilzug", "4", "RTZ", "WTZ", "TZ1", "TZ2", "TZ3", "TZ4", "TZ5", "TZ6", "gym"],
+
+        ["Seitenheben KH", "4", "RSH", "WSH", "SH1", "SH2", "SH3", "SH4", "SH5", "SH6", "gym"]
+    ]
+
+    db.addManyEntries(dbName, "training_routine", training)
     """
     def __init__(self, path = None, extension = ".db"):
         self.__path = path
