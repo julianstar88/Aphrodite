@@ -14,7 +14,7 @@ class database():
 
     Input parameter:
         - databaseName: name of the generated database-file type: str
-        - tableName: name of the table within a database-file type: str
+        - tableName: name of the table in a database-file type: str
         - columnNames: name and type of the colums in form of an tupel
             (("name", "type"), ("name", "type"),...)
 
@@ -37,7 +37,7 @@ class database():
 
     def addEntry(self, databaseName, tableName, insert):
         """
-        add a single entry 'insert' to the table named 'tableName' within the database
+        add a single entry 'insert' to the table named 'tableName' in the database
         'databaseName'.
 
         Parameters
@@ -225,7 +225,7 @@ class database():
     def deleteEntry(self, databaseName, tableName, row_id):
         """
         delete only on line refered by 'row_id' from a table refered by 'tableName'
-        within the database called 'databaseName'.
+        in the database called 'databaseName'.
 
         Parameters
         ----------
@@ -256,6 +256,24 @@ class database():
         self.closeConnection(con)
 
     def deleteManyEntries(self, databaseName, tableName, row_id_list):
+        """
+        delete a bulk of entries from table 'tableName' in the database
+        'databaseName'. 'row_id_list' specifies which rows to delete.
+
+        Parameters
+        ----------
+        databaseName : str
+            specify the database.
+        tableName : TYPE
+            specify the table form which to delete.
+        row_id_list : list
+            list of integers defining the rows which to delete.
+
+        Returns
+        -------
+        None.
+
+        """
 
         # establish connection
         con = self.establishConnection(databaseName)
@@ -270,6 +288,25 @@ class database():
         self.closeConnection(con)
 
     def data(self, databaseName, tableName):
+        """
+        get all data from a table refered by 'tableName' in the database
+        refered by 'databaseName'
+
+        Parameters
+        ----------
+        databaseName : str
+            specify the database. if database 'databaseName' does not exist, an
+            OperationalError will be raisesd.
+        tableName : str
+            specify the table from which to fetch data. if table 'tableName'
+            does not exist, an OperationalError will be raised.
+
+        Returns
+        -------
+        data : list
+            a nested list, containing  all rows of a table.
+
+        """
 
         # establish connection
         con = self.establishConnection(databaseName)
@@ -285,18 +322,65 @@ class database():
         return data
 
     def establishConnection(self, databaseName):
+        """
+        establish a connection to the database 'databaseName'
+
+        Parameters
+        ----------
+        databaseName : str
+            specify the database to connect to.
+
+        Returns
+        -------
+        sqlite3.Connection Object
+            Connection Ojbect describing the connection to a specific database.
+
+        """
         databaseName = databaseName + self.__extension
         database = os.path.join(self.__path, databaseName)
         return lite.connect(database)
 
 
     def extension(self):
+        """
+        extesnion for the database to create a db-file. default is .db
+
+        Returns
+        -------
+        str
+            returns the current extension for all new databases created by
+            a Database.database-Object.
+
+        """
         return self.__extension
 
     def path(self):
+        """
+        path specifies the directory where new databases are going to be stored
+
+        Returns
+        -------
+        str
+            path to a directory.
+
+        """
         return self.__path
 
     def setExtension(self, extension):
+        """
+        set a new value for the property 'extension'
+
+        Parameters
+        ----------
+        extension : str
+            new extensions must have the form ".extension" and must specify a
+            valid file-type.
+
+        Returns
+        -------
+        None.
+
+        """
         self.__extension = extension
 
     def setPath(self, path):
