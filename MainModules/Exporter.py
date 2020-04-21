@@ -6,6 +6,7 @@ Created on Tue Mar  3 22:30:14 2020
 """
 import datetime
 import pathlib2
+import openpyxl
 import UtilityModules.ExporterUtilityModules as exporterUtils
 
 
@@ -17,7 +18,8 @@ class Exporter():
                  name = None,
                  routineName = None,
                  trainingPeriode = [None, None],
-                 trainingMode = None):
+                 trainingMode = None,
+                 workBook = None):
 
         self.__database = database
         self.__exportPath = exportPath
@@ -25,6 +27,7 @@ class Exporter():
         self.__routineName = routineName
         self.__trainingPeriode = trainingPeriode
         self.__trainingMode = trainingMode
+        self.__workBook = workBook
 
     def database(self):
         return self.__database
@@ -35,21 +38,22 @@ class Exporter():
     def name(self):
         return self.__name
 
-    def populateRoutine(self, workBook):
+    def populateRoutine(self):
         pass
-
-    def routineName(self):
-        return self.__routineName
 
     def routineLayout(self, rows = 40):
         workBook = exporterUtils.TamplateLayout(rows)
         return workBook
 
-    def trainingPeriode(self):
-        return self.__trainingPeriode
+    def routineName(self):
+        return self.__routineName
 
     def trainingMode(self):
         return self.__trainingMode
+
+    def trainingPeriode(self):
+        return self.__trainingPeriode
+
 
     def setDatabase(self, databasePath):
         path = pathlib2.Path(databasePath)
@@ -115,6 +119,20 @@ class Exporter():
         else:
             self.__routineName = routineName
 
+    def setTrainingMode(self, trainingMode):
+        if not type(trainingMode) == str:
+            raise TypeError(
+                    "input {input_name} for argument 'trainingMode' does not match {type_name}".format(
+                            input_name = type(trainingMode),
+                            type_name = type("123")
+                        )
+                )
+        if len(trainingMode) == 0:
+            raise ValueError(
+                    "input for 'trainingMode' is not valid. 'trainingMode' must at least contain one character"
+                )
+        self.__trainingMode = trainingMode
+
     def setTrainingPeriode(self, startYear, startMonth, startDay):
         if not type(startYear) == int:
             raise TypeError(
@@ -142,7 +160,19 @@ class Exporter():
                 )
         startDate = datetime.date(startYear, startMonth, startDay)
         endDate = startDate + datetime.timedelta(days = 42)
-        self.__trainingPeriode = (startDate, endDate)
+        startDateString = startDate.strftime("%d.%m.%Y")
+        endDateString = endDate.strftime("%d.%m.%Y")
+        self.__trainingPeriode = (startDateString, endDateString)
+
+    def setWorkBook(self, workBook):
+        if not type(workBook) == openpyxl.Workbook:
+            raise TypeError(
+                    "input for 'workBook' must be an instance of the 'openpyxl.Workbook' module"
+                )
+        self.__workBook = workBook
+
+    def workBook(self):
+        return self.__workBook
 
 if __name__ == "__main__":
     exporter = Exporter()
