@@ -179,10 +179,10 @@ class ExporterProperties(unittest.TestCase):
                         startDate.year, startDate.month, startDate.day
                     )
                 self.assertEqual(
-                        self.exporter.trainingPeriode(), (
+                        self.exporter.trainingPeriode(), [
                                 startDate.strftime("%d.%m.%Y"),
                                 endDate.strftime("%d.%m.%Y")
-                            )
+                            ]
                     )
         for value in exceptionValues:
             with self.subTest(value = value):

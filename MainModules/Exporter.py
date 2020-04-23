@@ -12,7 +12,96 @@ import MainModules.Database as db
 import UtilityModules.ExporterUtilityModules as exporterUtils
 
 class Exporter():
+    """
+    exports a table from a database to an excel-file (.xlsx). although the
+    database can be set arbitrarily, the database is supposed to be a
+    training-routine-database.
+    this class is meant to be used in the framwork of 'Aphrodite'
 
+    Properties
+    ----------
+    - database:
+        a path to a existing database file, which is a valid trainingroutine
+
+        - default: None
+        - getter: database()
+        - setter: setDatabase(db-file)
+
+    - exportPath:
+        a path to a dirctory to store the created exportfile in
+
+        - default: None
+        - getter: exportPath()
+        - setter: setExportPath(directory-path)
+
+    - name:
+        username for the trainingroutine
+
+        - default: None
+        - getter: name()
+        - setter: setName(name)
+
+    - routineName:
+        name of the exportfile
+
+        - default: None
+        - getter: routineName()
+        - setter: setRoutineName(routine-name)
+
+    - trainingPeriode:
+        discribes the duration for the trainingroutine. One has only to provide
+        the start date via the setter method, the end date will be calulated
+        automatically six weeks later. the getter will return a tuple consisting
+        of strings describing the start data in first place and the end data in
+        last place
+
+        - default: None
+        - getter: trainingPeriode()
+        - setter: setTrainingPeriode(year, month, day)
+
+    - trainingMode:
+        describes which kind of trainingform is written into the exportfile
+
+        - default: None
+        - getter: trainingMode
+        - setter: setTrainingMode(mode)
+
+    - workBook:
+        'workBook' is an openpyxl.Workbook object, used to create the exportfile.
+        this property gets written, if one set a path to a valid database. it
+        also can be changed using its setter method
+
+        - default: none
+        - getter: workBook()
+        - setter: setWorkBook(workbook)
+
+    Usage
+    -----
+
+    1. create the exporter object:
+
+        - exporter = Exporter()
+
+    2. set suitable properties:
+
+        - exporter.setDatabase(...)
+        - exporter.setExportPath(...)
+        - exporter.setName(...)
+        - exporter.setTrainingPeriode(...)
+        - exporter.setTrainingMode(...)
+
+    3. layout the exportfile:
+
+        - exporter.routineLayout()
+
+    4. populate the exportfile with exercises, sets and repetitions
+
+        - exporter.populateRoutine()
+
+    5. save the workBook to create the exportfile
+
+        - exporter.saveRoutine()
+    """
     def __init__(self,
                  database = None,
                  exportPath = None,
@@ -33,21 +122,92 @@ class Exporter():
         self._workBook = workBook
 
     def database(self):
+        """
+        holds thepath to a existing database file, which is a valid
+        trainingroutine. the database is needed to populate the the
+        exportfile.
+
+
+        Returns
+        -------
+        str
+            path to a database.
+
+        """
+
         return self._database
 
     def databaseName(self):
+        """
+        holds the name of the database. this property is written by
+        'setDatabase'. it is the equivalent of invoking 'os.path.basename()' and
+        'os.path.spiltext()[0]'
+
+        Returns
+        -------
+        str
+            databaseName.
+
+        """
+
         return self._databaseName
 
     def databasePath(self):
+        """
+        holds the directory of 'databaseName'. this property is written by
+        'setDatabase'. it is the equivalent of invoking 'os.path.basename()' and
+        'os.path.spiltext()[0]'
+
+        Returns
+        -------
+        str
+            databasePath.
+
+        """
+
         return self._databasePath
 
     def exportPath(self):
+        """
+        holds the directory-path where to store the exportfile
+
+        Returns
+        -------
+        str
+            exportPath.
+
+        """
+
         return self._exportPath
 
     def name(self):
+        """
+        holds the username for the trainingroutine. this is the name, which
+        will be written under the name in the exportfile
+
+        Returns
+        -------
+        str
+            name.
+
+        """
+
         return self._name
 
     def populateRoutine(self):
+        """
+        by invoking this method, the workbook in the 'workBook' property gets
+        populated with data from the database. make sure, that 'routineLayout'
+        has been invoked prior.
+        if no proper values either for the database-property or the
+        workBook-property have been set, a ValueError will be raised
+
+        Returns
+        -------
+        None.
+
+        """
+
         if not self.database():
             raise TypeError(
                     "tried to access an invalid database. set a vild Database.database-object as database, before populating a trainingroutine"
@@ -80,17 +240,69 @@ class Exporter():
             ws["D" + str(7 + i)] = val
 
     def routineLayout(self, rows = 40):
+        """
+        by invoking this method, the layout for the trainingroutine
+        in the exportfile will be created. its also writing the intermediate
+        workbook file to the 'workBook'-property. for convinience, the created
+        intermediade workbook will be returned to the user.
+
+        Parameters
+        ----------
+        rows : int, optional
+            determines, how many rows in the exportfile will be available.
+            The default is 40.
+
+        Returns
+        -------
+        workBook : openpyxl.Workbook
+            intermediate workbook ojbect.
+
+        """
+
         workBook = exporterUtils.TamplateLayout(rows)
         self.setWorkBook(workBook)
         return workBook
 
     def routineName(self):
+        """
+        holds the routinename for the exportfile. this will be the name for the
+        -excel-file, which will be saved at 'exportPath'
+
+        Returns
+        -------
+        str
+            routineName.
+
+        """
+
         return self._routineName
 
     def trainingMode(self):
+        """
+        holds the mode, which discribes the kind of training. this mode will be
+        written into the exportfile
+
+        Returns
+        -------
+        str
+            trainingMode.
+
+        """
+
         return self._trainingMode
 
     def trainingPeriode(self):
+        """
+        holds the duration for the trainingroutine. the dates in this property
+        will be written to the exportfile
+
+        Returns
+        -------
+        tuple
+            contains the start and end date of the given trainingroutine.
+
+        """
+
         return self._trainingPeriode
 
     def saveRoutine(self):
@@ -215,7 +427,7 @@ class Exporter():
         endDate = startDate + datetime.timedelta(days = 42)
         startDateString = startDate.strftime("%d.%m.%Y")
         endDateString = endDate.strftime("%d.%m.%Y")
-        self._trainingPeriode = (startDateString, endDateString)
+        self._trainingPeriode = [startDateString, endDateString]
 
     def setWorkBook(self, workBook):
         if not type(workBook) == openpyxl.Workbook:
@@ -228,6 +440,4 @@ class Exporter():
         return self._workBook
 
 if __name__ == "__main__":
-    pathObj = pathlib2.Path("test_database.db")
-    exporter = Exporter()
-    exporter.populateRoutine()
+    pass
