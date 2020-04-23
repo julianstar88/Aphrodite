@@ -351,21 +351,21 @@ def TamplateLayout(endRow):
     ws.cell(2, 1, value = "Name").font = Font(
             b = True
         )
-    ws.cell(3, 1, value = "Julian")
+    # ws.cell(3, 1, value = "Julian")
 
     ws.cell(2, 4, value = "Trainingszeitraum").font = Font(
             b = True
         )
     ws.cell(3, 4, value = "Anfang:")
-    ws.cell(3, 6, value = "15.04.2020")
+    # ws.cell(3, 6, value = "15.04.2020")
     ws.cell(4, 4, value = "Ende:")
-    ws.cell(4, 6, value = "15.04.2020")
+    # ws.cell(4, 6, value = "15.04.2020")
 
 
     ws.cell(2, 9, value = "Trainingsmodus").font = Font(
             b = True
         )
-    ws.cell(3, 9, value = "Maximalkraft")
+    # ws.cell(3, 9, value = "Maximalkraft")
 
     ws.merge_cells("A2:B2")
     ws.merge_cells("A3:B3")

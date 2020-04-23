@@ -6,12 +6,12 @@ Created on Thu Apr 16 14:37:34 2020
 """
 
 import unittest
-import examples.SQLite3_Database.Database as db
 import datetime
 import openpyxl
 import os
 import pathlib2
 from MainModules.Exporter import Exporter
+import MainModules.Database as db
 
 class ExporterProperties(unittest.TestCase):
 
@@ -27,10 +27,10 @@ class ExporterProperties(unittest.TestCase):
                 "randomParent/randomPath/randomFile",
                 ""
             ]
-        pathObj = pathlib2.Path().cwd() / "temp_test_database.db"
-        self.path = str(pathObj)
-        self.db = db.database(pathObj.parent)
-        self.db.createDatabase("temp_test_database")
+        self.databaseName = "temp_test_database"
+        self.pathObj = pathlib2.Path().cwd() / pathlib2.Path(self.databaseName + ".db")
+        self.db = db.database(self.pathObj.parent)
+        self.db.createDatabase(self.databaseName)
         self.exporter = Exporter()
 
     def test_instance(self):
@@ -48,6 +48,16 @@ class ExporterProperties(unittest.TestCase):
                 self.exporter.exportPath(), None
             )
 
+    def test_databaseName_getter(self):
+        self.assertEqual(
+                self.exporter.databaseName(), None
+            )
+
+    def test_databasePath_getter(self):
+        self.assertEqual(
+                self.exporter.databasePath(), None
+            )
+
     def test_name_getter(self):
         self.assertEqual(
                 self.exporter.name(), None
@@ -58,9 +68,19 @@ class ExporterProperties(unittest.TestCase):
                 self.exporter.routineName(), None
             )
 
+    def test_trainingMode_getter(self):
+        self.assertEqual(
+                self.exporter.trainingMode(), None
+            )
+
     def test_trainingPeriode_getter(self):
         self.assertEqual(
                 self.exporter.trainingPeriode(), [None, None]
+            )
+
+    def test_workBook_getter(self):
+        self.assertEqual(
+                self.exporter.workBook(), None
             )
 
     def test_name_setter(self):
@@ -76,9 +96,9 @@ class ExporterProperties(unittest.TestCase):
             )
 
     def test_database_setter(self):
-        self.exporter.setDatabase(self.path)
+        self.exporter.setDatabase(str(self.pathObj))
         self.assertEqual(
-                self.exporter.database(), self.path
+                self.exporter.database(), str(self.pathObj)
             )
         for val in self.raiseTypeErrors:
             with self.subTest(val = val):
@@ -118,6 +138,27 @@ class ExporterProperties(unittest.TestCase):
                 ValueError, self.exporter.setRoutineName, self.raiseValueErrors[1]
             )
 
+    def test_trainingMode_setter(self):
+        raiseTypeErrors = self.raiseTypeErrors
+        raiseValueErrors = self.raiseValueErrors[1]
+
+        self.exporter.setTrainingMode("TestMode")
+        self.assertEqual(
+                self.exporter.trainingMode(), "TestMode"
+            )
+
+        for val in raiseTypeErrors:
+            with self.subTest(val = val):
+                self.assertRaises(
+                        TypeError, self.exporter.setTrainingMode, val
+                    )
+
+        for val in raiseValueErrors:
+            with self.subTest(val = val):
+                self.assertRaises(
+                        ValueError, self.exporter.setTrainingMode, val
+                    )
+
     def test_trainingPeriode_setter(self):
         startDateValues = [
                 datetime.date(year, month, day)
@@ -138,7 +179,10 @@ class ExporterProperties(unittest.TestCase):
                         startDate.year, startDate.month, startDate.day
                     )
                 self.assertEqual(
-                        self.exporter.trainingPeriode(), (startDate, endDate)
+                        self.exporter.trainingPeriode(), [
+                                startDate.strftime("%d.%m.%Y"),
+                                endDate.strftime("%d.%m.%Y")
+                            ]
                     )
         for value in exceptionValues:
             with self.subTest(value = value):
@@ -156,15 +200,71 @@ class ExporterProperties(unittest.TestCase):
                         TypeError, self.exporter.setTrainingPeriode, 1, 2, value
                     )
 
+    def test_workBook_setter(self):
+        raiseTypeErrors = self.raiseTypeErrors
+        raiseTypeErrors.append("")
+        wb = self.exporter.routineLayout()
+
+        self.exporter.setWorkBook(wb)
+        self.assertEqual(
+                self.exporter.workBook(), wb
+            )
+        for val in raiseTypeErrors:
+            with self.subTest(val = val):
+                self.assertRaises(
+                        TypeError, self.exporter.setWorkBook, val
+                    )
+
     def tearDown(self):
-        os.remove(self.path)
+        os.remove(str(self.pathObj))
 
 class TrainingRoutineLayout(unittest.TestCase):
 
     def setUp(self):
+        self.databaseName = "temp_test_database"
+        self.routineName = "temp_test_routine.xlsx"
+        self.tableName = "training_routine"
+        self.name = "Aphrodite"
+        self.trainingMode = "TestMode"
         self.columnCount = 10
         self.rowCountValues = [6, 10, 20, 40, 60]
+
+
+        self.pathObj = pathlib2.Path().cwd()
+
+        self.db = db.database(self.pathObj)
+        columnNames = (
+                ("exercise", "TEXT"),
+                ("Sets", "TEXT"),
+                ("repetitions", "TEXT"),
+                ("warm_up", "TEXT"),
+                ("week_1", "TEXT"),
+                ("week_2", "TEXT"),
+                ("week_3", "TEXT"),
+                ("week_4", "TEXT"),
+                ("week_5", "TEXT"),
+                ("week_6", "TEXT"),
+                ("mode", "TEXT"),
+            )
+        self.db.createTable(self.databaseName, self.tableName, columnNames)
+        training = [
+                ["Bankdrücken KH", "4", "RBD", "WBD", "BD1", "BD2", "BD3", "BD4", "BD5", "BD6", "gym"],
+                ["Klimmzüge", "4", "RKZ", "WKZ", "KZ1", "KL2", "KL3", "KL4", "KL5", "KL6", "gym"],
+                ["Kniebeugen", "4", "RKB", "WKB", "KB1", "KB2", "KB3", "KB4", "KN5", "KB6", "gym"],
+                ["Bizeps KH", "4", "RBZ", "WBZ", "BZ1", "BZ2", "BZ3", "BZ4", "BZ5", "BZ6", "gym"],
+                ["Trizeps Seilzug", "4", "RTZ", "WTZ", "TZ1", "TZ2", "TZ3", "TZ4", "TZ5", "TZ6", "gym"],
+                ["Seitenheben KH", "4", "RSH", "WSH", "SH1", "SH2", "SH3", "SH4", "SH5", "SH6", "gym"]
+            ]
+        self.db.addManyEntries(self.databaseName, self.tableName, training)
+
+        path = self.pathObj / pathlib2.Path(self.databaseName + ".db")
         self.exporter = Exporter()
+        self.exporter.setDatabase(str(path))
+        self.exporter.setName(self.name)
+        self.exporter.setRoutineName(self.routineName)
+        self.exporter.setTrainingMode(self.trainingMode)
+        self.exporter.setTrainingPeriode(2020, 11, 11)
+        self.exporter.setExportPath(str(self.pathObj))
 
     def test_workbook_validity(self):
         wb = self.exporter.routineLayout(self.rowCountValues[1])
@@ -304,13 +404,69 @@ class TrainingRoutineLayout(unittest.TestCase):
                                         self.assertEqual(cell.border.bottom.style, "thick")
                                         self.assertEqual(cell.border.right.style, "thin")
 
-    def test_routine_population(self):
-        wb = self.exporter.routineLayout()
-        self.exporter.setName("Aphrodite")
-        self.exporter.populateRoutine(wb)
-        ws = wb.active
+    def test_populateRoutine(self):
+        self.exporter.routineLayout()
+        self.exporter.populateRoutine()
+        data = self.db.data(self.databaseName, self.tableName)
+        ws = self.exporter.workBook().active
 
+        headerTestCells = ["A3", "F3", "F4", "I3"]
+        headerTestResults = [
+                        self.name,
+                        self.exporter.trainingPeriode()[0],
+                        self.exporter.trainingPeriode()[1],
+                        self.trainingMode
+                     ]
+        for i, val in enumerate(headerTestCells):
+            with self.subTest(val = val):
+                self.assertEqual(
+                        ws[val].value, headerTestResults[i]
+                    )
 
+        testValues = [data[i][0] for i in range(len(data))]
+        for i, val in enumerate(testValues):
+            with self.subTest(i = i):
+                cell = ws["A" + str(7 + i)]
+                self.assertEqual(
+                        cell.value, val
+                    )
+
+        testValues = [data[i][1] for i in range(len(data))]
+        for i, val in enumerate(testValues):
+            with self.subTest(i = i):
+                cell = ws["C" + str(7 + i)]
+                self.assertEqual(
+                        cell.value, val
+                    )
+
+        testValues = [data[i][2] for i in range(len(data))]
+        for i, val in enumerate(testValues):
+            with self.subTest(i = i):
+                cell = ws["D" + str(7 + i)]
+                self.assertEqual(
+                        cell.value, val
+                    )
+
+    def test_saveRoutine(self):
+        path = self.pathObj / pathlib2.Path(self.routineName)
+        self.exporter.routineLayout()
+        self.exporter.populateRoutine()
+        self.exporter.saveRoutine()
+        self.assertTrue(path.is_file())
+
+    def tearDown(self):
+        databasePath = self.pathObj / pathlib2.Path(self.databaseName + ".db")
+        routinePath = self.pathObj / pathlib2.Path(self.routineName)
+
+        try:
+            os.remove(str(databasePath))
+        except FileNotFoundError:
+            pass
+
+        try:
+            os.remove(str(routinePath))
+        except FileNotFoundError:
+            pass
 
 if __name__ == "__main__":
     unittest.main()

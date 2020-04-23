@@ -5,15 +5,12 @@ Created on Thu Apr 16 20:58:19 2020
 @author: Julian
 """
 
-import examples.SQLite3_Database.Database as db
+import pathlib2
+import os.path
 
-db = db.database()
-# db.createTable(
-#         "test", "testTable",
-#         (
-#             ("col1", "TEXT"),
-#             ("col2", "TEXT"),
-#             ("col3", "TEXT")
-#         )
-#     )
-db.deleteAllEntries("test.db", "testTable")
+path = "C:/Users/Julian/Documents/Python/Projekte/Aphrodite/examples/Qt_ModelView/database/test_database.db"
+pathObj = pathlib2.Path(1)
+splitted = os.path.splitext(pathObj.name)
+
+print(pathObj.parent)
+print(splitted)
