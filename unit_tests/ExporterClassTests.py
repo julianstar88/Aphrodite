@@ -6,12 +6,12 @@ Created on Thu Apr 16 14:37:34 2020
 """
 
 import unittest
-import examples.SQLite3_Database.Database as db
 import datetime
 import openpyxl
 import os
 import pathlib2
 from MainModules.Exporter import Exporter
+import MainModules.Database as db
 
 class ExporterProperties(unittest.TestCase):
 
@@ -46,6 +46,16 @@ class ExporterProperties(unittest.TestCase):
     def test_exportPath_getter(self):
         self.assertEqual(
                 self.exporter.exportPath(), None
+            )
+
+    def test_databaseName_getter(self):
+        self.assertEqual(
+                self.exporter.databaseName(), None
+            )
+
+    def test_databasePath_getter(self):
+        self.assertEqual(
+                self.exporter.databasePath(), None
             )
 
     def test_name_getter(self):
@@ -212,12 +222,17 @@ class TrainingRoutineLayout(unittest.TestCase):
 
     def setUp(self):
         self.databaseName = "temp_test_database"
+        self.routineName = "temp_test_routine.xlsx"
         self.tableName = "training_routine"
-        self.pathObj = pathlib2.Path().cwd() / pathlib2.Path(self.databaseName + ".db")
+        self.name = "Aphrodite"
+        self.trainingMode = "TestMode"
         self.columnCount = 10
         self.rowCountValues = [6, 10, 20, 40, 60]
-        self.exporter = Exporter()
-        self.db = db.database(self.pathObj.parent)
+
+
+        self.pathObj = pathlib2.Path().cwd()
+
+        self.db = db.database(self.pathObj)
         columnNames = (
                 ("exercise", "TEXT"),
                 ("Sets", "TEXT"),
@@ -241,6 +256,15 @@ class TrainingRoutineLayout(unittest.TestCase):
                 ["Seitenheben KH", "4", "RSH", "WSH", "SH1", "SH2", "SH3", "SH4", "SH5", "SH6", "gym"]
             ]
         self.db.addManyEntries(self.databaseName, self.tableName, training)
+
+        path = self.pathObj / pathlib2.Path(self.databaseName + ".db")
+        self.exporter = Exporter()
+        self.exporter.setDatabase(str(path))
+        self.exporter.setName(self.name)
+        self.exporter.setRoutineName(self.routineName)
+        self.exporter.setTrainingMode(self.trainingMode)
+        self.exporter.setTrainingPeriode(2020, 11, 11)
+        self.exporter.setExportPath(str(self.pathObj))
 
     def test_workbook_validity(self):
         wb = self.exporter.routineLayout(self.rowCountValues[1])
@@ -381,22 +405,24 @@ class TrainingRoutineLayout(unittest.TestCase):
                                         self.assertEqual(cell.border.right.style, "thin")
 
     def test_populateRoutine(self):
-        testName = "Aphrodite"
-        testMode = "TestMode"
-        wb = self.exporter.routineLayout()
-        self.exporter.setName(testName)
-        self.exporter.setTrainingMode(testMode)
-        self.exporter.setTrainingPeriode(2020, 11, 11)
-        self.exporter.populateRoutine(wb)
+        # testName = "Aphrodite"
+        # testMode = "TestMode"
+        # path = self.pathObj / pathlib2.Path(self.databaseName + ".db")
+        self.exporter.routineLayout()
+        # self.exporter.setDatabase(str(path))
+        # self.exporter.setName(testName)
+        # self.exporter.setTrainingMode(testMode)
+        # self.exporter.setTrainingPeriode(2020, 11, 11)
+        self.exporter.populateRoutine()
         data = self.db.data(self.databaseName, self.tableName)
-        ws = wb.active
+        ws = self.exporter.workBook().active
 
         headerTestCells = ["A3", "F3", "F4", "I3"]
         headerTestResults = [
-                        testName,
+                        self.name,
                         self.exporter.trainingPeriode()[0],
                         self.exporter.trainingPeriode()[1],
-                        testMode
+                        self.trainingMode
                      ]
         for i, val in enumerate(headerTestCells):
             with self.subTest(val = val):
@@ -428,8 +454,26 @@ class TrainingRoutineLayout(unittest.TestCase):
                         cell.value, val
                     )
 
+    def test_saveRoutine(self):
+        path = self.pathObj / pathlib2.Path(self.routineName)
+        self.exporter.routineLayout()
+        self.exporter.populateRoutine()
+        self.exporter.saveRoutine()
+        self.assertTrue(path.is_file())
+
     def tearDown(self):
-        os.remove(str(self.pathObj))
+        databasePath = self.pathObj / pathlib2.Path(self.databaseName + ".db")
+        routinePath = self.pathObj / pathlib2.Path(self.routineName)
+
+        try:
+            os.remove(str(databasePath))
+        except FileNotFoundError:
+            pass
+
+        try:
+            os.remove(str(routinePath))
+        except FileNotFoundError:
+            pass
 
 if __name__ == "__main__":
     unittest.main()
