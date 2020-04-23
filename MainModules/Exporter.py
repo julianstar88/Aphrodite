@@ -51,8 +51,8 @@ class Exporter():
     - trainingPeriode:
         discribes the duration for the trainingroutine. One has only to provide
         the start date via the setter method, the end date will be calulated
-        automatically six weeks later. the getter will return a tuple consisting
-        of strings describing the start data in first place and the end data in
+        automatically six weeks later. the getter will return a list consisting
+        of strings describing the start date in first place and the end date in
         last place
 
         - default: None
@@ -306,6 +306,25 @@ class Exporter():
         return self._trainingPeriode
 
     def saveRoutine(self):
+        """
+        save the intermediate workbook 'workBook' and create the final export-
+        file (.xlsx-file). the exportfile will be saved to the 'exportPath',
+        with the name 'routineName'. to prevent unexpected behavior, one should
+        obey the recommended procedure in the class-documentation.
+
+        Raises
+        ------
+        TypeError
+            will be raised, if either 'exportPath' or 'routineName' are
+            invalid.
+
+        Returns
+        -------
+        None.
+
+        """
+
+
         if not self.exportPath():
             raise TypeError (
                     "try to export a trainingroutine to an invalid path. set a valid export path before saving a trainingroutine"
@@ -319,6 +338,30 @@ class Exporter():
         self.workBook().save(str(path))
 
     def setDatabase(self, databasePath):
+        """
+        setter method for the 'database'-property.
+
+        Parameters
+        ----------
+        databasePath : str
+            this parameter must point to a valid db-file
+            (typically a trainingroutine).
+
+        Raises
+        ------
+        TypeError
+             will be raised if the input is not type str.
+
+        ValueError
+            will be raised if input is an empty string or a path which
+            does not point to a file.
+
+        Returns
+        -------
+        None.
+
+        """
+
         path = pathlib2.Path(databasePath)
         if not type(databasePath) == str:
             raise TypeError(
@@ -340,6 +383,30 @@ class Exporter():
         self._databasePath = path.parent
 
     def setExportPath(self, exportPath):
+        """
+        setter method for the 'exportPath'-property.
+
+        Parameters
+        ----------
+        exportPath : str
+            exportPath must point to a directory, where the exportfile
+            will be stored.
+
+        Raises
+        ------
+        TypeError
+            will be raised, if the input is not type str.
+
+        ValueError
+            will be raised, if the input does not point to a directory,
+            or the length of the input string is zeor.
+
+        Returns
+        -------
+        None.
+
+        """
+
         path = pathlib2.Path(exportPath)
         if not type(exportPath) == str:
             raise TypeError(
@@ -359,6 +426,28 @@ class Exporter():
         self._exportPath = str(path)
 
     def setName(self, name):
+        """
+        setter methof for the 'name'-property.
+
+        Parameters
+        ----------
+        name : str
+            Username, written in the exportfile.
+
+        Raises
+        ------
+        TypeError
+            will be raised, if the input is not type str.
+
+        ValueError
+            will be raised, if the length of the input is zero.
+
+        Returns
+        -------
+        None.
+
+        """
+
         if not type(name) == str:
             raise TypeError(
                 "input argument {name} does not match {type_name}".format(
@@ -372,6 +461,27 @@ class Exporter():
             self._name = name
 
     def setRoutineName(self, routineName):
+        """
+        setter method for the 'routineName'-property
+
+        Parameters
+        ----------
+        routineName : str
+            this represents the name of the exporfile.
+
+        Raises
+        ------
+        TypeError
+            will be raised.
+        ValueError
+            DESCRIPTION.
+
+        Returns
+        -------
+        None.
+
+        """
+
         if not type(routineName) == str:
             raise TypeError(
                 "input argument {name} does not match {type_name}".format(
@@ -385,6 +495,28 @@ class Exporter():
             self._routineName = routineName
 
     def setTrainingMode(self, trainingMode):
+        """
+        setter for the 'trainingMode'-property
+
+        Parameters
+        ----------
+        trainingMode : str
+            descirbes which the type of training. this property will be written
+            inot the exportfile.
+
+        Raises
+        ------
+        TypeError
+            will be raised, if the input is not type str.
+        ValueError
+            will be raised, if input length is zero.
+
+        Returns
+        -------
+        None.
+
+        """
+
         if not type(trainingMode) == str:
             raise TypeError(
                     "input {input_name} for argument 'trainingMode' does not match {type_name}".format(
@@ -399,6 +531,31 @@ class Exporter():
         self._trainingMode = trainingMode
 
     def setTrainingPeriode(self, startYear, startMonth, startDay):
+        """
+        setter method for the 'trainingPeriode'-property. the setter provides
+        only the possibility to set the start date. the end date will be
+        computed automatically six weeks later.
+
+        Parameters
+        ----------
+        startYear : int
+            start year of the training.
+        startMonth : int
+            start month of the training.
+        startDay : int
+            start day of the training.
+
+        Raises
+        ------
+        TypeError
+            will be raised, if one of the parameters is not type int.
+
+        Returns
+        -------
+        None.
+
+        """
+
         if not type(startYear) == int:
             raise TypeError(
                     """input argument '{name}' for <startYear>
@@ -430,6 +587,28 @@ class Exporter():
         self._trainingPeriode = [startDateString, endDateString]
 
     def setWorkBook(self, workBook):
+        """
+        setter method for the 'workBook'-property. this property is normally
+        not meant to be set manually, because it will be set by 'setDatabase'.
+        However, for convinience of special cases it is possible to modify the
+        value of the 'workBook' later on
+
+        Parameters
+        ----------
+        workBook : openpyxl.Workbook
+            workbook objects will used as intermediate to create the exportfile.
+
+        Raises
+        ------
+        TypeError
+            will be raised, if the paramter is not type openpyxl.Workbook.
+
+        Returns
+        -------
+        None.
+
+        """
+
         if not type(workBook) == openpyxl.Workbook:
             raise TypeError(
                     "input for 'workBook' must be an instance of the 'openpyxl.Workbook' module"
@@ -437,6 +616,17 @@ class Exporter():
         self._workBook = workBook
 
     def workBook(self):
+        """
+        holds the intermediate workbook-object which will be needed to create
+        the export file
+
+        Returns
+        -------
+        openpyxl.Workbook
+            the 'workBook'-property.
+
+        """
+
         return self._workBook
 
 if __name__ == "__main__":
