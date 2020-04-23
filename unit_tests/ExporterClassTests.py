@@ -405,14 +405,7 @@ class TrainingRoutineLayout(unittest.TestCase):
                                         self.assertEqual(cell.border.right.style, "thin")
 
     def test_populateRoutine(self):
-        # testName = "Aphrodite"
-        # testMode = "TestMode"
-        # path = self.pathObj / pathlib2.Path(self.databaseName + ".db")
         self.exporter.routineLayout()
-        # self.exporter.setDatabase(str(path))
-        # self.exporter.setName(testName)
-        # self.exporter.setTrainingMode(testMode)
-        # self.exporter.setTrainingPeriode(2020, 11, 11)
         self.exporter.populateRoutine()
         data = self.db.data(self.databaseName, self.tableName)
         ws = self.exporter.workBook().active
