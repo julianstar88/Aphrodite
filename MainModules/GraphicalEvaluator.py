@@ -77,11 +77,27 @@ class GraphicalEvaluator():
                         )
                 )
 
+        self._mainWidget = mainWidget
+
     def setModel(self, model):
-        pass
+        if not type(model) == CustomSqlModel:
+            raise TypeError(
+                    "input for 'setModel' does not match {type_name}".format(
+                            type_name = CustomSqlModel
+                        )
+                )
+
+        self._model = model
 
     def setParentWidget(self, parentWidget):
-        pass
+        if not type(parentWidget) == QtWidgets.QWidget:
+            raise TypeError(
+                    "input for 'setParentWidget' does not match {type_name}".format(
+                            type_name = QtWidgets.QWidget
+                        )
+                )
+
+        self._parentWidget = parentWidget
 
 if __name__ == "__main__":
 
@@ -95,7 +111,7 @@ if __name__ == "__main__":
 
             self.evaluator = GraphicalEvaluator()
 
-            self.evaluator.setMainWidget("test")
+            self.evaluator.setModel("test")
 
             self.show()
 
