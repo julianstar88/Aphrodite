@@ -6,23 +6,21 @@ Created on Tue Mar  3 22:30:42 2020
 """
 import sys
 import pathlib2
-import MainModules.Database as db
 from PyQt5 import QtWidgets
 from UtilityModules.CustomModel import CustomSqlModel
 
 class GraphicalEvaluator():
 
-    def __init__(self, database = None, mainWidget = None, model = None, parentWidget = None):
+    def __init__(self,
+                 database = None,
+                 model = None,
+                 parentWidget = None,
+                 dataSource = None):
 
         if database:
             self.setDatabase(database)
         else:
             self._database = database
-
-        if mainWidget:
-            self.setMainWidget(mainWidget)
-        else:
-            self._mainWidget = mainWidget
 
         if model:
             self.setModel(model)
@@ -34,13 +32,29 @@ class GraphicalEvaluator():
         else:
             self._parentWidget = parentWidget
 
+        if dataSource:
+            self.setDataSource(dataSource)
+        else:
+            self._dataSource = 0
+
+        self._mainWidget = QtWidgets.QTabWidget()
+        self._mainWidget.setTabPosition(QtWidgets.QTabWidget.South)
+        self._layout = QtWidgets.QVBoxLayout()
+        self._layout.addWidget(self._mainWidget)
+
     def createTabs(self):
         pass
 
     def database(self):
         return self._database
 
-    def getInformation(self):
+    def dataSource(self):
+        return self._dataSource
+
+    def dataFromDatabase(self):
+        pass
+
+    def dataFromModel(self):
         pass
 
     def mainWidget(self):
@@ -55,7 +69,8 @@ class GraphicalEvaluator():
     def setDatabase(self, database):
         if not type(database) == str:
             raise TypeError(
-                    "input for 'setDatabase' does not match {type_name}".format(
+                    "input <{input_name}> for 'setDatabase' does not match {type_name}".format(
+                            input_name = str(database),
                             type_name = type("123")
                         )
                 )
@@ -64,25 +79,33 @@ class GraphicalEvaluator():
 
         if not pathObj.is_file() or pathObj.match(".db"):
             raise ValueError(
-                    "input for 'setDatabase' does not point to an existing database"
+                    "input <{input_name}> for 'setDatabase' does not point to an existing database".format(
+                            input_name = str(database)
+                        )
                 )
 
         self._database = str(pathObj)
 
-    def setMainWidget(self, mainWidget):
-        if not type(mainWidget) == QtWidgets.QWidget:
+    def setDataSource(self, source):
+        if not type(source) == int:
             raise TypeError(
-                    "input for 'setMainWidget' does not match {type_name}".format(
-                            type_name = QtWidgets.QWidget
+                    "input <{input_name}> for 'setDataSource' does not match {type_name}".format(
+                            input_name = str(source),
+                            type_name = int
                         )
                 )
+        if not (0 <= source <= 1):
+            raise ValueError(
+                    "input for 'setDataSource' is not valid"
+                )
 
-        self._mainWidget = mainWidget
+        self._dataSource = source
 
     def setModel(self, model):
         if not type(model) == CustomSqlModel:
             raise TypeError(
-                    "input for 'setModel' does not match {type_name}".format(
+                    "input <{input_name}> for 'setModel' does not match {type_name}".format(
+                            input_name = str(model),
                             type_name = CustomSqlModel
                         )
                 )
@@ -92,12 +115,27 @@ class GraphicalEvaluator():
     def setParentWidget(self, parentWidget):
         if not type(parentWidget) == QtWidgets.QWidget:
             raise TypeError(
-                    "input for 'setParentWidget' does not match {type_name}".format(
+                    "input <{input_name}> for 'setParentWidget' does not match {type_name}".format(
+                            input_name = str(parentWidget),
                             type_name = QtWidgets.QWidget
                         )
                 )
 
         self._parentWidget = parentWidget
+
+class EvaluatorTab(QtWidgets.QWidget):
+
+    def __init__(self, mainWidget, data):
+        super().__init__()
+        self.mainWidget = mainWidget
+        self.data = data
+        self.layout = QtWidgets.QVBoxLayout(self.mainWidget)
+
+        testLabel = QtWidgets.QLabel("test")
+
+        self.layout.addWidget(testLabel)
+
+
 
 if __name__ == "__main__":
 
@@ -111,7 +149,7 @@ if __name__ == "__main__":
 
             self.evaluator = GraphicalEvaluator()
 
-            self.evaluator.setModel("test")
+            self.evaluator.setDataSource("test")
 
             self.show()
 

@@ -35,9 +35,14 @@ class GraphicalEvaluatorProperties(unittest.TestCase):
                 self.evaluator.database(), None
             )
 
+    def test_dataSource_getter(self):
+        self.assertEqual(
+                self.evaluator.dataSource(), 0
+            )
+
     def test_mainWidget_getter(self):
         self.assertEqual(
-                self.evaluator.mainWidget(), None
+                type(self.evaluator.mainWidget()), QtWidgets.QTabWidget
             )
 
     def test_model_getter(self):
@@ -74,19 +79,26 @@ class GraphicalEvaluatorProperties(unittest.TestCase):
                         ValueError, self.evaluator.setDatabase, val
                     )
 
-    def test_mainWidget_setter(self):
-        self.app = QtWidgets.QApplication([])
-        widget = QtWidgets.QWidget()
+    def test_dataSource_setter(self):
+        testValue = 1
+        typeErrors = ["", '', 123.123, (), [], {}]
+        valueErrors = [-1, 2, 3, 10, 100]
 
-        self.evaluator.setMainWidget(widget)
+        self.evaluator.setDataSource(testValue)
         self.assertEqual(
-                self.evaluator.mainWidget(), widget
+                self.evaluator.dataSource(), testValue
             )
 
-        for val in self.raiseTypeErrors:
+        for val in typeErrors:
             with self.subTest(val = val):
                 self.assertRaises(
-                        TypeError, self.evaluator.setMainWidget, val
+                        TypeError, self.evaluator.setDataSource, val
+                    )
+
+        for val in valueErrors:
+            with self.subTest(val = val):
+                self.assertRaises(
+                        ValueError, self.evaluator.setDataSource, val
                     )
 
     def test_model_setter(self):
@@ -124,6 +136,14 @@ class GraphicalEvaluatorProperties(unittest.TestCase):
             self.app.quit()
         if self.databasePath:
             os.remove(self.databasePath)
+
+class EvaluatorLayout(unittest.TestCase):
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
 
 if __name__ == "__main__":
     unittest.main()
