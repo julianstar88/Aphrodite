@@ -6,7 +6,7 @@ Created on Tue Mar  3 22:30:42 2020
 """
 import sys
 import pathlib2
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtCore
 from UtilityModules.CustomModel import CustomSqlModel
 
 class GraphicalEvaluator():
@@ -33,6 +33,8 @@ class GraphicalEvaluator():
             self._parentWidget = parentWidget
 
         if dataSource:
+            # 0: data source is model
+            # 1: data source is database
             self.setDataSource(dataSource)
         else:
             self._dataSource = 0
@@ -42,8 +44,24 @@ class GraphicalEvaluator():
         self._layout = QtWidgets.QVBoxLayout()
         self._layout.addWidget(self._mainWidget)
 
-    def createTabs(self):
-        pass
+    def createTabs(self, tabLabels = None):
+        if self.dataSource() == 0:
+            data = self.dataFromModel()
+
+        if self.dataSource() == 1:
+            data = self.dataFromDatabase()
+
+        print(data)
+
+    def connectEvaluator(self, parentWidget = None):
+        if parentWidget:
+            self.setParentWidget(parentWidget)
+
+        if not self.parentWidget():
+            raise TypeError(
+                    "before connecting the 'GraphicalEvaluator' to a Parent, the parentWidget have to be set to a <PyQt5.QtWidgets.QWidget> object"
+                )
+        self.parentWidget().setLayout(self._layout)
 
     def database(self):
         return self._database
@@ -54,8 +72,26 @@ class GraphicalEvaluator():
     def dataFromDatabase(self):
         pass
 
-    def dataFromModel(self):
-        pass
+    def dataFromModel(self, model = None):
+        if model:
+            self.setModel(model)
+
+        if not self.model():
+            raise TypeError(
+                    "before fetching data from a model, a valid <QStandardItemModel> has to be set for the model-property of 'GraphicalEvaluator'"
+                )
+
+        rows = self.model().rowCount()
+        cols = self.model().columnCount()
+        print(rows)
+        data = []
+        for row in range(rows):
+            line = []
+            for col in range(cols):
+                item = self.model().item(row, col)
+                line.append(item.data(role = QtCore.Qt.DisplayRole))
+            data.append(line)
+        return data
 
     def mainWidget(self):
         return self._mainWidget
@@ -125,11 +161,10 @@ class GraphicalEvaluator():
 
 class EvaluatorTab(QtWidgets.QWidget):
 
-    def __init__(self, mainWidget, data):
+    def __init__(self, data):
         super().__init__()
-        self.mainWidget = mainWidget
         self.data = data
-        self.layout = QtWidgets.QVBoxLayout(self.mainWidget)
+        self.layout = QtWidgets.QVBoxLayout(self)
 
         testLabel = QtWidgets.QLabel("test")
 
@@ -147,9 +182,16 @@ if __name__ == "__main__":
             self.setGeometry(100,100,800,500)
             self.setWindowTitle("Graphical Evaluator Test")
 
-            self.evaluator = GraphicalEvaluator()
+            model = CustomSqlModel(
+                database = "examples/Qt_ModelView/database/test_database.db",
+                table = "training_routine",
+                tableStartIndex = 0,
+            )
 
-            self.evaluator.setDataSource("test")
+            self.evaluator = GraphicalEvaluator()
+            self.evaluator.setModel(model)
+            self.evaluator.connectEvaluator(self.main)
+            self.evaluator.createTabs()
 
             self.show()
 
