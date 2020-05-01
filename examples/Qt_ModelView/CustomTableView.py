@@ -170,7 +170,7 @@ class CustomModelView(QtWidgets.QTableView):
             canvas = CreateCanvas(labelText, fontSize = 10)
             qpixmap = CreateQPixmap(canvas)
             label = CustomLabel(qpixmap)
-            label.item = item
+            label.itemText = item.data(role = QtCore.Qt.DisplayRole)
             item.setData("", role = QtCore.Qt.DisplayRole)
 
             self.setIndexWidget(index, label)

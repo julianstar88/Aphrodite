@@ -431,7 +431,7 @@ class CustomModelItem(QtGui.QStandardItem):
 
     def __init__(self, displayData, *args, **kwargs):
         super().__init__(displayData, *args, **kwargs)
-        self.displayData = displayData
+        self.setUserData(displayData)
 
     def addTrainingAlternative(self, exerciseID, alternativeExercise, warmUp, repetition,
                                w1, w2, w3, w4, w5, w6,
@@ -586,11 +586,26 @@ class CustomModelItem(QtGui.QStandardItem):
                 CustomModelItem.trainingNotes.append(l)
 
     def setData(self, value, role, defaultPurpose = True):
+        if role == QtCore.Qt.DisplayData:
+            self.setUserData(value)
         super().setData(value, role)
         self.model().itemChanged.emit(self, defaultPurpose)
 
+    def setUserData(self, data):
+        if not type(data) == str:
+            raise TypeError(
+                    "input <{input_name}> for 'setDisplayData' does not match {type_name}".format(
+                            input_name = str(data),
+                            type_name = str
+                        )
+                )
+        self._userData = data
+
     def type():
         return 1001
+
+    def userData(self):
+        return self._userData
 
 class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
 

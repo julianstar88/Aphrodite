@@ -435,7 +435,7 @@ class CustomModelItem(QtGui.QStandardItem):
 
     def __init__(self, displayData, *args, **kwargs):
         super().__init__(displayData, *args, **kwargs)
-        self.displayData = displayData
+        self.setDisplayData(displayData)
 
     def addTrainingAlternative(self, exerciseID, alternativeExercise, warmUp, repetition,
                                w1, w2, w3, w4, w5, w6,
@@ -561,6 +561,9 @@ class CustomModelItem(QtGui.QStandardItem):
         except IndexError:
             return
 
+    def displayData(self):
+        return self._displayData
+
     @staticmethod
     def fetchAlternativesFromDatabase(database):
         con = sqlite3.connect(database)
@@ -592,6 +595,15 @@ class CustomModelItem(QtGui.QStandardItem):
     def setData(self, value, role, defaultPurpose = True):
         super().setData(value, role)
         self.model().itemChanged.emit(self, defaultPurpose)
+
+    def setDisplayData(self, data):
+        if not type(data) == str:
+            raise TypeError(
+                    "input <{input_name}> for 'setDisplayData' does not match {type_name}".format(
+                            input_name = str(data),
+                            type_name = str
+                        )
+                )
 
     def type():
         return 1001

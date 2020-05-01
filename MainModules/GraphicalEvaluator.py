@@ -6,16 +6,19 @@ Created on Tue Mar  3 22:30:42 2020
 """
 import sys
 import pathlib2
-from PyQt5 import QtWidgets, QtCore
+import numpy as np
+import matplotlib.pyplot as plt
+import MainModules.Database as db
+from PyQt5 import QtWidgets
 from UtilityModules.CustomModel import CustomSqlModel
+from matplotlib.backends.backend_qt5agg import FigureCanvas
 
 class GraphicalEvaluator():
 
     def __init__(self,
                  database = None,
                  model = None,
-                 parentWidget = None,
-                 dataSource = None):
+                 parentWidget = None):
 
         if database:
             self.setDatabase(database)
@@ -32,26 +35,36 @@ class GraphicalEvaluator():
         else:
             self._parentWidget = parentWidget
 
-        if dataSource:
-            # 0: data source is model
-            # 1: data source is database
-            self.setDataSource(dataSource)
-        else:
-            self._dataSource = 0
-
         self._mainWidget = QtWidgets.QTabWidget()
         self._mainWidget.setTabPosition(QtWidgets.QTabWidget.South)
         self._layout = QtWidgets.QVBoxLayout()
         self._layout.addWidget(self._mainWidget)
 
-    def createTabs(self, tabLabels = None):
-        if self.dataSource() == 0:
-            data = self.dataFromModel()
+    def createTabs(self, data, tabLabels = None):
+        if not type(data) == tuple and not type(data) == list:
+            raise TypeError(
+                    "input {input_type} does not match {expected_type_1} nor {expected_type_2}".format(
+                            input_type = type(data),
+                            expected_type_1 = tuple,
+                            expected_type_2 = list
+                        )
+                )
+        if not len(np.array(data).shape) == 2:
+            raise ValueError(
+                    "dim = {input_dim} for argument 'data' does not match the expected dim = 3".format(
+                            input_dim = str(len(np.array(data).shape))
+                        )
+                )
 
-        if self.dataSource() == 1:
-            data = self.dataFromDatabase()
+        if tabLabels:
+            labels = tabLabels
+        else:
+            labels = []
+            for row in data:
+                labels.append(row[0])
 
-        print(data)
+        for i, label in enumerate(labels):
+            self.mainWidget().addTab(EvaluatorTab(data[i]), label)
 
     def connectEvaluator(self, parentWidget = None):
         if parentWidget:
@@ -66,11 +79,20 @@ class GraphicalEvaluator():
     def database(self):
         return self._database
 
-    def dataSource(self):
-        return self._dataSource
+    def dataFromDatabase(self, database = None, tableName = "training_routine"):
+        if database:
+            self.setDatabase(database)
 
-    def dataFromDatabase(self):
-        pass
+        if not self.database():
+            raise TypeError(
+                    "before fetching data from a database, set a path to a valid database-file"
+                )
+        pathObj = pathlib2.Path(self.database())
+        databaseName = pathObj.stem
+        databaseObj = db.database(pathObj.parent)
+        data = databaseObj.data(databaseName, tableName)
+
+        return data
 
     def dataFromModel(self, model = None):
         if model:
@@ -83,15 +105,15 @@ class GraphicalEvaluator():
 
         rows = self.model().rowCount()
         cols = self.model().columnCount()
-        print(rows)
-        data = []
+
+        modelData = []
         for row in range(rows):
             line = []
             for col in range(cols):
                 item = self.model().item(row, col)
-                line.append(item.data(role = QtCore.Qt.DisplayRole))
-            data.append(line)
-        return data
+                line.append(item.userData())
+            modelData.append(line)
+        return modelData
 
     def mainWidget(self):
         return self._mainWidget
@@ -122,21 +144,6 @@ class GraphicalEvaluator():
 
         self._database = str(pathObj)
 
-    def setDataSource(self, source):
-        if not type(source) == int:
-            raise TypeError(
-                    "input <{input_name}> for 'setDataSource' does not match {type_name}".format(
-                            input_name = str(source),
-                            type_name = int
-                        )
-                )
-        if not (0 <= source <= 1):
-            raise ValueError(
-                    "input for 'setDataSource' is not valid"
-                )
-
-        self._dataSource = source
-
     def setModel(self, model):
         if not type(model) == CustomSqlModel:
             raise TypeError(
@@ -161,15 +168,20 @@ class GraphicalEvaluator():
 
 class EvaluatorTab(QtWidgets.QWidget):
 
+
     def __init__(self, data):
         super().__init__()
         self.data = data
         self.layout = QtWidgets.QVBoxLayout(self)
-
-        testLabel = QtWidgets.QLabel("test")
-
-        self.layout.addWidget(testLabel)
-
+        self.fig, self.ax = plt.subplots()
+        xticks = np.linspace(1,6,6)
+        self.ax.set_xticks(xticks)
+        canvas = FigureCanvas(self.fig)
+        self.layout.addWidget(canvas)
+        x = np.linspace(1,6,6)
+        y = data[4:]
+        self.ax.plot(x,y)
+        self.fig.tight_layout()
 
 
 if __name__ == "__main__":
@@ -182,16 +194,21 @@ if __name__ == "__main__":
             self.setGeometry(100,100,800,500)
             self.setWindowTitle("Graphical Evaluator Test")
 
+            database = pathlib2.Path("examples/Qt_ModelView/database/test_database.db")
+            parentDir = pathlib2.Path().cwd().parent
             model = CustomSqlModel(
-                database = "examples/Qt_ModelView/database/test_database.db",
+                database = parentDir / database,
                 table = "training_routine",
                 tableStartIndex = 0,
+                valueStartIndex = 5
             )
+            model.populateModel()
 
             self.evaluator = GraphicalEvaluator()
             self.evaluator.setModel(model)
+            self.evaluator.setDatabase(str(parentDir / database))
             self.evaluator.connectEvaluator(self.main)
-            self.evaluator.createTabs()
+            self.evaluator.createTabs(self.evaluator.dataFromModel())
 
             self.show()
 
