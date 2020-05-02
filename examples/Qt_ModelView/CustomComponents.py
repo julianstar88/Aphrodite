@@ -604,6 +604,7 @@ class CustomModelItem(QtGui.QStandardItem):
                             type_name = str
                         )
                 )
+        self._displayData = data
 
     def type():
         return 1001

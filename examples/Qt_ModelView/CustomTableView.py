@@ -79,7 +79,7 @@ class CustomModelView(QtWidgets.QTableView):
         exerciseID = row + 1
 
         if mode == "main":
-            text = item.displayData
+            text = item.displayData()
             alternatives = [item[1] for item in item.trainingAlternatives if exerciseID == item[0]]
             if alternatives:
                 values = "%s~" * len(alternatives)

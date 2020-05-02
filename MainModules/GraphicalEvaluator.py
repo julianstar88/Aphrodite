@@ -174,14 +174,19 @@ class EvaluatorTab(QtWidgets.QWidget):
         self.data = data
         self.layout = QtWidgets.QVBoxLayout(self)
         self.fig, self.ax = plt.subplots()
-        xticks = np.linspace(1,6,6)
-        self.ax.set_xticks(xticks)
-        canvas = FigureCanvas(self.fig)
-        self.layout.addWidget(canvas)
-        x = np.linspace(1,6,6)
-        y = data[4:]
-        self.ax.plot(x,y)
         self.fig.tight_layout()
+        self.ax.minorticks_on()
+        self.ax.grid(which = "both")
+        self.canvas = FigureCanvas(self.fig)
+        self.layout.addWidget(self.canvas)
+
+        x = np.linspace(1,6,6)
+        y = self.data[4:]
+        self.ax.plot(x,y)
+
+        labels = ["Week " + str(i) for i in range(0,7,1)]
+        self.ax.set_xticklabels(labels)
+
 
 
 if __name__ == "__main__":
