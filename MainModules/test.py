@@ -4,6 +4,18 @@ Created on Thu Apr 30 18:11:28 2020
 
 @author: Julian
 """
-import numpy as np
+import re
+import ast
 
-t = np.linspace(1,6,6)
+testValues = ["5", "5/5/5", "sdfs", "sfdsdf/sdf/xdf", ""]
+
+match = []
+for val in testValues:
+    testVal = re.split("/", val)
+    for num in testVal:
+        try:
+            valid = ast.literal_eval(num)
+            match.append(valid)
+        except (ValueError, SyntaxError):
+            match.append(0)
+
