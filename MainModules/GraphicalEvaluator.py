@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import MainModules.Database as db
 from PyQt5 import QtWidgets
 from UtilityModules.CustomModel import CustomSqlModel
+from UtilityModules.MiscUtilities import ModelInputValidation
 from matplotlib.backends.backend_qt5agg import FigureCanvas
 
 class GraphicalEvaluator():
@@ -171,21 +172,24 @@ class EvaluatorTab(QtWidgets.QWidget):
 
     def __init__(self, data):
         super().__init__()
-        self.data = data
         self.layout = QtWidgets.QVBoxLayout(self)
         self.fig, self.ax = plt.subplots()
         self.fig.tight_layout()
-        self.ax.minorticks_on()
-        self.ax.grid(which = "both")
+        self.ax.grid(which = "major")
         self.canvas = FigureCanvas(self.fig)
         self.layout.addWidget(self.canvas)
 
         x = np.linspace(1,6,6)
-        y = self.data[4:]
+        y = self.readData(data[4:])
         self.ax.plot(x,y)
 
         labels = ["Week " + str(i) for i in range(0,7,1)]
         self.ax.set_xticklabels(labels)
+
+    def readData(self, data):
+        validator = ModelInputValidation()
+        return [validator.readValue(val)[0] for val in data]
+
 
 
 
