@@ -7,6 +7,7 @@ Created on Tue Apr 28 14:02:17 2020
 import unittest
 import pathlib2
 import os
+import sys
 import MainModules.Database as db
 from PyQt5 import QtWidgets
 from MainModules.GraphicalEvaluator import GraphicalEvaluator
@@ -37,7 +38,7 @@ class GraphicalEvaluatorProperties(unittest.TestCase):
 
     def test_mainWidget_getter(self):
         self.assertEqual(
-                type(self.evaluator.mainWidget()), QtWidgets.QTabWidget
+                self.evaluator.mainWidget(), None
             )
 
     def test_model_getter(self):
@@ -92,6 +93,7 @@ class GraphicalEvaluatorProperties(unittest.TestCase):
         self.app = QtWidgets.QApplication([])
         widget = QtWidgets.QWidget()
 
+        self.evaluator.initiateQWidgets()
         self.evaluator.setParentWidget(widget)
         self.assertEqual(
                 self.evaluator.parentWidget(), widget
@@ -113,10 +115,49 @@ class GraphicalEvaluatorProperties(unittest.TestCase):
 class EvaluatorLayout(unittest.TestCase):
 
     def setUp(self):
-        pass
+        self.database = pathlib2.Path("examples/Qt_ModelView/database/test_database.db")
+        self.parentDir = pathlib2.Path().cwd().parent
+        self.app = QtWidgets.QApplication(sys.argv)
+        self.evaluator = GraphicalEvaluator()
+        self.evaluator.setDatabase(str(self.parentDir / self.database))
+
+    def test_initiateQWidgets(self):
+        self.evaluator.initiateQWidgets()
+        self.assertTrue(
+                isinstance(self.evaluator.mainWidget(), QtWidgets.QTabWidget)
+            )
+
+    def test_connectEvaluator(self):
+        self.evaluator.connectEvaluator(QtWidgets.QWidget())
+        self.assertTrue(
+                isinstance(self.evaluator.parentWidget(), QtWidgets.QWidget)
+            )
+
+    def test_createTabs(self):
+        self.evaluator.initiateQWidgets()
+        self.evaluator.connectEvaluator(QtWidgets.QWidget())
+        self.evaluator.createTabs(self.evaluator.dataFromDatabase())
+
+        data = self.evaluator.dataFromDatabase()
+        self.assertEqual(
+                self.evaluator.mainWidget().count(), len(data)
+            )
+
+        exercises = [line[0] for line in data]
+        for i, val in enumerate(exercises):
+            with self.subTest(val = val):
+                self.assertEqual(
+                        self.evaluator.mainWidget().tabText(i), val
+                    )
+
+    def test_plotData(self):
+        self.evaluator.initiateQWidgets()
+        self.evaluator.connectEvaluator(QtWidgets.QWidget())
+        self.evaluator.createTabs(self.evaluator.dataFromDatabase())
 
     def tearDown(self):
-        pass
+        if self.app:
+            self.app.quit()
 
 if __name__ == "__main__":
     unittest.main()

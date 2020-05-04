@@ -12,7 +12,7 @@ import MainModules.Database as db
 from PyQt5 import QtWidgets
 from UtilityModules.CustomModel import CustomSqlModel
 from UtilityModules.MiscUtilities import ModelInputValidation
-from matplotlib.backends.backend_qt5agg import FigureCanvas
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 class GraphicalEvaluator():
 
@@ -36,13 +36,15 @@ class GraphicalEvaluator():
         else:
             self._parentWidget = parentWidget
 
-        self._mainWidget = QtWidgets.QTabWidget()
-        self._mainWidget.setTabPosition(QtWidgets.QTabWidget.South)
+        self._mainWidget = None
         self._layout = QtWidgets.QVBoxLayout()
-        self._layout.addWidget(self._mainWidget)
 
     def createTabs(self, data, tabLabels = None):
-        if not type(data) == tuple and not type(data) == list:
+        if not isinstance(self.mainWidget(), QtWidgets.QTabWidget):
+            raise TypeError(
+                    "GraphicalEvaluator.createTabs: set a valid mainWidget before creating Tabs"
+                )
+        if not isinstance(data, tuple) and not isinstance(data, list):
             raise TypeError(
                     "input {input_type} does not match {expected_type_1} nor {expected_type_2}".format(
                             input_type = type(data),
@@ -52,7 +54,7 @@ class GraphicalEvaluator():
                 )
         if not len(np.array(data).shape) == 2:
             raise ValueError(
-                    "dim = {input_dim} for argument 'data' does not match the expected dim = 3".format(
+                    "dim = {input_dim} for argument 'data' does not match the expected dim = 2".format(
                             input_dim = str(len(np.array(data).shape))
                         )
                 )
@@ -65,7 +67,7 @@ class GraphicalEvaluator():
                 labels.append(row[0])
 
         for i, label in enumerate(labels):
-            self.mainWidget().addTab(EvaluatorTab(data[i]), label)
+            self.mainWidget().addTab(EvaluatorTab(), label)
 
     def connectEvaluator(self, parentWidget = None):
         if parentWidget:
@@ -116,6 +118,15 @@ class GraphicalEvaluator():
             modelData.append(line)
         return modelData
 
+    def initiateQWidgets(self, mainWidget = None):
+        if isinstance(mainWidget, QtWidgets.QTabWidget):
+            self._mainWidget = mainWidget
+        else:
+            self._mainWidget = QtWidgets.QTabWidget()
+
+        self._mainWidget.setTabPosition(QtWidgets.QTabWidget.South)
+        self._layout.addWidget(self._mainWidget)
+
     def mainWidget(self):
         return self._mainWidget
 
@@ -125,8 +136,35 @@ class GraphicalEvaluator():
     def parentWidget(self):
         return self._parentWidget
 
+    def plotData(self, data):
+        if not isinstance(self.mainWidget(), QtWidgets.QTabWidget):
+            raise TypeError(
+                    "before plotting data into tabs, set mainWidget to a valid QTabWidget"
+                )
+        if self.mainWidget().count() == 0:
+            raise ValueError(
+                    "befor plotting data into tabs, create tabs in mainWidget using the createTabs() method"
+                )
+        if not isinstance(data, tuple) and not isinstance(data, list):
+            raise TypeError(
+                    "input {input_type} does not match {expected_type_1} nor {expected_type_2}".format(
+                            input_type = type(data),
+                            expected_type_1 = tuple,
+                            expected_type_2 = list
+                        )
+                )
+        if not len(np.array(data).shape) == 2:
+            raise ValueError(
+                    "dim = {input_dim} for argument 'data' does not match the expected dim = 2".format(
+                            input_dim = str(len(np.array(data).shape))
+                        )
+                )
+
+        for i in range(self.mainWidget().count()):
+            self.mainWidget().widget(i).plotData(data[i])
+
     def setDatabase(self, database):
-        if not type(database) == str:
+        if not isinstance(database, str):
             raise TypeError(
                     "input <{input_name}> for 'setDatabase' does not match {type_name}".format(
                             input_name = str(database),
@@ -146,7 +184,7 @@ class GraphicalEvaluator():
         self._database = str(pathObj)
 
     def setModel(self, model):
-        if not type(model) == CustomSqlModel:
+        if not isinstance(model, CustomSqlModel):
             raise TypeError(
                     "input <{input_name}> for 'setModel' does not match {type_name}".format(
                             input_name = str(model),
@@ -157,7 +195,7 @@ class GraphicalEvaluator():
         self._model = model
 
     def setParentWidget(self, parentWidget):
-        if not type(parentWidget) == QtWidgets.QWidget:
+        if not isinstance(parentWidget, QtWidgets.QWidget):
             raise TypeError(
                     "input <{input_name}> for 'setParentWidget' does not match {type_name}".format(
                             input_name = str(parentWidget),
@@ -169,28 +207,68 @@ class GraphicalEvaluator():
 
 class EvaluatorTab(QtWidgets.QWidget):
 
-
-    def __init__(self, data):
+    def __init__(self, data = None):
         super().__init__()
+
+        if data:
+            self.setData(data)
+        else:
+            self._data = None
+
+        self.canvas = None
         self.layout = QtWidgets.QVBoxLayout(self)
         self.fig, self.ax = plt.subplots()
         self.fig.tight_layout()
         self.ax.grid(which = "major")
+        # self.canvas = FigureCanvas(self.fig)
+        # self.layout.addWidget(self.canvas)
+
+        # x = np.linspace(1,6,6)
+        # y = self.readData(data[4:])
+        # self.ax.plot(x,y)
+
+        # labels = ["Week " + str(i) for i in range(0,7,1)]
+        # self.ax.set_xticklabels(labels)
+
+    def data(self):
+        return self._data
+
+    def plotData(self, data = None):
+        if data:
+            self.setData(data)
+
         self.canvas = FigureCanvas(self.fig)
         self.layout.addWidget(self.canvas)
 
         x = np.linspace(1,6,6)
-        y = self.readData(data[4:])
+        y = self.data()
         self.ax.plot(x,y)
 
         labels = ["Week " + str(i) for i in range(0,7,1)]
         self.ax.set_xticklabels(labels)
 
-    def readData(self, data):
+    def __readData(self, data):
+
         validator = ModelInputValidation()
         return [validator.readValue(val)[0] for val in data]
 
+    def setData(self, data):
+        if not isinstance(data, tuple) and not isinstance(data, list):
+            raise TypeError(
+                    "input {input_type} does not match {expected_type_1} nor {expected_type_2}".format(
+                            input_type = type(data),
+                            expected_type_1 = tuple,
+                            expected_type_2 = list
+                        )
+                )
+        if not len(np.array(data).shape) == 1:
+            raise ValueError(
+                    "dim = {input_dim} for argument 'data' does not match the expected dim = 2".format(
+                            input_dim = str(len(np.array(data).shape))
+                        )
+                )
 
+        self._data = self.__readData(data[4:])
 
 
 if __name__ == "__main__":
@@ -214,10 +292,12 @@ if __name__ == "__main__":
             model.populateModel()
 
             self.evaluator = GraphicalEvaluator()
+            self.evaluator.initiateQWidgets()
             self.evaluator.setModel(model)
             self.evaluator.setDatabase(str(parentDir / database))
             self.evaluator.connectEvaluator(self.main)
-            self.evaluator.createTabs(self.evaluator.dataFromModel())
+            self.evaluator.createTabs(self.evaluator.dataFromDatabase())
+            self.evaluator.plotData(self.evaluator.dataFromDatabase())
 
             self.show()
 
