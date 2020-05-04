@@ -296,7 +296,8 @@ if __name__ == "__main__":
             self.evaluator.setModel(model)
             self.evaluator.setDatabase(str(parentDir / database))
             self.evaluator.connectEvaluator(self.main)
-            self.evaluator.createTabs(self.evaluator.dataFromDatabase())
+            self.evaluator.createTabs([[1,2,3]])
+            # self.evaluator.createTabs(self.evaluator.dataFromDatabase())
             self.evaluator.plotData(self.evaluator.dataFromDatabase())
 
             self.show()

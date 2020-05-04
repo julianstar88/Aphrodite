@@ -115,6 +115,17 @@ class GraphicalEvaluatorProperties(unittest.TestCase):
 class EvaluatorLayout(unittest.TestCase):
 
     def setUp(self):
+        self.raiseTypeErrors = [
+                123,
+                123.123,
+                {},
+            ]
+        self.raiseValueErrors = [
+                [],
+                [1,2,3],
+                (),
+                (1,2,3),
+            ]
         self.database = pathlib2.Path("examples/Qt_ModelView/database/test_database.db")
         self.parentDir = pathlib2.Path().cwd().parent
         self.app = QtWidgets.QApplication(sys.argv)
@@ -143,17 +154,24 @@ class EvaluatorLayout(unittest.TestCase):
                 self.evaluator.mainWidget().count(), len(data)
             )
 
+        for val in self.raiseTypeErrors:
+            with self.subTest(val = val):
+                self.assertRaises(
+                        TypeError, self.evaluator.createTabs, val
+                    )
+
+        for val in self.raiseValueErrors:
+            with self.subTest(val = val):
+                self.assertRaises(
+                        ValueError, self.evaluator.createTabs, val
+                    )
+
         exercises = [line[0] for line in data]
         for i, val in enumerate(exercises):
             with self.subTest(val = val):
                 self.assertEqual(
                         self.evaluator.mainWidget().tabText(i), val
                     )
-
-    def test_plotData(self):
-        self.evaluator.initiateQWidgets()
-        self.evaluator.connectEvaluator(QtWidgets.QWidget())
-        self.evaluator.createTabs(self.evaluator.dataFromDatabase())
 
     def tearDown(self):
         if self.app:
