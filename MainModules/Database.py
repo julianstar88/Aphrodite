@@ -468,7 +468,7 @@ class database():
 
         Returns
         -------
-        str
+        str or path-like object
             path to a directory.
 
         """
@@ -516,7 +516,6 @@ class database():
         None.
 
         """
-        # npath = os.path.normpath(path)
         pathObj = pathlib2.Path(path)
 
         if not pathObj.is_dir():

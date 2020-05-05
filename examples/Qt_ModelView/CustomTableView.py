@@ -79,7 +79,7 @@ class CustomModelView(QtWidgets.QTableView):
         exerciseID = row + 1
 
         if mode == "main":
-            text = item.displayData
+            text = item.displayData()
             alternatives = [item[1] for item in item.trainingAlternatives if exerciseID == item[0]]
             if alternatives:
                 values = "%s~" * len(alternatives)
@@ -170,7 +170,7 @@ class CustomModelView(QtWidgets.QTableView):
             canvas = CreateCanvas(labelText, fontSize = 10)
             qpixmap = CreateQPixmap(canvas)
             label = CustomLabel(qpixmap)
-            label.item = item
+            label.itemText = item.data(role = QtCore.Qt.DisplayRole)
             item.setData("", role = QtCore.Qt.DisplayRole)
 
             self.setIndexWidget(index, label)

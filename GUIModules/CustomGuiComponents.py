@@ -6,14 +6,10 @@ Created on Tue Mar 17 23:57:11 2020
 """
 import sqlite3
 import string
-
-import os
 import sys
-path = os.getcwd()
-sys.path.append("C:/Users/Julian/Documents/Python/Projekte/Aphrodite/examples/SQLite3_Database")
 
-from HelperModules import GraphicalRoutineEditor, CreateCanvas, CreateQPixmap
-from Database import database
+from UtilityModules.GraphicUtilityModules import CreateCanvas, CreateQPixmap
+from MainModules.Database import database
 
 from PyQt5 import QtWidgets, QtCore, QtGui
 
@@ -56,7 +52,7 @@ class CustomAddAlternativeDialog(QtWidgets.QDialog):
         self.exerciseIdEdit.setValidator(QtGui.QIntValidator(self.exerciseIdEdit))
         self.shortNameEdit = QtWidgets.QLineEdit(self.alternativeGroup)
         self.shortNameEdit.setPlaceholderText("New Short Name...")
-        self.editor = GraphicalRoutineEditor(parent = self.editorGroup)
+        self.editor = CustomRoutineEditor(parent = self.editorGroup)
         self.editor.verticalHeader().hide()
         items = [QtGui.QStandardItem(None) for item in range(self.editor.model().columnCount())]
         self.editor.model().appendRow(items)
@@ -435,7 +431,7 @@ class CustomModelItem(QtGui.QStandardItem):
 
     def __init__(self, displayData, *args, **kwargs):
         super().__init__(displayData, *args, **kwargs)
-        self.setDisplayData(displayData)
+        self.setUserData(displayData)
 
     def addTrainingAlternative(self, exerciseID, alternativeExercise, warmUp, repetition,
                                w1, w2, w3, w4, w5, w6,
@@ -561,9 +557,6 @@ class CustomModelItem(QtGui.QStandardItem):
         except IndexError:
             return
 
-    def displayData(self):
-        return self._displayData
-
     @staticmethod
     def fetchAlternativesFromDatabase(database):
         con = sqlite3.connect(database)
@@ -593,10 +586,12 @@ class CustomModelItem(QtGui.QStandardItem):
                 CustomModelItem.trainingNotes.append(l)
 
     def setData(self, value, role, defaultPurpose = True):
+        if role == QtCore.Qt.DisplayData:
+            self.setUserData(value)
         super().setData(value, role)
         self.model().itemChanged.emit(self, defaultPurpose)
 
-    def setDisplayData(self, data):
+    def setUserData(self, data):
         if not type(data) == str:
             raise TypeError(
                     "input <{input_name}> for 'setDisplayData' does not match {type_name}".format(
@@ -604,10 +599,13 @@ class CustomModelItem(QtGui.QStandardItem):
                             type_name = str
                         )
                 )
-        self._displayData = data
+        self._userData = data
 
     def type():
         return 1001
+
+    def userData(self):
+        return self._userData
 
 class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
 
@@ -652,8 +650,8 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
                 self.inputSubGroup2
             )
         self.deleteAlternativesButton.setEnabled(False)
-        self.editor = GraphicalRoutineEditor(parent = self.editorGroup)
-        self.alternativeEditor = GraphicalRoutineEditor(parent = self.editorGroup)
+        self.editor = CustomRoutineEditor(parent = self.editorGroup)
+        self.alternativeEditor = CustomRoutineEditor(parent = self.editorGroup)
         self.alternativeEditor.setHidden(True)
         self.acceptButton = QtWidgets.QPushButton("OK", self.buttonGroup)
         self.acceptButton.setDefault(True)
@@ -936,6 +934,37 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
             self.acceptButton.setEnabled(False)
         else:
             self.acceptButton.setEnabled(True)
+
+class CustomRoutineEditor(QtWidgets.QTableView):
+
+    ObjectType = "CustomRoutineEditor"
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.__model = QtGui.QStandardItemModel(0, 10, self)
+        self.__model.setHorizontalHeaderLabels(["Excercise",
+                                              "Sets",
+                                              "Reps",
+                                              "Warm Up",
+                                              "Week 1",
+                                              "Week 2",
+                                              "Week 3",
+                                              "Week 4",
+                                              "Week 5",
+                                              "Week 6",
+                                              "Mode"])
+        self.setModel(self.model())
+        self.setColumnResizeMode()
+
+    def setColumnResizeMode(self):
+        for i in range(self.model().columnCount()):
+            if i == 0:
+                self.horizontalHeader().setSectionResizeMode(i, QtWidgets.QHeaderView.Fixed)
+            else:
+                self.horizontalHeader().setSectionResizeMode(i, QtWidgets.QHeaderView.Stretch)
+
+    def model(self):
+        return self.__model
 
 class CustomScrollArea(QtWidgets.QScrollArea):
 
