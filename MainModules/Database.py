@@ -82,51 +82,44 @@ class database():
 
     Exmple Usage
     ------------
-    db = database(path)
+    1. create a database object
 
-    dbName = "test_database_2"
+        >>> db = database(path)
 
-    columnNames = (
-                    ("exercise", "TEXT"),
+    2. create a table
 
-                    ("sets", "TEXT"),
+        >>> dbName = "test_database_2"
+        >>> columnNames = (
+        >>>                ("exercise", "TEXT"),
+        >>>                ("sets", "TEXT"),
+        >>>                ("repetitions", "TEXT"),
+        >>>                ("warm_up", "TEXT"),
+        >>>                ("week_1", "TEXT"),
+        >>>                ("week_2", "TEXT"),
+        >>>                ("week_3", "TEXT"),
+        >>>                ("week_4", "TEXT"),
+        >>>                ("week_5", "TEXT"),
+        >>>                ("week_6", "TEXT"),
+        >>>                ("mode", "TEXT"),
+        >>>     )
+        >>> db.createTable(
+        >>>     dbName, "training_routine", columnNames
+        >>>     )
 
-                    ("repetitions", "TEXT"),
+    3. add Entries to the table
 
-                    ("warm_up", "TEXT"),
+        >>> training = [
+        >>>         ["Bankdrücken KH", "4", "RBD", "WBD", "BD1", "BD2", "BD3", "BD4", "BD5", "BD6", "gym"],
+        >>>         ["Klimmzüge", "4", "RKZ", "WKZ", "KZ1", "KL2", "KL3", "KL4", "KL5", "KL6", "gym"],
+        >>>         ["Kniebeugen", "4", "RKB", "WKB", "KB1", "KB2", "KB3", "KB4", "KN5", "KB6", "gym"],
+        >>>         ["Bizeps KH", "4", "RBZ", "WBZ", "BZ1", "BZ2", "BZ3", "BZ4", "BZ5", "BZ6", "gym"],
+        >>>         ["Trizeps Seilzug", "4", "RTZ", "WTZ", "TZ1", "TZ2", "TZ3", "TZ4", "TZ5", "TZ6", "gym"],
+        >>>         ["Seitenheben KH", "4", "RSH", "WSH", "SH1", "SH2", "SH3", "SH4", "SH5", "SH6", "gym"]
+        >>>     ]
+        >>> db.addManyEntries(
+        >>>         dbName, "training_routine", training
+        >>>     )
 
-                    ("week_1", "TEXT"),
-
-                    ("week_2", "TEXT"),
-
-                    ("week_3", "TEXT"),
-
-                    ("week_4", "TEXT"),
-
-                    ("week_5", "TEXT"),
-
-                    ("week_6", "TEXT"),
-
-                    ("mode", "TEXT"),
-                )
-
-    db.createTable(dbName, "training_routine", columnNames)
-
-    training = [
-        ["Bankdrücken KH", "4", "RBD", "WBD", "BD1", "BD2", "BD3", "BD4", "BD5", "BD6", "gym"],
-
-        ["Klimmzüge", "4", "RKZ", "WKZ", "KZ1", "KL2", "KL3", "KL4", "KL5", "KL6", "gym"],
-
-        ["Kniebeugen", "4", "RKB", "WKB", "KB1", "KB2", "KB3", "KB4", "KN5", "KB6", "gym"],
-
-        ["Bizeps KH", "4", "RBZ", "WBZ", "BZ1", "BZ2", "BZ3", "BZ4", "BZ5", "BZ6", "gym"],
-
-        ["Trizeps Seilzug", "4", "RTZ", "WTZ", "TZ1", "TZ2", "TZ3", "TZ4", "TZ5", "TZ6", "gym"],
-
-        ["Seitenheben KH", "4", "RSH", "WSH", "SH1", "SH2", "SH3", "SH4", "SH5", "SH6", "gym"]
-    ]
-
-    db.addManyEntries(dbName, "training_routine", training)
     """
     def __init__(self, path = None, extension = ".db"):
         if path:
@@ -194,15 +187,15 @@ class database():
         insert : list
             list of values added to table 'tableName'. The values have to be
             oreded like this:
-                [
-                    [value11, value12, ..., value1N],
-                    [value21, value22, ..., value2N],
-                        .       .               .
-                        .       .               .
-                        .       .               .
-                    [valueN1, valueN2, ..., valueNN]
 
-                ]
+            >>>    [
+            >>>        [value11, value12, ..., value1N],
+            >>>        [value21, value22, ..., value2N],
+            >>>            .       .               .
+            >>>            .       .               .
+            >>>            .       .               .
+            >>>        [valueN1, valueN2, ..., valueNN]
+            >>>    ]
 
         Returns
         -------
