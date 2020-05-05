@@ -10,8 +10,11 @@ import datetime
 import openpyxl
 import os
 import pathlib2
+import numpy as np
 from MainModules.Exporter import Exporter
+from UtilityModules.CustomModel import CustomSqlModel
 import MainModules.Database as db
+
 
 class ExporterProperties(unittest.TestCase):
 
@@ -27,10 +30,9 @@ class ExporterProperties(unittest.TestCase):
                 "randomParent/randomPath/randomFile",
                 ""
             ]
-        self.databaseName = "temp_test_database"
-        self.pathObj = pathlib2.Path().cwd() / pathlib2.Path(self.databaseName + ".db")
-        self.db = db.database(self.pathObj.parent)
-        self.db.createDatabase(self.databaseName)
+        self.database = pathlib2.Path("files/test_files/test_database_2.db")
+        self.currentDir = pathlib2.Path().cwd()
+        self.parentDir = pathlib2.Path().cwd().parent
         self.exporter = Exporter()
 
     def test_instance(self):
@@ -58,6 +60,11 @@ class ExporterProperties(unittest.TestCase):
                 self.exporter.databasePath(), None
             )
 
+    def test_model_getter(self):
+        self.assertEqual(
+                self.exporter.model(), None
+            )
+
     def test_name_getter(self):
         self.assertEqual(
                 self.exporter.name(), None
@@ -83,6 +90,27 @@ class ExporterProperties(unittest.TestCase):
                 self.exporter.workBook(), None
             )
 
+    def test_model_setter(self):
+        model = CustomSqlModel()
+        self.exporter.setModel(model)
+
+        self.assertEqual(
+                self.exporter.model(), model
+            )
+
+        for val in self.raiseTypeErrors:
+            with self.subTest(val = val):
+                self.assertRaises(
+                        TypeError, self.exporter.setModel, val
+                    )
+
+        for val in self.raiseTypeErrors:
+            with self.subTest(val = val):
+                self.assertRaises(
+                        TypeError, self.exporter.setModel, val
+                    )
+
+
     def test_name_setter(self):
         self.exporter.setName("Test Name")
         self.assertEqual(self.exporter.name(), "Test Name")
@@ -96,9 +124,9 @@ class ExporterProperties(unittest.TestCase):
             )
 
     def test_database_setter(self):
-        self.exporter.setDatabase(str(self.pathObj))
+        self.exporter.setDatabase(str(self.parentDir / self.database))
         self.assertEqual(
-                self.exporter.database(), str(self.pathObj)
+                self.exporter.database(), str(self.parentDir / self.database)
             )
         for val in self.raiseTypeErrors:
             with self.subTest(val = val):
@@ -108,10 +136,9 @@ class ExporterProperties(unittest.TestCase):
                 self.assertRaises(ValueError, self.exporter.setDatabase, val)
 
     def test_exportPath_setter(self):
-        pathObj = pathlib2.Path().cwd()
-        self.exporter.setExportPath(str(pathObj))
+        self.exporter.setExportPath(str(self.currentDir))
         self.assertEqual(
-                self.exporter.exportPath(), str(pathObj)
+                self.exporter.exportPath(), str(self.currentDir)
             )
         for val in self.raiseTypeErrors:
             with self.subTest(val = val):
@@ -216,12 +243,26 @@ class ExporterProperties(unittest.TestCase):
                     )
 
     def tearDown(self):
-        os.remove(str(self.pathObj))
+        pass
 
 class TrainingRoutineLayout(unittest.TestCase):
 
     def setUp(self):
-        self.databaseName = "temp_test_database"
+        self.raiseTypeErrors = [
+                123,
+                123.123,
+                [],
+                (),
+                {},
+            ]
+        self.raiseValueErrors = [
+                "randomParent/randomPath/randomFile",
+                ""
+            ]
+        self.database = pathlib2.Path("files/test_files/test_database_2.db")
+        self.currentDir = pathlib2.Path().cwd()
+        self.parentDir = pathlib2.Path().cwd().parent
+        self.databaseName = self.database.stem
         self.routineName = "temp_test_routine.xlsx"
         self.tableName = "training_routine"
         self.name = "Aphrodite"
@@ -229,46 +270,50 @@ class TrainingRoutineLayout(unittest.TestCase):
         self.columnCount = 10
         self.rowCountValues = [6, 10, 20, 40, 60]
 
+        self.db = db.database(self.parentDir / pathlib2.Path("files/test_files"))
 
-        self.pathObj = pathlib2.Path().cwd()
+        self.model = CustomSqlModel(
+                database = self.parentDir / self.database,
+                table = self.tableName,
+                valueStartIndex = 0,
+                tableStartIndex = 0
+                )
+        self.model.populateModel()
 
-        self.db = db.database(self.pathObj)
-        columnNames = (
-                ("exercise", "TEXT"),
-                ("Sets", "TEXT"),
-                ("repetitions", "TEXT"),
-                ("warm_up", "TEXT"),
-                ("week_1", "TEXT"),
-                ("week_2", "TEXT"),
-                ("week_3", "TEXT"),
-                ("week_4", "TEXT"),
-                ("week_5", "TEXT"),
-                ("week_6", "TEXT"),
-                ("mode", "TEXT"),
-            )
-        self.db.createTable(self.databaseName, self.tableName, columnNames)
-        training = [
-                ["Bankdrücken KH", "4", "RBD", "WBD", "BD1", "BD2", "BD3", "BD4", "BD5", "BD6", "gym"],
-                ["Klimmzüge", "4", "RKZ", "WKZ", "KZ1", "KL2", "KL3", "KL4", "KL5", "KL6", "gym"],
-                ["Kniebeugen", "4", "RKB", "WKB", "KB1", "KB2", "KB3", "KB4", "KN5", "KB6", "gym"],
-                ["Bizeps KH", "4", "RBZ", "WBZ", "BZ1", "BZ2", "BZ3", "BZ4", "BZ5", "BZ6", "gym"],
-                ["Trizeps Seilzug", "4", "RTZ", "WTZ", "TZ1", "TZ2", "TZ3", "TZ4", "TZ5", "TZ6", "gym"],
-                ["Seitenheben KH", "4", "RSH", "WSH", "SH1", "SH2", "SH3", "SH4", "SH5", "SH6", "gym"]
-            ]
-        self.db.addManyEntries(self.databaseName, self.tableName, training)
-
-        path = self.pathObj / pathlib2.Path(self.databaseName + ".db")
         self.exporter = Exporter()
-        self.exporter.setDatabase(str(path))
+        self.exporter.setDatabase(str(self.parentDir / self.database))
+        self.exporter.setModel(self.model)
         self.exporter.setName(self.name)
         self.exporter.setRoutineName(self.routineName)
         self.exporter.setTrainingMode(self.trainingMode)
         self.exporter.setTrainingPeriode(2020, 11, 11)
-        self.exporter.setExportPath(str(self.pathObj))
+        self.exporter.setExportPath(str(self.currentDir))
 
     def test_workbook_validity(self):
         wb = self.exporter.routineLayout(self.rowCountValues[1])
         self.assertIsInstance(wb, openpyxl.Workbook)
+
+    def test_dataFromDatabase(self):
+        data = self.exporter.dataFromDatabase(str(self.parentDir / self.database))
+
+        self.assertEqual(
+                len(np.array(data).shape), 2
+            )
+
+        self.assertEqual(
+                len(data[0]), 11
+            )
+
+    def test_dataFromModel(self):
+        data = self.exporter.dataFromModel()
+
+        self.assertEqual(
+                len(np.array(data).shape), 2
+            )
+
+        self.assertEqual(
+                len(data[0]), 11
+            )
 
     def test_layout_dimenstions(self):
         for rowCount in self.rowCountValues:
@@ -404,9 +449,52 @@ class TrainingRoutineLayout(unittest.TestCase):
                                         self.assertEqual(cell.border.bottom.style, "thick")
                                         self.assertEqual(cell.border.right.style, "thin")
 
-    def test_populateRoutine(self):
+    def test_populateRoutine_from_database(self):
         self.exporter.routineLayout()
-        self.exporter.populateRoutine()
+        self.exporter.populateRoutine(self.exporter.dataFromDatabase())
+        data = self.db.data(self.databaseName, self.tableName)
+        ws = self.exporter.workBook().active
+
+        headerTestCells = ["A3", "F3", "F4", "I3"]
+        headerTestResults = [
+                        self.name,
+                        self.exporter.trainingPeriode()[0],
+                        self.exporter.trainingPeriode()[1],
+                        self.trainingMode
+                     ]
+        for i, val in enumerate(headerTestCells):
+            with self.subTest(val = val):
+                self.assertEqual(
+                        ws[val].value, headerTestResults[i]
+                    )
+
+        testValues = [data[i][0] for i in range(len(data))]
+        for i, val in enumerate(testValues):
+            with self.subTest(i = i):
+                cell = ws["A" + str(7 + i)]
+                self.assertEqual(
+                        cell.value, val
+                    )
+
+        testValues = [data[i][1] for i in range(len(data))]
+        for i, val in enumerate(testValues):
+            with self.subTest(i = i):
+                cell = ws["C" + str(7 + i)]
+                self.assertEqual(
+                        cell.value, val
+                    )
+
+        testValues = [data[i][2] for i in range(len(data))]
+        for i, val in enumerate(testValues):
+            with self.subTest(i = i):
+                cell = ws["D" + str(7 + i)]
+                self.assertEqual(
+                        cell.value, val
+                    )
+
+    def test_populateRoutine_from_model(self):
+        self.exporter.routineLayout()
+        self.exporter.populateRoutine(self.exporter.dataFromModel())
         data = self.db.data(self.databaseName, self.tableName)
         ws = self.exporter.workBook().active
 
@@ -448,15 +536,15 @@ class TrainingRoutineLayout(unittest.TestCase):
                     )
 
     def test_saveRoutine(self):
-        path = self.pathObj / pathlib2.Path(self.routineName)
+        path = self.currentDir / pathlib2.Path(self.routineName)
         self.exporter.routineLayout()
-        self.exporter.populateRoutine()
+        self.exporter.populateRoutine(self.exporter.dataFromModel())
         self.exporter.saveRoutine()
         self.assertTrue(path.is_file())
 
     def tearDown(self):
-        databasePath = self.pathObj / pathlib2.Path(self.databaseName + ".db")
-        routinePath = self.pathObj / pathlib2.Path(self.routineName)
+        databasePath = self.currentDir / pathlib2.Path(self.databaseName + ".db")
+        routinePath = self.currentDir / pathlib2.Path(self.routineName)
 
         try:
             os.remove(str(databasePath))

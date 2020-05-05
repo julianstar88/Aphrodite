@@ -563,13 +563,17 @@ class CustomModelItem(QtGui.QStandardItem):
         with con:
             c = con.cursor()
             sqlCommand = "SELECT * FROM training_alternatives"
-            c.execute(sqlCommand)
+            try:
+                c.execute(sqlCommand)
+            except sqlite3.OperationalError:
+                return False
             data = c.fetchall()
         con.close()
         data = [list(item) for item in data]
         for l in data:
             if l not in CustomModelItem.trainingAlternatives:
                 CustomModelItem.trainingAlternatives.append(l)
+        return True
 
     @staticmethod
     def fetchNotesFromDatabase(database):
@@ -577,7 +581,10 @@ class CustomModelItem(QtGui.QStandardItem):
         with con:
             c = con.cursor()
             sqlCommand = "SELECT * FROM training_notes"
-            c.execute(sqlCommand)
+            try:
+                c.execute(sqlCommand)
+            except sqlite3.OperationalError:
+                return False
             data = c.fetchall()
         con.close()
         data = [list(item) for item in data]

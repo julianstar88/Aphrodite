@@ -7,9 +7,10 @@ Created on Tue Mar  3 22:30:14 2020
 import datetime
 import pathlib2
 import openpyxl
-import os.path
+import numpy as np
 import MainModules.Database as db
 import UtilityModules.ExporterUtilityModules as exporterUtils
+from UtilityModules.CustomModel import CustomSqlModel
 
 class Exporter():
     """
@@ -33,6 +34,13 @@ class Exporter():
         - default: None
         - getter: exportPath()
         - setter: setExportPath(directory-path)
+
+    - model:
+        a refenrence to a valid CustomSqlModel
+
+        - default: None
+        - getter: model()
+        - setter: setModel(model)
 
     - name:
         username for the trainingroutine
@@ -80,31 +88,33 @@ class Exporter():
 
     1. create the exporter object:
 
-        - exporter = Exporter()
+        >>> exporter = Exporter()
 
     2. set suitable properties:
 
-        - exporter.setDatabase(...)
-        - exporter.setExportPath(...)
-        - exporter.setName(...)
-        - exporter.setTrainingPeriode(...)
-        - exporter.setTrainingMode(...)
+        >>> exporter.setDatabase(...)
+        >>> exporter.setExportPath(...)
+        >>> exporter.setName(...)
+        >>> exporter.setTrainingPeriode(...)
+        >>> exporter.setTrainingMode(...)
 
     3. layout the exportfile:
 
-        - exporter.routineLayout()
+        >>> exporter.routineLayout()
 
     4. populate the exportfile with exercises, sets and repetitions
 
-        - exporter.populateRoutine()
+        >>> exporter.populateRoutine()
 
     5. save the workBook to create the exportfile
 
-        - exporter.saveRoutine()
+        >>> exporter.saveRoutine()
+
     """
     def __init__(self,
                  database = None,
                  exportPath = None,
+                 model = None,
                  name = None,
                  routineName = None,
                  trainingPeriode = [None, None],
@@ -115,6 +125,7 @@ class Exporter():
         self._databaseName = None
         self._databasePath = None
         self._exportPath = exportPath
+        self._model = None
         self._name = name
         self._routineName = routineName
         self._trainingPeriode = trainingPeriode
@@ -140,8 +151,8 @@ class Exporter():
     def databaseName(self):
         """
         holds the name of the database. this property is written by
-        'setDatabase'. it is the equivalent of invoking 'os.path.basename()' and
-        'os.path.spiltext()[0]'
+        'setDatabase'. it is the equivalent of invoking
+        'pathlib2.Path(database).stem'
 
         Returns
         -------
@@ -155,8 +166,7 @@ class Exporter():
     def databasePath(self):
         """
         holds the directory of 'databaseName'. this property is written by
-        'setDatabase'. it is the equivalent of invoking 'os.path.basename()' and
-        'os.path.spiltext()[0]'
+        'setDatabase'. it is the equivalent of invoking str(pathlib2.Path(database).parent)
 
         Returns
         -------
@@ -166,6 +176,91 @@ class Exporter():
         """
 
         return self._databasePath
+
+    def dataFromDatabase(self, database = None, tableName = "training_routine"):
+        """
+        retrieve data from a database as source for training data. the property
+        'database' can be st either by calling 'setDatabase' or directly by
+        calling 'dataFromDatabase(database)' with a path to a valid database-file.
+        additionally, one can set the tabel from wich to retrive data, by setting
+        the 'tableName' argument to a valid table.
+
+        Parameters
+        ----------
+        database : str, optional
+            path to a valid database-file. The default is None.
+        tableName : str, optional
+            name of a table in database. The default is "training_routine".
+
+        Raises
+        ------
+        TypeError
+            will be raised, if no valid value for the database-property
+            has been set.
+
+        Returns
+        -------
+        data : list
+            all data within a database as nested list.
+
+        """
+
+        if database:
+            self.setDatabase(database)
+
+        if not self.database():
+            raise TypeError(
+                    "before fetching data from a database, set a path to a valid database-file"
+                )
+        pathObj = pathlib2.Path(self.database())
+        databaseName = pathObj.stem
+        databaseObj = db.database(pathObj.parent)
+        data = databaseObj.data(databaseName, tableName)
+
+        return data
+
+    def dataFromModel(self, model = None):
+        """
+        retrieve data from a CustomSqlModel as source for training data. the property
+        'mdoel' can be st either by calling 'setModel' or directly by
+        calling 'dataFromModel(model)' with a reference to a valid CustomSqlModel.
+
+        Parameters
+        ----------
+        model : CustomSqlModel, optional
+            reference to a valid CustomSqlModel. The default is None.
+
+        Raises
+        ------
+        TypeError
+            will be raised, if no valid value for the 'model' property has been set.
+
+        Returns
+        -------
+        modelData : list
+            all data in a CustomSqlModel as nested list.
+
+        """
+
+        if model:
+            self.setModel(model)
+
+        if not isinstance(self.model(), CustomSqlModel):
+            raise TypeError(
+                    "before fetching data from a model, a valid <QStandardItemModel> has to be set for the model-property of 'GraphicalEvaluator'"
+                )
+
+        rows = self.model().rowCount()
+        cols = self.model().columnCount()
+
+        modelData = []
+        for row in range(rows):
+            line = []
+            for col in range(cols):
+                item = self.model().item(row, col)
+                line.append(item.userData())
+            modelData.append(line)
+        return modelData
 
     def exportPath(self):
         """
@@ -179,6 +274,18 @@ class Exporter():
         """
 
         return self._exportPath
+
+    def model(self):
+        """
+        holds a reference to a valid CustomSqlModel-object
+
+        Returns
+        -------
+        CustomSqlModel
+
+        """
+
+        return self._model
 
     def name(self):
         """
@@ -194,7 +301,7 @@ class Exporter():
 
         return self._name
 
-    def populateRoutine(self):
+    def populateRoutine(self, data):
         """
         by invoking this method, the workbook in the 'workBook' property gets
         populated with data from the database. make sure, that 'routineLayout'
@@ -202,25 +309,54 @@ class Exporter():
         if no proper values either for the database-property or the
         workBook-property have been set, a ValueError will be raised
 
+        Parameters
+        ----------
+        databasePath : str
+            this parameter must point to a valid db-file
+            (typically a trainingroutine).
+
+        Raises
+        ------
+        TypeError
+             will be raised if the input is not type list or type tuple, or the
+             'workBook' property does not hold a valid 'openpyxl.Workbook' object
+
+        ValueError
+            will be raised, if the 'database' property does not point to a valid
+            database-file. it will also be raised, if the dimension of the
+            'numpy.array' representation of data does not match (n, m)
+
         Returns
         -------
         None.
 
         """
+        if not isinstance(data, tuple) and not isinstance(data, list):
+            raise TypeError(
+                    "input {input_type} does not match {expected_type_1} nor {expected_type_2}".format(
+                            input_type = type(data),
+                            expected_type_1 = tuple,
+                            expected_type_2 = list
+                        )
+                )
+        if not len(np.array(data).shape) == 2:
+            raise ValueError(
+                    "dim = {input_dim} for argument 'data' does not match the expected dim = 2".format(
+                            input_dim = str(len(np.array(data).shape))
+                        )
+                )
 
         if not self.database():
-            raise TypeError(
+            raise ValueError(
                     "tried to access an invalid database. set a vild Database.database-object as database, before populating a trainingroutine"
                 )
 
-        if not self.workBook():
+        if not isinstance(self.workBook(), openpyxl.Workbook):
             raise TypeError(
                     "tried to access an invalid workbook. set a valid openpyxl.Workbook-object as workbook, before populating a trainingroutine "
                 )
 
         ws = self.workBook().active
-        database = db.database(self.databasePath())
-        data = database.data(self.databaseName(), "training_routine")
 
         ws["A3"] = self.name()
         ws["F3"] = self.trainingPeriode()[0]
@@ -362,24 +498,26 @@ class Exporter():
 
         """
 
-        path = pathlib2.Path(databasePath)
-        if not type(databasePath) == str:
+        if not isinstance(databasePath, str):
             raise TypeError(
                     "input {input_value} for argument 'databasePath' does not match {type_name}".format(
-                            input_value = path,
+                            input_value = databasePath,
                             type_name = type("str")
                         )
                 )
+        path = pathlib2.Path(databasePath)
         if not path.exists():
             raise ValueError(
-                    "Database does not exist"
+                    "Database does not exist: {input_name}".format(
+                            input_name = str(path)
+                        )
                 )
         if len(databasePath) == 0:
             raise ValueError(
                     "invalid input for argument 'databasePath'"
                 )
         self._database = str(path)
-        self._databaseName = os.path.splitext(path.name)[0]
+        self._databaseName = path.stem
         self._databasePath = path.parent
 
     def setExportPath(self, exportPath):
@@ -424,6 +562,36 @@ class Exporter():
                     "invalid input for argument 'exportPath'"
                 )
         self._exportPath = str(path)
+
+    def setModel(self, model):
+        """
+        setter method for the property: model
+
+        Parameters
+        ----------
+        model : CustomSqlModel
+            valid reference to a CustomSqlModel-object.
+
+        Raises
+        ------
+        TypeError
+            will be raised, if model is no CustomSqlModel-type.
+
+        Returns
+        -------
+        None.
+
+        """
+
+        if not isinstance(model, CustomSqlModel):
+            raise TypeError(
+                    "input <{input_name}> for 'setModel' does not match {type_name}".format(
+                            input_name = type(model),
+                            type_name = CustomSqlModel
+                        )
+                )
+
+        self._model = model
 
     def setName(self, name):
         """

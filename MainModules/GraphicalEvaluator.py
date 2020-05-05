@@ -603,7 +603,7 @@ class EvaluatorTab(QtWidgets.QWidget):
                         )
                 )
 
-        self._data = self.__readData(data[4:])
+        self._data = self.__readData(data[4:-1])
 
 
 if __name__ == "__main__":
@@ -616,7 +616,8 @@ if __name__ == "__main__":
             self.setGeometry(100,100,800,500)
             self.setWindowTitle("Graphical Evaluator Test")
 
-            database = pathlib2.Path("examples/Qt_ModelView/database/test_database.db")
+            # database = pathlib2.Path("examples/Qt_ModelView/database/test_database_2.db")
+            database = pathlib2.Path("files/test_files/test_database_2.db")
             parentDir = pathlib2.Path().cwd().parent
             model = CustomSqlModel(
                 database = parentDir / database,
