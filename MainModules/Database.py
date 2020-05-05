@@ -6,7 +6,6 @@ Created on Wed Feb 19 13:53:18 2020
 """
 
 import sqlite3 as lite
-import os, os.path
 import pathlib2
 
 class database():
@@ -130,16 +129,19 @@ class database():
     db.addManyEntries(dbName, "training_routine", training)
     """
     def __init__(self, path = None, extension = ".db"):
-        self.__path = path
-        self.__extension = extension
+        if path:
+            self.setPath(path)
+        else:
+            self.__path = None
+
+        if extension:
+            self.setExtension(extension)
+
         self.__checkPath()
 
     def __checkPath(self):
-        if self.__path == None:
-            self.__path = os.getcwd()
-        else:
-            npath = os.path.normpath(self.__path)
-            self.__path = npath
+        if self.__path is None:
+            self.setPath(pathlib2.Path().cwd())
 
 
 
@@ -444,8 +446,7 @@ class database():
             Connection Ojbect describing the connection to a specific database.
 
         """
-        databaseName = databaseName + self.__extension
-        database = os.path.join(self.__path, databaseName)
+        database = pathlib2.Path(self.path()) / pathlib2.Path(databaseName + self.extension())
         return lite.connect(database)
 
 
