@@ -15,7 +15,9 @@ from UtilityModules.MiscUtilities import ModelInputValidation
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 class GraphicalEvaluator():
-
+    """
+    the GraphicalEvaluator-class defines an interface between
+    """
     def __init__(self,
                  database = None,
                  model = None,
@@ -220,15 +222,6 @@ class EvaluatorTab(QtWidgets.QWidget):
         self.fig, self.ax = plt.subplots()
         self.fig.tight_layout()
         self.ax.grid(which = "major")
-        # self.canvas = FigureCanvas(self.fig)
-        # self.layout.addWidget(self.canvas)
-
-        # x = np.linspace(1,6,6)
-        # y = self.readData(data[4:])
-        # self.ax.plot(x,y)
-
-        # labels = ["Week " + str(i) for i in range(0,7,1)]
-        # self.ax.set_xticklabels(labels)
 
     def data(self):
         return self._data
@@ -296,8 +289,7 @@ if __name__ == "__main__":
             self.evaluator.setModel(model)
             self.evaluator.setDatabase(str(parentDir / database))
             self.evaluator.connectEvaluator(self.main)
-            self.evaluator.createTabs([[1,2,3]])
-            # self.evaluator.createTabs(self.evaluator.dataFromDatabase())
+            self.evaluator.createTabs(self.evaluator.dataFromDatabase())
             self.evaluator.plotData(self.evaluator.dataFromDatabase())
 
             self.show()
