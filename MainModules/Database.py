@@ -484,7 +484,7 @@ class database():
         -------
         None.
         """
-        if not type(extension) == str:
+        if not isinstance(extension, str):
             raise TypeError(
                     "expected {expected_type_name} for input 'extension', not '{input_type_name}'".format(
                             expected_type_name = type("123"),
@@ -510,11 +510,18 @@ class database():
         None.
 
         """
+        if not isinstance(path, str):
+            raise ValueError(
+                    "input <{input_name}> for argument 'path' of 'setPath' does not match {type_name}".format(
+                            input_name = str(path),
+                            type_name = str
+                        )
+                )
         pathObj = pathlib2.Path(path)
 
         if not pathObj.is_dir():
             raise ValueError(
-                    "input '{input_name}' for input argument 'path' does not point to a direcotry".format(
+                    "input '{input_name}' for input argument 'path' of 'setPath' does not point to a direcotry".format(
                             input_name = path
                         )
                 )
