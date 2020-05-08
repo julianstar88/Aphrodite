@@ -6,6 +6,7 @@ Created on Thu May  7 16:29:27 2020
 """
 import unittest
 import pathlib2
+import sqlite3 as lite
 import numpy as np
 import MainModules.Database as db
 
@@ -18,24 +19,68 @@ class DatabaseProperties(unittest.TestCase):
 
     def test_path_getter(self):
         self.assertEqual(
-                self.database.path(), str(pathlib2.Path().cwd())
+                self.database.path(), pathlib2.Path().cwd()
             )
 
     def test_extension_getter(self):
         self.assertEqual(
                 self.database.extension(), ".db"
+
+            )
+
+    def test_databaseName_getter(self):
+        self.assertEqual(
+                self.database.databaseName(), None
+            )
+
+    def test_tables_getter(self):
+        self.assertEqual(
+                self.database.tables(), None
             )
 
     def test_path_setter(self):
-        self.database.setPath(str(self.currentDir.parent))
+        self.database.setPath(self.currentDir.parent)
         self.assertEqual(
-                self.database.path(), str(self.currentDir.parent)
+                self.database.path(), self.currentDir.parent
             )
 
     def test_extension_setter(self):
-        self.database.setExtension(".test")
+        testValues = [".py", ".txt", ".exe"]
+
+        self.database.setExtension(".db")
         self.assertEqual(
-                self.database.extension(), ".test"
+                self.database.extension(), ".db"
+            )
+
+        for val in testValues:
+            with self.subTest(val = val):
+                self.assertRaises(
+                        ValueError, self.database.setExtension, val
+                    )
+
+
+    def test_databaseName_setter(self):
+        self.database.setDatabaseName(self.databaseName)
+        self.assertEqual(
+                self.database.databaseName(), self.databaseName
+            )
+
+    def test_tables_setter(self):
+        file = pathlib2.Path("files/test_files/test_database_2.db")
+        parentDir = pathlib2.Path().cwd().parent
+        path = parentDir / file
+        database = db.database(path)
+
+        con = lite.connect(path)
+        with con:
+            c = con.cursor()
+            c.execute("SELECT name FROM sqlite_master WHERE type='table';")
+            data = c.fetchall()
+        con.close()
+        tables = [element[0] for element in data]
+
+        self.assertEqual(
+                database.tables(), tables
             )
 
     def tearDown(self):
@@ -47,16 +92,16 @@ class DatabaseMethods(unittest.TestCase):
         self.currentDir = pathlib2.Path().cwd()
         self.databaseName = "temp_test_database"
         self.tableName = "test_table"
-        self.database = db.database(str(self.currentDir))
+        self.database = db.database(self.currentDir)
         self.databaseFile = self.currentDir / (self.databaseName + self.database.extension())
 
     def test_data(self):
         file = pathlib2.Path("files/test_files/test_database_2.db")
-        parentDir = pathlib2.Path().cwd().parent / file.parent
-        database = db.database(str(parentDir))
-        databaseName = file.stem
+        parentDir = pathlib2.Path().cwd().parent
+        path = parentDir / file
+        database = db.database(path)
         tableName = "training_routine"
-        data = database.data(databaseName, tableName)
+        data = database.data(tableName)
         array = np.array(data)
 
         self.assertEqual(
@@ -79,7 +124,7 @@ class DatabaseMethods(unittest.TestCase):
                 ("two", "TEXT"),
                 ("three", "TEXT")
             )
-        self.database.createTable(self.databaseName, self.tableName, colNames)
+        self.database.createTable(self.tableName, colNames, self.databaseName)
 
         con = self.database.establishConnection(self.databaseName)
         with con:
@@ -101,9 +146,9 @@ class DatabaseMethods(unittest.TestCase):
                 ("three", "INT")
             )
         insert = [1, 2, 3]
-        self.database.createTable(self.databaseName, self.tableName, colNames)
-        self.database.addEntry(self.databaseName, self.tableName, insert)
-        data = self.database.data(self.databaseName, self.tableName)
+        self.database.createTable(self.tableName, colNames, self.databaseName)
+        self.database.addEntry(self.tableName, insert)
+        data = self.database.data(self.tableName)
         array = np.array(data)
 
         self.assertEqual(
@@ -127,9 +172,9 @@ class DatabaseMethods(unittest.TestCase):
                 ("three", "INT")
             )
         insert = [[1, 2, 3], [4,5,6], [7,8,9]]
-        self.database.createTable(self.databaseName, self.tableName, colNames)
-        self.database.addManyEntries(self.databaseName, self.tableName, insert)
-        data = self.database.data(self.databaseName, self.tableName)
+        self.database.createTable(self.tableName, colNames, self.databaseName)
+        self.database.addManyEntries(self.tableName, insert)
+        data = self.database.data(self.tableName)
         array = np.array(data)
 
         self.assertEqual(
@@ -153,18 +198,18 @@ class DatabaseMethods(unittest.TestCase):
                 ("three", "INT")
             )
         insert = [[1, 2, 3], [4,5,6], [7,8,9]]
-        self.database.createTable(self.databaseName, self.tableName, colNames)
-        self.database.addManyEntries(self.databaseName, self.tableName, insert)
+        self.database.createTable(self.tableName, colNames, self.databaseName)
+        self.database.addManyEntries(self.tableName, insert)
 
-        self.database.deleteAllEntries(self.databaseName, self.tableName)
-        data = self.database.data(self.databaseName, self.tableName)
+        self.database.deleteAllEntries(self.tableName)
+        data = self.database.data(self.tableName)
         array = np.array(data)
 
         self.assertEqual(
                 array.size, 0
             )
 
-    def deleteManyEntries(self):
+    def test_deleteEntries(self):
         colNames = (
                 ("one", "INT"),
                 ("two", "INT"),
@@ -172,29 +217,29 @@ class DatabaseMethods(unittest.TestCase):
             )
         insert = [[1, 2, 3], [4,5,6], [7,8,9], [10,11,12]]
         inputArray = np.array(insert)
-        deleteRow = 3
+        deleteRow = [3]
         deleteRows = [1, 2]
-        self.database.createTable(self.databaseName, self.tableName, colNames)
-        self.database.addManyEntries(self.databaseName, self.tableName, insert)
+        self.database.createTable(self.tableName, colNames, self.databaseName)
+        self.database.addManyEntries(self.tableName, insert)
 
-        self.database.deleteManyEntries(self.databaseName, self.tableName, deleteRow)
-        data = self.database.data(self.databaseName, self.tableName)
+        self.database.deleteEntries(self.tableName, deleteRow)
+        data = self.database.data(self.tableName)
         array = np.array(data)
 
-        self.asserEqual(
+        self.assertEqual(
                 len(array.shape), 2
             )
 
         self.assertEqual(
-                array.shape[0], inputArray[0]-1
+                array.shape[0], inputArray.shape[0]-1
             )
 
         self.assertNotEqual(
                 array.size, 0
             )
 
-        self.database.deleteManyEntries(self.databaseName, self.tableName, deleteRows)
-        data = self.database.data(self.databaseName, self.tableName)
+        self.database.deleteEntries(self.tableName, deleteRows)
+        data = self.database.data(self.tableName)
         array = np.array(data)
 
         self.assertEqual(
@@ -210,7 +255,6 @@ class DatabaseMethods(unittest.TestCase):
             self.databaseFile.unlink()
         except FileNotFoundError: # self.databaseFile does not exist
             pass
-
 
 if __name__ == "__main__":
     unittest.main()

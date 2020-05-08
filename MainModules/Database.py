@@ -125,24 +125,27 @@ class database():
 
     """
 
+    allowedExtensions = (".db")
+
     def __init__(self, path = None, extension = ".db"):
+        self.__path = None
+        self.__databaseName = None
+        self.__tables = None
+        self.__extension = None
+
         if path is not None:
             self.setPath(path)
-        else:
-            self.__path = None
 
-        if extension:
+        if self.extension() is None:
             self.setExtension(extension)
 
         self.__checkPath()
 
     def __checkPath(self):
-        if self.__path is None:
-            self.setPath(str(pathlib2.Path().cwd()))
+        if self.path() is None:
+            self.setPath(pathlib2.Path().cwd())
 
-
-
-    def addEntry(self, databaseName, tableName, insert):
+    def addEntry(self, tableName, insert, databaseName = None):
         """
         add a single entry 'insert' to the table named 'tableName' in the database
         'databaseName'.
@@ -162,8 +165,47 @@ class database():
 
         """
 
+        if databaseName is not None:
+            self.setDatabaseName(databaseName)
+
+        if self.databaseName() is None:
+            raise TypeError(
+                    "Databse.addEntry: before adding many etries to a database, set a valid databaseName"
+                )
+
+        if not isinstance(tableName, str):
+            raise TypeError(
+                    "input <{input_name}> for 'tableName' of 'addEntry' in 'Database' does not match {type_name}".format(
+                            input_name = str(tableName),
+                            type_name = str
+                        )
+                )
+
+        if self.tables() is None:
+            raise TypeError(
+                    "Database.addEntry: there are no tables in database <{name}>".format(
+                            name = self.databaseName()
+                        )
+                )
+
+        if not tableName in self.tables():
+            raise ValueError(
+                    "input <{input_name}> for 'tableName' of 'addEntry' in 'Database' is not one of {tables}".format(
+                            input_name = str(tableName),
+                            tables = str(self.tables)
+                        )
+                )
+
+        path = self.path() / (self.databaseName() + self.extension())
+        if not path.is_file():
+            raise ValueError(
+                    "Database.addEntry: can not add entry to database. database <{name}> does not exist".format(
+                            name = self.databaseName()
+                        )
+                )
+
         # establish connection
-        con = self.establishConnection(databaseName)
+        con = self.establishConnection(self.databaseName())
 
         # do work
         with con:
@@ -177,7 +219,7 @@ class database():
         # close connection
         self.closeConnection(con)
 
-    def addManyEntries(self, databaseName, tableName, insert):
+    def addManyEntries(self, tableName, insert, databaseName = None):
         """
         add a bulk of rows specified by 'insert' to the table 'tableName' in
         database 'databaseName'
@@ -207,8 +249,45 @@ class database():
 
         """
 
+        if databaseName is not None:
+            self.setDatabaseName(databaseName)
+
+        if self.databaseName() is None:
+            raise TypeError(
+                    "Databse.addManyEntries: before adding many etries to a database, set a valid databaseName"
+                )
+
+        if not isinstance(tableName, str):
+            raise TypeError(
+                    "input <{input_name}> for 'tableName' of 'addManyEntries' in 'Database' does not match {type_name}".format(
+                            input_name = str(tableName),
+                            type_name = str
+                        )
+                )
+
+        if self.tables() is None:
+            raise TypeError(
+                    "Database.addManyEntries: there are no tables in database"
+                )
+
+        if not tableName in self.tables():
+            raise ValueError(
+                    "input <{input_name}> for 'tableName' of 'addManyEntries' in 'Database' is not one of {tables}".format(
+                            input_name = str(tableName),
+                            tables = str(self.tables)
+                        )
+                )
+
+        path = self.path() / (self.databaseName() + self.extension())
+        if not path.is_file():
+            raise ValueError(
+                    "can not add many entries to database. database <{name}> does not exist".format(
+                            name = self.databaseName()
+                        )
+                )
+
         # establish connection
-        con = self.establishConnection(databaseName)
+        con = self.establishConnection(self.databaseName())
         with con:
             c = con.cursor()
             values = '?, ' * len(insert[0])
@@ -234,10 +313,17 @@ class database():
         None.
 
         """
+        if not isinstance(connectionObject, lite.Connection):
+            raise TypeError(
+                    "input <{input_name}> for 'closeConnection' of 'Database' does not match {type_name}".format(
+                            input_name = str(connectionObject),
+                            type_name = lite.Connection
+                        )
+                )
 
         connectionObject.close()
 
-    def createDatabase(self, databaseName):
+    def createDatabase(self, databaseName = None):
         """
         generates a database called 'databaseName'
 
@@ -254,10 +340,14 @@ class database():
         None.
 
         """
-        con = self.establishConnection(databaseName)
+
+        if databaseName is not None:
+            self.setDatabaseName(databaseName)
+
+        con = self.establishConnection(self.databaseName())
         self.closeConnection(con)
 
-    def createTable(self, databaseName, tableName, columnNames):
+    def createTable(self, tableName, columnNames, databaseName = None):
         """
         create a table 'tableName' in the database 'databaseName'. the names of
         the columns are specified by 'columnNames'
@@ -287,7 +377,24 @@ class database():
         None.
 
         """
-        con = self.establishConnection(databaseName)
+
+        if databaseName is not None:
+            self.setDatabaseName(databaseName)
+
+        if self.databaseName() is None:
+            raise TypeError(
+                    "before creating a table, set a valid databaseName"
+                )
+
+        if not isinstance(tableName, str):
+            raise TypeError(
+                    "input <{input_name}> for 'createTable' of 'Database' does not match {type_name}".format(
+                            input_name = str(tableName),
+                            type_name = str
+                        )
+                )
+
+        con = self.establishConnection(self.databaseName())
         with con:
             c = con.cursor()
             c.execute("DROP TABLE IF EXISTS {name}".format(name = tableName))
@@ -299,8 +406,12 @@ class database():
                                                                  values = valueString)
             c.execute(sql_command)
         self.closeConnection(con)
+        self.setTables()
 
-    def deleteAllEntries(self, databaseName, tableName):
+    def databaseName(self):
+        return self.__databaseName
+
+    def deleteAllEntries(self, tableName, databaseName = None):
         """
         delete all Entries in the table given by 'tableName' in the database
         called 'databasename'
@@ -320,6 +431,43 @@ class database():
 
         """
 
+        if databaseName is not None:
+            self.setDatabaseName(databaseName)
+
+        if self.databaseName() is None:
+            raise TypeError(
+                    "Databse.deleteAllEntries: before adding many etries to a database, set a valid databaseName"
+                )
+
+        if not isinstance(tableName, str):
+            raise TypeError(
+                    "input <{input_name}> for 'tableName' of 'deleteAllEntries' in 'Database' does not match {type_name}".format(
+                            input_name = str(tableName),
+                            type_name = str
+                        )
+                )
+
+        if self.tables() is None:
+            raise TypeError(
+                    "Database.deleteAllEntries: there are no tables in database"
+                )
+
+        if not tableName in self.tables():
+            raise ValueError(
+                    "input <{input_name}> for 'tableName' of 'deleteAllEntries' in 'Database' is not one of {tables}".format(
+                            input_name = str(tableName),
+                            tables = str(self.tables)
+                        )
+                )
+
+        path = self.path() / (self.databaseName() + self.extension())
+        if not path.is_file():
+            raise ValueError(
+                    "Database.deleteAllEntries: database <{name}> does not exist".format(
+                            name = self.databaseName()
+                        )
+                )
+
         # establish connection
         con = self.establishConnection(databaseName)
         with con:
@@ -330,40 +478,40 @@ class database():
         # close connection
         self.closeConnection(con)
 
-    def deleteEntry(self, databaseName, tableName, row_id):
-        """
-        delete only on line refered by 'row_id' from a table refered by 'tableName'
-        in the database called 'databaseName'.
+    # def deleteEntry(self, databaseName, tableName, row_id):
+    #     """
+    #     delete only on line refered by 'row_id' from a table refered by 'tableName'
+    #     in the database called 'databaseName'.
 
-        Parameters
-        ----------
-        databaseName : str
-            specify the database. if 'databaseName' does not exist, an OperationalError
-            will be raised
-        tableName : str
-            specify the table were a certain row will be deleted. if 'tableName'
-            does not exist, an OperationalError will be raised
-        row_id : int
-            specify the row which to delete from the table.
+    #     Parameters
+    #     ----------
+    #     databaseName : str
+    #         specify the database. if 'databaseName' does not exist, an OperationalError
+    #         will be raised
+    #     tableName : str
+    #         specify the table were a certain row will be deleted. if 'tableName'
+    #         does not exist, an OperationalError will be raised
+    #     row_id : int
+    #         specify the row which to delete from the table.
 
-        Returns
-        -------
-        None.
+    #     Returns
+    #     -------
+    #     None.
 
-        """
+    #     """
 
-        # establish connection
-        con = self.establishConnection(databaseName)
-        with con:
-            c = con.cursor()
-            sql_command = "DELETE FROM {name} WHERE id = {row_id}".format(
-                name = tableName, row_id = row_id)
-            c.execute(sql_command)
+    #     # establish connection
+    #     con = self.establishConnection(databaseName)
+    #     with con:
+    #         c = con.cursor()
+    #         sql_command = "DELETE FROM {name} WHERE id = {row_id}".format(
+    #             name = tableName, row_id = row_id)
+    #         c.execute(sql_command)
 
-        # close connection
-        self.closeConnection(con)
+    #     # close connection
+    #     self.closeConnection(con)
 
-    def deleteManyEntries(self, databaseName, tableName, row_id_list):
+    def deleteEntries(self, tableName, row_id_list, databaseName = None):
         """
         delete a bulk of entries from table 'tableName' in the database
         'databaseName'. 'row_id_list' specifies which rows to delete.
@@ -374,8 +522,8 @@ class database():
             specify the database.
         tableName : TYPE
             specify the table form which to delete.
-        row_id_list : list
-            list of integers defining the rows which to delete.
+        row_id_list : list or int
+            list of integers/ single integer, defining the rows which to delete.
 
         Returns
         -------
@@ -383,19 +531,56 @@ class database():
 
         """
 
+        if databaseName is not None:
+            self.setDatabaseName(databaseName)
+
+        if self.databaseName() is None:
+            raise TypeError(
+                    "Databse.deleteEntries: before deleting many etries to a database, set a valid databaseName"
+                )
+
+        if not isinstance(tableName, str):
+            raise TypeError(
+                    "input <{input_name}> for 'tableName' of 'deleteEntries' in 'Database' does not match {type_name}".format(
+                            input_name = str(tableName),
+                            type_name = str
+                        )
+                )
+
+        if self.tables() is None:
+            raise TypeError(
+                    "Database.delteEntries: there are no tables in database"
+                )
+
+        if not tableName in self.tables():
+            raise ValueError(
+                    "input <{input_name}> for 'tableName' of 'deleteEntries' in 'Database' is not one of {tables}".format(
+                            input_name = str(tableName),
+                            tables = str(self.tables)
+                        )
+                )
+
+        path = self.path() / (self.databaseName() + self.extension())
+        if not path.is_file():
+            raise ValueError(
+                    "Database.deleteEntries: database <{name}> does not exist".format(
+                            name = self.databaseName()
+                        )
+                )
+
         # establish connection
         con = self.establishConnection(databaseName)
         with con:
             c = con.cursor()
             for idx in row_id_list:
-                sql_command = "DELETE FROM {name} WHERE id = {row_id}".format(
+                sql_command = "DELETE FROM {name} WHERE rowid = {row_id}".format(
                     name = tableName, row_id = idx)
                 c.execute(sql_command)
 
         # close connection
         self.closeConnection(con)
 
-    def data(self, databaseName, tableName):
+    def data(self, tableName, databaseName = None):
         """
         get all data from a table refered by 'tableName' in the database
         refered by 'databaseName'
@@ -416,6 +601,43 @@ class database():
 
         """
 
+        if databaseName is not None:
+            self.setDatabaseName(databaseName)
+
+        if self.databaseName() is None:
+            raise TypeError(
+                    "Databse.addEntry: before adding many etries to a database, set a valid databaseName"
+                )
+
+        if not isinstance(tableName, str):
+            raise TypeError(
+                    "input <{input_name}> for 'tableName' of 'data' in 'Database' does not match {type_name}".format(
+                            input_name = str(tableName),
+                            type_name = str
+                        )
+                )
+
+        if self.tables() is None:
+            raise TypeError(
+                    "Database.data: there are no tables in database"
+                )
+
+        if not tableName in self.tables():
+            raise ValueError(
+                    "input <{input_name}> for 'tableName' of 'data' in 'Database' is not one of {tables}".format(
+                            input_name = str(tableName),
+                            tables = str(self.tables)
+                        )
+                )
+
+        path = self.path() / (self.databaseName() + self.extension())
+        if not path.is_file():
+            raise ValueError(
+                    "Database.data: database <{name}> does not exist".format(
+                            name = self.databaseName()
+                        )
+                )
+
         # establish connection
         con = self.establishConnection(databaseName)
         with con:
@@ -429,14 +651,15 @@ class database():
 
         return data
 
-    def establishConnection(self, databaseName):
+    def establishConnection(self, databaseName = None):
         """
         establish a connection to the database 'databaseName'
 
         Parameters
         ----------
         databaseName : str
-            specify the database to connect to.
+            specify the database to connect to. if databaseName is none, the value
+            hold by the databaseName-property will be taken. default is None
 
         Returns
         -------
@@ -445,7 +668,13 @@ class database():
 
         """
 
-        database = pathlib2.Path(self.path()) / (databaseName + self.extension())
+        if databaseName is not None:
+            self.setDatabaseName(databaseName)
+
+        if self.databaseName() is None:
+            return False
+
+        database = self.path() / (self.databaseName() + self.extension())
         return lite.connect(database)
 
 
@@ -474,6 +703,26 @@ class database():
         """
         return self.__path
 
+    def setDatabaseName(self, databaseName):
+
+        if not isinstance(databaseName, str):
+            raise TypeError(
+                    "input <{input_name}> for 'setDatabaseName' of 'Database' does not match {type_name}".format(
+                            input_name = str(databaseName),
+                            type_name = str
+                        )
+                )
+
+        name = pathlib2.Path(databaseName)
+
+        if len(name.suffix) != 0:
+            raise ValueError(
+                    "only databaseNames without file-extensions are allowed"
+                )
+
+        self.__databaseName = databaseName
+        self.setTables()
+
     def setExtension(self, extension):
         """
         set a new value for the property 'extension'
@@ -492,9 +741,22 @@ class database():
         """
         if not isinstance(extension, str):
             raise TypeError(
-                    "expected {expected_type_name} for input 'extension', not '{input_type_name}'".format(
+                    "expected {expected_type_name} for 'setExtension' of 'Database', not '{input_type_name}'".format(
                             expected_type_name = type("123"),
                             input_type_name = type(extension)
+                        )
+                )
+
+        if len(extension) == 0:
+            raise ValueError(
+                    "empty strings for 'setExtension' of 'Database' are not allowed"
+                )
+
+        if extension not in type(self).allowedExtensions:
+            raise ValueError(
+                    "input <{input_name}> is not allowed. allowed extensions: <{extensions}>".format(
+                            input_name = str(extension),
+                            extensions = str(type(self).allowedExtensions)
                         )
                 )
 
@@ -516,30 +778,76 @@ class database():
         None.
 
         """
-        if not isinstance(path, str):
+        if not isinstance(path, str) and not isinstance(path, pathlib2.Path):
             raise ValueError(
-                    "input <{input_name}> for argument 'path' of 'setPath' does not match {type_name}".format(
+                    "input <{input_name}> for argument 'path' of 'setPath' does not match {type_name_1} or {type_name_2}".format(
                             input_name = str(path),
-                            type_name = str
+                            type_name_1 = str,
+                            type_name_2 = pathlib2.Path()
                         )
                 )
         pathObj = pathlib2.Path(path)
 
-        if not pathObj.is_dir():
-            raise ValueError(
-                    "input '{input_name}' for input argument 'path' of 'setPath' does not point to a direcotry".format(
-                            input_name = path
-                        )
+        if pathObj.is_file():
+            path = pathObj.parent
+            name = pathObj.stem
+            extension = pathObj.suffix
+            self.__path = path
+            self.setDatabaseName(name)
+            self.setExtension(extension)
+            self.setTables()
+
+        if pathObj.is_dir():
+            self.__path = pathObj
+
+    def setTables(self, databaseName = None):
+
+        if databaseName is not None:
+            self.setDatabaseName(databaseName)
+
+        if self.databaseName() is None:
+            raise TypeError(
+                    "before retrieveing the tables within a database, set a valid database"
                 )
 
-        self.__path = str(pathObj)
+        con = self.establishConnection()
+        if con:
+            with con:
+                c = con.cursor()
+                c.execute("SELECT name FROM sqlite_master WHERE type='table';")
+                data = c.fetchall()
+            self.closeConnection(con)
+        else:
+            data = []
+
+        # try:
+        #     con = self.establishConnection()
+        #     with con:
+        #         c = con.cursor()
+        #         c.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        #         data = c.fetchall()
+        #     self.closeConnection(con)
+        # except:
+        #     data = []
+
+        tables = [element[0] for element in data]
+
+        if len(tables) == 0:
+            self.__tables = None
+        else:
+            self.__tables = tables
+
+    def tables(self):
+        return self.__tables
 
 if __name__ == '__main__':
 
     # create database
-    path = r"C:\Users\Julian\Documents\Python\Projekte\Aphrodite\examples\Qt_ModelView\database"
-    db = database(path)
+    path = pathlib2.Path("C:/Users/Julian/Documents/Python/Projekte/Aphrodite/examples/Qt_ModelView/database")
     dbName = "test_database_2"
+    db = database()
+    db.setPath(path)
+    db.setDatabaseName(dbName)
 
     columnNames = ( ("exercise", "TEXT"),
                     ("sets", "TEXT"),
@@ -553,7 +861,7 @@ if __name__ == '__main__':
                     ("week_6", "TEXT"),
                     ("mode", "TEXT"),
                 )
-    db.createTable(dbName, "training_routine", columnNames)
+    db.createTable("training_routine", columnNames)
 
     columnNames = (("exerciseID", "INT"),
                    ("label", "TEXT"),
@@ -570,14 +878,14 @@ if __name__ == '__main__':
                    ("week_6", "TEXT"),
                    ("mode", "TEXT"),
                   )
-    db.createTable(dbName, "training_alternatives", columnNames)
+    db.createTable("training_alternatives", columnNames)
 
 
     columnNames = (("excerciseID", "INT"),
                    ("label", "TEXT"),
                    ("short", "TEXT"),
                    ("note", "TEXT"))
-    db.createTable(dbName, "training_notes", columnNames)
+    db.createTable("training_notes", columnNames)
 
 
     training = [
@@ -587,19 +895,16 @@ if __name__ == '__main__':
         ["Bizeps KH", "4", "RBZ", "WBZ", "BZ1", "BZ2", "BZ3", "BZ4", "BZ5", "BZ6", "gym"],
         ["Trizeps Seilzug", "4", "RTZ", "WTZ", "TZ1", "TZ2", "TZ3", "TZ4", "TZ5", "TZ6", "gym"],
         ["Seitenheben KH", "4", "RSH", "WSH", "SH1", "SH2", "SH3", "SH4", "SH5", "SH6", "gym"]]
-    db.addManyEntries(dbName, "training_routine", training)
+    db.addManyEntries("training_routine", training)
 
     trainingAlternatives = [
             [1, "1", "Bankdrücken LH", "Bankdrücken LH", "4", "RBDA", "WBDA", "BDA1", "BDA2", "BDA3", "BDA4", "BDA5", "BDA6", "gym"],
             [5, "2", "TZ Dips", "Trizeps Dips", "4", "RSHA", "WSHA", "SHA1", "SHA2", "SHA3", "SHA4", "SHA5", "SHA6", "gym"],
             [6, "3", "SH Maschine", "Seitenheben Maschine", "4", "RSHA", "WSHA", "SHA1", "SHA2", "SHA3", "SHA4", "SHA5", "SHA6", "gym"],
         ]
-    db.addManyEntries(dbName, "training_alternatives", trainingAlternatives)
+    db.addManyEntries("training_alternatives", trainingAlternatives)
 
     trainingNotes = [
             [2, "a", "note 1", "test training note 1"],
             [4, "b", "note 2", "test training note 2"]]
-    db.addManyEntries(dbName, "training_notes", trainingNotes)
-
-
-
+    db.addManyEntries("training_notes", trainingNotes)
