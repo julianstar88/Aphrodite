@@ -42,6 +42,9 @@ class database():
     - closeConnection : connectionObject
         close a sqlite3.connection object specified by 'connectionObject'
 
+    - createDatabase: databaseName
+        create an empty Database 'databaseName'
+
     - createTable : databaseName, tableName, columnNames
         create a table 'tableName' in 'databaseName' with columns specified
         in 'columnNames'
@@ -121,8 +124,9 @@ class database():
         >>>     )
 
     """
+
     def __init__(self, path = None, extension = ".db"):
-        if path:
+        if path is not None:
             self.setPath(path)
         else:
             self.__path = None
@@ -134,7 +138,7 @@ class database():
 
     def __checkPath(self):
         if self.__path is None:
-            self.setPath(pathlib2.Path().cwd())
+            self.setPath(str(pathlib2.Path().cwd()))
 
 
 
@@ -230,6 +234,7 @@ class database():
         None.
 
         """
+
         connectionObject.close()
 
     def createDatabase(self, databaseName):
@@ -439,7 +444,8 @@ class database():
             Connection Ojbect describing the connection to a specific database.
 
         """
-        database = pathlib2.Path(self.path()) / pathlib2.Path(databaseName + self.extension())
+
+        database = pathlib2.Path(self.path()) / (databaseName + self.extension())
         return lite.connect(database)
 
 
@@ -484,7 +490,7 @@ class database():
         -------
         None.
         """
-        if not type(extension) == str:
+        if not isinstance(extension, str):
             raise TypeError(
                     "expected {expected_type_name} for input 'extension', not '{input_type_name}'".format(
                             expected_type_name = type("123"),
@@ -510,11 +516,18 @@ class database():
         None.
 
         """
+        if not isinstance(path, str):
+            raise ValueError(
+                    "input <{input_name}> for argument 'path' of 'setPath' does not match {type_name}".format(
+                            input_name = str(path),
+                            type_name = str
+                        )
+                )
         pathObj = pathlib2.Path(path)
 
         if not pathObj.is_dir():
             raise ValueError(
-                    "input '{input_name}' for input argument 'path' does not point to a direcotry".format(
+                    "input '{input_name}' for input argument 'path' of 'setPath' does not point to a direcotry".format(
                             input_name = path
                         )
                 )
