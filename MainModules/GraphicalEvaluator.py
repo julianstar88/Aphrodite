@@ -263,7 +263,7 @@ class GraphicalEvaluator():
         pathObj = pathlib2.Path(self.database())
         databaseName = pathObj.stem
         databaseObj = db.database(pathObj.parent)
-        data = databaseObj.data(databaseName, tableName)
+        data = databaseObj.data(tableName, databaseName)
 
         return data
 

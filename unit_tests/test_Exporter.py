@@ -452,7 +452,7 @@ class TrainingRoutineLayout(unittest.TestCase):
     def test_populateRoutine_from_database(self):
         self.exporter.routineLayout()
         self.exporter.populateRoutine(self.exporter.dataFromDatabase())
-        data = self.db.data(self.databaseName, self.tableName)
+        data = self.db.data(self.tableName, self.databaseName)
         ws = self.exporter.workBook().active
 
         headerTestCells = ["A3", "F3", "F4", "I3"]
@@ -495,7 +495,7 @@ class TrainingRoutineLayout(unittest.TestCase):
     def test_populateRoutine_from_model(self):
         self.exporter.routineLayout()
         self.exporter.populateRoutine(self.exporter.dataFromModel())
-        data = self.db.data(self.databaseName, self.tableName)
+        data = self.db.data(self.tableName, self.databaseName)
         ws = self.exporter.workBook().active
 
         headerTestCells = ["A3", "F3", "F4", "I3"]

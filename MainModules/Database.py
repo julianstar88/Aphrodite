@@ -133,11 +133,11 @@ class database():
         self.__tables = None
         self.__extension = None
 
-        if path is not None:
-            self.setPath(path)
-
         if self.extension() is None:
             self.setExtension(extension)
+
+        if path is not None:
+            self.setPath(path)
 
         self.__checkPath()
 
@@ -674,6 +674,12 @@ class database():
         if self.databaseName() is None:
             return False
 
+        if self.path() is None:
+            return False
+
+        if self.extension() is None:
+            return False
+
         database = self.path() / (self.databaseName() + self.extension())
         return lite.connect(database)
 
@@ -805,10 +811,25 @@ class database():
         if databaseName is not None:
             self.setDatabaseName(databaseName)
 
+        if self.path() is None:
+            raise TypeError(
+                    "Database.setTables: before retrieveing the tables in a database, set a valid path"
+                )
+
         if self.databaseName() is None:
             raise TypeError(
-                    "before retrieveing the tables within a database, set a valid database"
+                    "Database.setTables: before retrieveing the tables in a database, set a valid databaseName"
                 )
+
+        if self.extension() is None:
+            raise TypeError(
+                    "Database.setTables: before retrieving the tables in a database, set a valid extension"
+                )
+
+        path = self.path() / (self.databaseName() + self.extension())
+
+        if not path.is_file():
+            return
 
         con = self.establishConnection()
         if con:
@@ -820,22 +841,14 @@ class database():
         else:
             data = []
 
-        # try:
-        #     con = self.establishConnection()
-        #     with con:
-        #         c = con.cursor()
-        #         c.execute("SELECT name FROM sqlite_master WHERE type='table';")
-        #         data = c.fetchall()
-        #     self.closeConnection(con)
-        # except:
-        #     data = []
+        self.__tables = [element[0] for element in data]
 
-        tables = [element[0] for element in data]
+        # tables = [element[0] for element in data]
 
-        if len(tables) == 0:
-            self.__tables = None
-        else:
-            self.__tables = tables
+        # if len(tables) == 0:
+        #     self.__tables = None
+        # else:
+        #     self.__tables = tables
 
     def tables(self):
         return self.__tables

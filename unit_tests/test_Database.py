@@ -15,6 +15,7 @@ class DatabaseProperties(unittest.TestCase):
     def setUp(self):
         self.currentDir = pathlib2.Path().cwd()
         self.databaseName = "temp_test_database"
+        self.databaseFile = self.currentDir / (self.databaseName + ".db")
         self.database = db.database()
 
     def test_path_getter(self):
@@ -69,6 +70,9 @@ class DatabaseProperties(unittest.TestCase):
         file = pathlib2.Path("files/test_files/test_database_2.db")
         parentDir = pathlib2.Path().cwd().parent
         path = parentDir / file
+
+        # the setter will be invoked implicit by using the setPath method
+        # by instantiating db.database(path)
         database = db.database(path)
 
         con = lite.connect(path)
@@ -84,7 +88,10 @@ class DatabaseProperties(unittest.TestCase):
             )
 
     def tearDown(self):
-        pass
+        try:
+            self.databaseFile.unlink()
+        except FileNotFoundError: # self.databaseFile does not exist
+            pass
 
 class DatabaseMethods(unittest.TestCase):
 
