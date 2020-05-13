@@ -33,30 +33,30 @@ class database():
 
     Public Methods
     --------------
-    - addEntry : databaseName, tableName, insert
+    - addEntry : tableName, insert, databaseName = None
         add a single entry 'insert' to 'tableName' in 'databaseName'
 
-    - addManyEntries : databaseName, tableName, insert
+    - addManyEntries : tableName, insert, databaseName = None
         add a bulk of entries in 'insert' to 'tableName' in 'databaseName'
 
     - closeConnection : connectionObject
         close a sqlite3.connection object specified by 'connectionObject'
 
-    - createDatabase: databaseName
+    - createDatabase: databaseName = None
         create an empty Database 'databaseName'
 
-    - createTable : databaseName, tableName, columnNames
+    - createTable : tableName, columnNames, databaseName = None
         create a table 'tableName' in 'databaseName' with columns specified
         in 'columnNames'
 
-    - deleteAllEntries : databaseName, tableName
+    - deleteAllEntries : tableName, databaseName = None
         delete all rows in 'tableName' in 'databaseName'
 
-    - deleteManyEntries : databaseName, tableName, row_id_list
+    - deleteEntries : tableName, row_id_list, databaseName = None
         delete only certain rows specified by 'row_id_list' from
         'tableName' in 'databaseName'
 
-    - data : databaseName, tableName
+    - data : tableName, databaseName = None
         get all data from 'tableName' in 'databaseName'
 
     - establishConnection : databaseName
@@ -409,6 +409,14 @@ class database():
         self.setTables()
 
     def databaseName(self):
+        """
+        Name of the db-file, which serves as data source.
+
+        Returns
+        -------
+        str
+
+        """
         return self.__databaseName
 
     def deleteAllEntries(self, tableName, databaseName = None):
@@ -477,39 +485,6 @@ class database():
 
         # close connection
         self.closeConnection(con)
-
-    # def deleteEntry(self, databaseName, tableName, row_id):
-    #     """
-    #     delete only on line refered by 'row_id' from a table refered by 'tableName'
-    #     in the database called 'databaseName'.
-
-    #     Parameters
-    #     ----------
-    #     databaseName : str
-    #         specify the database. if 'databaseName' does not exist, an OperationalError
-    #         will be raised
-    #     tableName : str
-    #         specify the table were a certain row will be deleted. if 'tableName'
-    #         does not exist, an OperationalError will be raised
-    #     row_id : int
-    #         specify the row which to delete from the table.
-
-    #     Returns
-    #     -------
-    #     None.
-
-    #     """
-
-    #     # establish connection
-    #     con = self.establishConnection(databaseName)
-    #     with con:
-    #         c = con.cursor()
-    #         sql_command = "DELETE FROM {name} WHERE id = {row_id}".format(
-    #             name = tableName, row_id = row_id)
-    #         c.execute(sql_command)
-
-    #     # close connection
-    #     self.closeConnection(con)
 
     def deleteEntries(self, tableName, row_id_list, databaseName = None):
         """
@@ -666,6 +641,12 @@ class database():
         sqlite3.Connection Object
             Connection Ojbect describing the connection to a specific database.
 
+        False
+            if one of the following property-types holds None:
+                - path()
+                - databaseName()
+                - extension()
+
         """
 
         if databaseName is not None:
@@ -710,6 +691,29 @@ class database():
         return self.__path
 
     def setDatabaseName(self, databaseName):
+        """
+        set the name of the db-file, which serves as data-source. if the name
+        has a pathlib2.Path().stem and a pathlib2.Path().suffix, the
+        'extension' property will be set accordingly, if the suffix is in
+        'allowedExtensions'
+
+        Parameters
+        ----------
+        databaseName : str
+            name of the db-file.
+
+        Raises
+        ------
+        TypeError
+            will be raised, if 'databaseName' is not str-type.
+        ValueError
+            if a pathlib2.Path().suffix exists, and is not in 'allowedExtensions'.
+
+        Returns
+        -------
+        None.
+
+        """
 
         if not isinstance(databaseName, str):
             raise TypeError(
@@ -719,14 +723,19 @@ class database():
                         )
                 )
 
+        # if len(name.suffix) != 0:
+        #     raise ValueError(
+        #             "only databaseNames without file-extensions are allowed"
+        #         )
+
         name = pathlib2.Path(databaseName)
 
         if len(name.suffix) != 0:
-            raise ValueError(
-                    "only databaseNames without file-extensions are allowed"
-                )
+            self.__databaseName = name.stem
+            self.setExtension(name.suffix)
+        else:
+            self.__databaseName = databaseName
 
-        self.__databaseName = databaseName
         self.setTables()
 
     def setExtension(self, extension):
@@ -771,7 +780,9 @@ class database():
     def setPath(self, path):
         """
         set a new path for the property 'path'. the path should point to the
-        directory where created database should be stored.
+        directory where created database should be stored. if 'path' points to
+        a file, 'path' will be set to the parent-directory and the values for
+        'databaseName' and 'extension' will be set automatically
 
         Parameters
         ----------
@@ -842,13 +853,6 @@ class database():
             data = []
 
         self.__tables = [element[0] for element in data]
-
-        # tables = [element[0] for element in data]
-
-        # if len(tables) == 0:
-        #     self.__tables = None
-        # else:
-        #     self.__tables = tables
 
     def tables(self):
         return self.__tables

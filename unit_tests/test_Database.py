@@ -66,6 +66,31 @@ class DatabaseProperties(unittest.TestCase):
                 self.database.databaseName(), self.databaseName
             )
 
+        testName = "test"
+        testEx = ".db"
+        name = testName + testEx
+        self.database.setDatabaseName(name)
+        self.assertEqual(
+                self.database.databaseName(), testName
+            )
+        self.assertEqual(
+                self.database.extension(), testEx
+            )
+
+        testValues = [123, 123.123, (), []]
+        for val in testValues:
+            with self.subTest(val = val):
+                self.assertRaises(
+                        TypeError, self.database.setDatabaseName, val
+                    )
+
+        failNames = ["test.txt", "test.test"]
+        for val in failNames:
+            with self.subTest(val = val):
+                self.assertRaises(
+                        ValueError, self.database.setDatabaseName, val
+                    )
+
     def test_tables_setter(self):
         file = pathlib2.Path("files/test_files/test_database_2.db")
         parentDir = pathlib2.Path().cwd().parent
