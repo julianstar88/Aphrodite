@@ -1034,8 +1034,8 @@ class CustomWidget(QtWidgets.QWidget):
 
     ObjectType = "CustomWidget"
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args):
+        super().__init__(*args)
         self.setAttribute(QtCore.Qt.WA_StyledBackground, True)
         self.setStyleSheet("""
 

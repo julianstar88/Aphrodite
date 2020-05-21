@@ -31,13 +31,18 @@ def CreateCanvas(mathText, color = "none", fontSize = 15, dpi = 100,
                 fontstyle = fontStyle,
                 fontweight = fontWeight,
                 horizontalalignment = horizontalAlignment,
-                verticalalignment = verticalAlignment
+                verticalalignment = verticalAlignment,
+                usetex = False
                 )
 
     text_bbox = t.get_window_extent(renderer)
 
-    fheight = (text_bbox.height + 20) / dpi
-    fwidth = (text_bbox.width + 5)/ dpi
+    # fheight = (text_bbox.height / dpi) + (ax.get_position().height - (text_bbox.height / dpi))
+    fheight = (text_bbox.height / dpi) + ax.get_position().height*0.5
+    fwidth = (text_bbox.width / dpi) + ax.get_position().width
+
+    # fheight = (text_bbox.height + 20) / dpi
+    # fwidth = (text_bbox.width + 5)/ dpi
 
     fig.set_size_inches(fwidth, fheight)
 
