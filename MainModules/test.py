@@ -4,7 +4,8 @@ Created on Thu Apr 30 18:11:28 2020
 
 @author: Julian
 """
+import warnings
 
-l = []
+warnings.warn("test warning", RuntimeWarning)
 
-x = [val[0] for val in l]
+print("test successfully finished")
