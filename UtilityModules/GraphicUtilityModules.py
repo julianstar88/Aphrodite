@@ -12,7 +12,8 @@ def CreateCanvas(mathText, color = "none", fontSize = 15, dpi = 100,
                   fontStyle = "normal", fontWeight = "normal",
                   fontColor = "black",
                   horizontalAlignment = "left",
-                  verticalAlignment = "bottom"):
+                  verticalAlignment = "bottom",
+                  usetex = False):
 
     fig = Figure()
     ax = fig.add_axes([0,0,1,1])
@@ -32,7 +33,7 @@ def CreateCanvas(mathText, color = "none", fontSize = 15, dpi = 100,
                 fontweight = fontWeight,
                 horizontalalignment = horizontalAlignment,
                 verticalalignment = verticalAlignment,
-                usetex = False
+                usetex = usetex
                 )
 
     text_bbox = t.get_window_extent(renderer)

@@ -4,8 +4,10 @@ Created on Thu Apr 30 18:11:28 2020
 
 @author: Julian
 """
-import warnings
+test = [[1,2,3], [4,5,6], [7,8,9]]
 
-warnings.warn("test warning", RuntimeWarning)
+for i in range(len(test)):
+    test.pop()
 
-print("test successfully finished")
+print(test)
+

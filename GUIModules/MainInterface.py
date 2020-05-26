@@ -6,9 +6,10 @@ Created on Thu May 14 14:58:37 2020
 """
 
 import sys
+import MainModules.GraphicalEvaluator as ge
 import GuiModules.CustomGuiComponents as cc
 import UtilityModules.GraphicUtilityModules as gum
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtCore, QtGui
 
 class MainWindow(QtWidgets.QMainWindow):
 
@@ -19,37 +20,83 @@ class MainWindow(QtWidgets.QMainWindow):
         self.mainLayout = QtWidgets.QGridLayout(self.mainWidget)
         self.setCentralWidget(self.mainWidget)
 
-        labels = ["test1", "test2", "test3"]
-        values = ["testText$^1$", "testText$^2$", "testText$^3$"]
-        panel1 = Panel(labels, values, fontSize = 12)
+        labels = ["Name:", "Start:", "End:", "Trainingmode:"]
+        values = ["None", "None", "None", "None"]
+        self.panel1 = Panel(labels, values, fontSize = 8, split = [1,5])
 
-        labels = ["test4", "test5", "test6"]
-        values = ["testText$^4$", "testText$^5$", "testText$^6$"]
-        panel2 = Panel(labels, values, fontSize = 12)
+        labels = ["None:"]
+        values = ["None"]
+        self.panel2 = Panel(labels, values, fontSize = 8, split = [1,15])
 
-        self.mainLayout.addWidget(panel1,0,0)
-        self.mainLayout.addWidget(panel2,1,0)
+        self.routineTab = RoutineTab()
+        self.evaluatorTab = EvaluatorTab()
+        self.tabWidget = QtWidgets.QTabWidget()
+        self.tabWidget.setTabPosition(QtWidgets.QTabWidget.North)
+        self.tabWidget.addTab(self.routineTab, "Trainingroutine")
+        self.tabWidget.addTab(self.evaluatorTab, "Evaluation")
 
-        self.show()
+        self.buttonLayout = QtWidgets.QHBoxLayout()
+        self.addNoteButton = QtWidgets.QPushButton("+")
+        self.deleteNoteButton = QtWidgets.QPushButton("-")
+        self.buttonLayout.addWidget(self.addNoteButton)
+        self.buttonLayout.addWidget(self.deleteNoteButton)
+
+        self.mainLayout.addWidget(self.panel1, 0, 0)
+        self.mainLayout.addLayout(self.buttonLayout, 1, 0)
+        self.mainLayout.addWidget(self.panel2, 2, 0)
+        self.mainLayout.addWidget(self.tabWidget, 0, 1, 3, 1)
+        self.mainLayout.setRowStretch(2, 2)
+        self.mainLayout.setColumnStretch(0, 1)
+        self.mainLayout.setColumnStretch(1, 2)
+
+        self.__connectButtons()
+
+        self.showMaximized()
+
+    def __connectButtons(self):
+        self.addNoteButton.clicked.connect(self.addNote)
+
+    def addNote(self, event):
+        labels = self.panel2.labels()
+        values = self.panel2.values()
+        labels.append("None:")
+        values.append("123456789-----"*20)
+        self.panel2.setLabels(labels)
+        self.panel2.setValues(values)
+        self.panel2.updatePanel()
+
+    def deleteNote(self, event):
+        labels = self.panel2.labels()
+        values = self.panel2.values()
+        labels.pop()
+        values.pop()
+        self.panel2.setLabels(labels)
+        self.panel2.setValues(values)
+        self.panel2.updatePanel()
 
 class Panel(cc.CustomWidget):
 
-    def __init__(self, labels, values,  *args, fontSize = 12):
+    def __init__(self, labels, values,  *args,
+                 fontSize = 8,
+                 split = [1, 1]):
+
         super().__init__(*args)
         self._labels = None
         self._values = None
         self._fontSize = None
         self._widgets = None
+        self._split = None
 
         self.setLabels(labels)
         self.setValues(values)
         self.setFontSize(fontSize)
+        self.setSplit(split)
 
         self.__createPanel()
 
         self.setStyleSheet(
                 """
-                CustomWidget {background-color: rgba(255,255,255,100%)}
+                Panel {background-color: rgba(255,255,255,100%)}
                 """
             )
 
@@ -70,36 +117,39 @@ class Panel(cc.CustomWidget):
                     "MainInterface.Panel.createPanel: labels must have the same length as values"
                 )
         self.__initiateWidgets()
-
         layout = QtWidgets.QGridLayout()
 
-        for i, val in enumerate(self.labels()):
-            canvas = gum.CreateCanvas(
-                    val,
-                    fontSize = self.fontSize()
-                )
-            pixmap = gum.CreateQPixmap(canvas)
-            label = cc.CustomLabel(pixmap)
-            layout.addWidget(
-                    label, i, 0
-                )
-            self._widgets[i][0] = label
+        for i,_ in enumerate(self.labels()):
+            label = self.labels()[i]
+            value = self.values()[i]
 
-        for i, val in enumerate(self.values()):
-            canvas = gum.CreateCanvas(
-                    val,
-                    fontSize = self.fontSize(),
-                    horizontalAlignment = "left",
-                    dpi = 100
-                )
-            pixmap = gum.CreateQPixmap(canvas)
-            label = cc.CustomLabel(pixmap)
-            layout.addWidget(
-                    label, i, 1
-                )
-            self._widgets[i][1] = label
+            labelString = label
+            labelFont = QtGui.QFont()
+            labelFont.setBold(True)
+            labelFont.setPointSize(self.fontSize())
+            labelWidget = QtWidgets.QLabel(labelString)
+            labelWidget.setTextFormat(QtCore.Qt.RichText)
+            labelWidget.setFont(labelFont)
 
+            valueString = value
+            valueFont = QtGui.QFont()
+            valueFont.setPointSize(self.fontSize())
+            valueWidget = QtWidgets.QLabel(valueString)
+            valueWidget.setTextFormat(QtCore.Qt.RichText)
+
+            layout.addWidget(
+                    labelWidget, i, 0, QtCore.Qt.AlignLeft
+                )
+            layout.addWidget(
+                    valueWidget, i, 1, QtCore.Qt.AlignLeft
+                )
+            layout.setColumnStretch(0, self.split()[0])
+            layout.setColumnStretch(1, self.split()[1])
+            layout.setRowStretch(len(self.labels()), 2)
+            self._widgets[i][0] = labelWidget
+            self._widgets[i][1] = valueWidget
         self.setLayout(layout)
+
         return self
 
     def fontSize(self):
@@ -133,6 +183,26 @@ class Panel(cc.CustomWidget):
                         )
                 )
         self._labels = labels
+
+    def setSplit(self, split):
+        if not isinstance(split, list):
+            raise TypeError(
+                    "input {input_name} does not match {type_name}".format(
+                            input_name = str(split),
+                            type_name = list
+                        )
+                )
+        if len(split) != 2:
+            raise ValueError(
+                    "there have to be only two elements in 'split'"
+                )
+        if not isinstance(split[0], int) or not isinstance(split[1], int):
+            raise TypeError(
+                    "elements of 'split' does not match {type_name}".format(
+                            type_name = int
+                        )
+                )
+        self._split = split
 
     def setValues(self, values):
         if not isinstance(values, list):
@@ -171,27 +241,46 @@ class Panel(cc.CustomWidget):
         toReplace = self.widgetAtPosition(rowIndex, columnIndex)
         self.layout().replaceWidget(toReplace, widget)
 
+    def split(self):
+        return self._split
+
     def updatePanel(self):
-        if len(self.labels()) != len(self.values()):
-            raise RuntimeError(
-                    "the attribrutes 'labels' and 'values' must have the same length"
-                )
+        for i, line in enumerate(self._widgets):
+            for widget in line:
+                self.layout().removeWidget(widget)
+                widget.deleteLater()
 
-        for i, val in enumerate(self.labels()):
-            canvas = gum.CreateCanvas(
-                    val,
-                    fontSize = self.fontSize()
-                )
-            pixmap = gum.CreateQPixmap(canvas)
-            self.widgetAtPosition(i, 0).setPixmap(pixmap)
+        self.__initiateWidgets()
 
-        for i, val in enumerate(self.values()):
-            canvas = gum.CreateCanvas(
-                    val,
-                    fontSize = self.fontSize()
+        for i,_ in enumerate(self.labels()):
+            label = self.labels()[i]
+            value = self.values()[i]
+
+            labelString = label
+            labelFont = QtGui.QFont()
+            labelFont.setBold(True)
+            labelFont.setPointSize(self.fontSize())
+            labelWidget = QtWidgets.QLabel(labelString)
+            labelWidget.setTextFormat(QtCore.Qt.RichText)
+            labelWidget.setFont(labelFont)
+
+            valueString = value
+            valueFont = QtGui.QFont()
+            valueFont.setPointSize(self.fontSize())
+            valueWidget = QtWidgets.QLabel(valueString)
+            valueWidget.setTextFormat(QtCore.Qt.RichText)
+
+            self.layout().addWidget(
+                    labelWidget, i, 0, QtCore.Qt.AlignLeft
                 )
-            pixmap = gum.CreateQPixmap(canvas)
-            self.widgetAtPosition(i, 1).setPixmap(pixmap)
+            self.layout().addWidget(
+                    valueWidget, i, 1, QtCore.Qt.AlignLeft
+                )
+            self.layout().setColumnStretch(0, self.split()[0])
+            self.layout().setColumnStretch(1, self.split()[1])
+            self.layout().setRowStretch(self.layout().rowCount(), 2)
+            self._widgets[i][0] = labelWidget
+            self._widgets[i][1] = valueWidget
 
     def values(self):
         return self._values
@@ -224,7 +313,7 @@ class EvaluatorTab(cc.CustomWidget):
 
     def __init__(self, *args):
         super().__init__(*args)
-
+        self.evaluator = ge.GraphicalEvaluator()
 
 if __name__ == "__main__":
     qapp = QtWidgets.QApplication(sys.argv)

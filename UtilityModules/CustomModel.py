@@ -6,7 +6,7 @@ Created on Tue Mar 17 23:47:14 2020
 """
 
 import sqlite3
-from GUIModules.CustomGuiComponents import CustomModelItem
+from GuiModules.CustomGuiComponents import CustomModelItem
 from PyQt5 import QtGui, QtCore
 
 class CustomSqlModel(QtGui.QStandardItemModel):
