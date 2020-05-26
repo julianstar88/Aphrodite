@@ -601,6 +601,8 @@ class EvaluatorTab(cc.CustomWidget):
     def __init__(self, *args):
         super().__init__(*args)
         self.evaluator = ge.GraphicalEvaluator()
+        self.evaluator.connectEvaluator(self)
+        self.evaluator.initiateQWidgets()
 
 if __name__ == "__main__":
     qapp = QtWidgets.QApplication(sys.argv)
