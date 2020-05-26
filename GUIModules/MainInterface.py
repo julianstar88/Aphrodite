@@ -29,7 +29,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 labels, values,
                 fontSize = 8,
                 split = [1,5],
-                lineMinHeight = 50
+                lineMinHeight = 50,
+                lineMaxHeight = 50
             )
 
         self.routineTab = RoutineTab()
@@ -66,7 +67,7 @@ class MainWindow(QtWidgets.QMainWindow):
         labels = self.panel2.labels()
         values = self.panel2.values()
         labels.append("None:")
-        values.append("0123456789----- "*20)
+        values.append("0123456789----- "*10)
         self.panel2.setLabels(labels)
         self.panel2.setValues(values)
         self.panel2.updatePanel()
@@ -318,7 +319,8 @@ class DynamicLinePanel(cc.CustomWidget):
     def __init__(self, labels, values, *args,
                  fontSize = 8,
                  split = [1, 1],
-                 lineMinHeight = 50):
+                 lineMinHeight = 50,
+                 lineMaxHeight = 200):
 
         super().__init__(*args)
         self._labels = None
@@ -327,6 +329,7 @@ class DynamicLinePanel(cc.CustomWidget):
         self._widgets = None
         self._split = None
         self._lineMinHeight = None
+        self._lineMaxHeight = None
 
         self._mainLayout = cc.CustomBoxLayout(QtWidgets.QBoxLayout.TopToBottom)
         self._mainLayout.setContentsMargins(0,0,0,0)
@@ -338,6 +341,7 @@ class DynamicLinePanel(cc.CustomWidget):
         self.setFontSize(fontSize)
         self.setSplit(split)
         self.setLineMinHeight(lineMinHeight)
+        self.setLineMaxHeight(lineMaxHeight)
         self.setLayout(self._mainLayout)
 
         self.__createPanel()
@@ -383,6 +387,7 @@ class DynamicLinePanel(cc.CustomWidget):
             labelWidget.setMargin(11)
             labelWidget.setFont(labelFont)
             labelWidget.setMinimumHeight(self.lineMinHeight())
+            labelWidget.setMaximumHeight(self.lineMaxHeight())
             labelWidget.setStyleSheet(
                 """
                 QLabel {background-color: rgba(255,255,255,100%)}
@@ -397,6 +402,7 @@ class DynamicLinePanel(cc.CustomWidget):
             valueWidget.setTextFormat(QtCore.Qt.RichText)
             valueWidget.setMargin(11)
             valueWidget.setMinimumHeight(self.lineMinHeight())
+            valueWidget.setMaximumHeight(self.lineMaxHeight())
             valueWidget.setStyleSheet(
                 """
                 QLabel {background-color: rgba(255,255,255,100%)}
@@ -434,6 +440,9 @@ class DynamicLinePanel(cc.CustomWidget):
     def labels(self):
         return self._labels
 
+    def lineMaxHeight(self):
+        return self._lineMaxHeight
+
     def lineMinHeight(self):
         return self._lineMinHeight
 
@@ -466,6 +475,20 @@ class DynamicLinePanel(cc.CustomWidget):
                         )
                 )
         self._labels = labels
+
+    def setLineMaxHeight(self, maxh):
+        if not isinstance(maxh, int):
+            raise TypeError(
+                    "input <{input_name}> does not match {type_name}".format(
+                            input_name = str(maxh),
+                            type_name = int
+                        )
+                )
+        if maxh < 0:
+            raise ValueError(
+                    "'maxh' has to be greater or equal than zero"
+                )
+        self._lineMaxHeight = maxh
 
     def setLineMinHeight(self, minh):
         if not isinstance(minh, int):
