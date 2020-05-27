@@ -1,0 +1,5 @@
+# Directorys
+new_routine_directory:
+last_opened_routine_directory:
+export_directory:
+
