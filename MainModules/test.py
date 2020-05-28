@@ -4,7 +4,14 @@ Created on Thu Apr 30 18:11:28 2020
 
 @author: Julian
 """
+import sys
+import GuiModules.MainInterface as mi
+from PyQt5 import QtWidgets
 
-t = [1,2]
-print(sum(t))
+qapp = QtWidgets.QApplication(sys.argv)
+
+app = mi.MainWindow()
+
+sys.exit(qapp.exec_())
+
 

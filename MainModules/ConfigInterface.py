@@ -8,84 +8,38 @@ import pathlib2
 
 class ConfigParser():
 
-    def __init__(self):
-        self._new_routine_directory = None
-        self._last_opened_routine_directory = None
-        self._export_routine_directory = None
+    knownConfigKeys = (
+        "username",
+        "current_routine",
+        "new_routine_directory",
+        "last_opened_routine",
+        "export_routine_directory"
+    )
 
-    """getter"""
-    @property
-    def export_routine_directory(self):
-        return self._export_routine_directory
-
-    @property
-    def last_opened_routine(self):
-        return self._last_opened_routine_directory
-
-    @property
-    def new_routine_directory(self):
-        return self._new_routine_directory
-
-    """setter"""
-    @export_routine_directory.setter
-    def export_routine_directory(self, path):
-        if not isinstance(path, str) and not isinstance(path, pathlib2.Path):
+    def addAttributes(self, attributes, values):
+        if not isinstance(attributes, list) and not isinstance(attributes, tuple):
             raise TypeError(
-                    "input <{input_name}> does not match {type_name_1} or {type_name_2}".format(
-                            input_name = str(path),
-                            type_name_1 = pathlib2.Path,
-                            type_name_2 = str
+                    "input <{input_name}> for 'attributes' does not match {type_name_1} or {type_name_2}".format(
+                            input_name = str(attributes),
+                            type_name_1 = list,
+                            type_name_2 = tuple
                         )
                 )
-        path = pathlib2.Path(path)
-        if not path.is_dir():
-            raise ValueError(
-                    "input <{input_name}> does not point to an existing directory".format(
-                            input_name = str(path)
-                        )
-                )
-        self._export_routine_directory = path
-
-    @last_opened_routine.setter
-    def last_opened_routine(self, path):
-        if not isinstance(path, str) and not isinstance(path, pathlib2.Path):
+        if not isinstance(values, list) and not isinstance(values, tuple):
             raise TypeError(
-                    "input <{input_name}> does not match {type_name_1} or {type_name_2}".format(
-                            input_name = str(path),
-                            type_name_1 = pathlib2.Path,
-                            type_name_2 = str
+                    "input <{input_name}> for 'values' does not match {type_name_1} or {type_name_2}".format(
+                            input_name = str(values),
+                            type_name_1 = list,
+                            type_name_2 = tuple
                         )
                 )
-        path = pathlib2.Path(path)
-        if not path.is_file():
-            raise ValueError(
-                    "input <{input_name}> does not point to an existing file".format(
-                            input_name = str(path)
-                        )
-                )
-        self._last_opened_routine_directory = path
+        for (key, value) in zip(attributes, values):
+            self.__dict__[key] = value
 
-    @new_routine_directory.setter
-    def new_routine_directory(self, path):
-        if not isinstance(path, str) and not isinstance(path, pathlib2.Path):
-            raise TypeError(
-                    "input <{input_name}> does not match {type_name_1} or {type_name_2}".format(
-                            input_name = str(path),
-                            type_name_1 = pathlib2.Path,
-                            type_name_2 = str
-                        )
-                )
-        path = pathlib2.Path(path)
-        if not path.is_dir():
-            raise ValueError(
-                    "input <{input_name}> does not point to an existing directory".format(
-                            input_name = str(path)
-                        )
-                )
-        self._new_routine_directory = path
+    def readAttributes(self):
+        return self.__dict__
 
 
-    """config file manipulation"""
     def readConfigFile(self, file):
         if not isinstance(file, str) and not isinstance(file, pathlib2.Path):
             raise TypeError(
@@ -106,19 +60,52 @@ class ConfigParser():
         with open(file, "r") as fh:
             rawData = fh.readlines()
 
-        data = []
+        data = list()
         for line in rawData:
-            if "#" in line:
-                del line
-            else:
-                line.strip("\n")
-                processed = line.split(":")
-                data.append(processed)
-        print(data)
+            stripped = line.strip("\n")
+            data.append(stripped.split(":"))
+        keys = [key[0] for key in data]
+        vals = [val[1] for val in data]
+        self.addAttributes(keys, vals)
 
-
-    def writeConfigFile(self, wdir):
-        pass
+    def writeConfigFile(self, wdir, mode = "w"):
+        if not isinstance(wdir, str) and not isinstance(wdir, pathlib2.Path):
+            raise TypeError(
+                    "input <{input_name}> for 'wdir' does not match {type_name_1} or {type_name_2}".format(
+                            input_name = str(wdir),
+                            type_name_1 = pathlib2.Path,
+                            type_name_2 = str
+                        )
+                )
+        path = pathlib2.Path(wdir)
+        if not path.is_dir():
+            raise ValueError(
+                    "input <{input_name}> for 'wdir' does not point to an existing directory".format(
+                            input_name = str(path)
+                        )
+                )
+        if not isinstance(mode, str):
+            raise TypeError(
+                    "input <{input_name}> for 'mode' does not match {type_name}".format(
+                            input_name = str(mode)
+                        )
+                )
+        if not mode in ["w", "a"]:
+            raise ValueError(
+                    "input <{input_name}> for 'mode' does not match 'w' or 'a'".format(
+                            input_name = str(mode)
+                        )
+                )
+        name = "config.txt"
+        with open(path/name, mode) as fh:
+            container = self.readAttributes()
+            keys = container.keys()
+            for key in keys:
+                line = "{key}:{val}\n".format(
+                        key = key,
+                        val = container[key]
+                    )
+                fh.write(line)
 
 if __name__ == "__main__":
 

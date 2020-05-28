@@ -94,7 +94,9 @@ class Exporter():
 
         >>> exporter.setDatabase(...)
         >>> exporter.setExportPath(...)
+        >>> exporter.setModel(...)
         >>> exporter.setName(...)
+        >>> exporter.setRoutineName(...)
         >>> exporter.setTrainingPeriode(...)
         >>> exporter.setTrainingMode(...)
 

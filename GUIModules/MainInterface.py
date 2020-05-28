@@ -6,14 +6,34 @@ Created on Thu May 14 14:58:37 2020
 """
 
 import sys
-import MainModules.GraphicalEvaluator as ge
+import pathlib2
+from MainModules import ConfigInterface, Database, Exporter, GraphicalEvaluator
+from UtilityModules import CustomModel
 import GuiModules.CustomGuiComponents as cc
 from PyQt5 import QtWidgets, QtCore, QtGui
 
 class MainWindow(QtWidgets.QMainWindow):
 
-    def __init__(self, *args):
+    def __init__(self, *args,
+                 configParser = None,
+                 database = None,
+                 evaluator = None,
+                 exporter = None,
+                 model = None):
+
         super().__init__(*args)
+        self._configParser = None
+        self._database = None
+        self._evaluator = None
+        self._exporter = None
+        self._model = None
+
+        self.setConfigParser(configParser)
+        self.setDatabase(database)
+        self.setEvaluator(evaluator)
+        self.setExporter(exporter)
+        self.setModel(model)
+
         self.setWindowTitle("Aphrodite")
         self.mainWidget = cc.CustomWidget()
         self.mainLayout = QtWidgets.QGridLayout(self.mainWidget)
@@ -33,8 +53,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 lineMaxHeight = 50
             )
 
-        self.routineTab = RoutineTab()
-        self.evaluatorTab = EvaluatorTab()
+        self.routineTab = RoutineTab(self.model())
+        self.evaluatorTab = EvaluatorTab(self.model(), self.evaluator())
         self.tabWidget = QtWidgets.QTabWidget()
         self.tabWidget.setTabPosition(QtWidgets.QTabWidget.North)
         self.tabWidget.addTab(self.routineTab, "Trainingroutine")
@@ -72,6 +92,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.panel2.setValues(values)
         self.panel2.updatePanel()
 
+    def configParser(self):
+        return self._configParser
+
+    def database(self):
+        return self._database
+
     def deleteNote(self, event):
         labels = self.panel2.labels()
         values = self.panel2.values()
@@ -83,6 +109,66 @@ class MainWindow(QtWidgets.QMainWindow):
             self.panel2.setLabels(labels)
             self.panel2.setValues(values)
             self.panel2.updatePanel()
+
+    def evaluator(self):
+        return self._evaluator
+
+    def exporter(self):
+        return self._exporter
+
+    def model(self):
+        return self._model
+
+    def setConfigParser(self, configParser):
+        if not isinstance(configParser, ConfigInterface.ConfigParser) and configParser is not None:
+            raise TypeError(
+                    "input <{input_name}> for 'configParser' does not match {type_name}".format(
+                            input_name = str(configParser),
+                            type_name = ConfigInterface.ConfigParser
+                        )
+                )
+        self._configParser = configParser
+
+    def setDatabase(self, database):
+        if not isinstance(database, str) and not isinstance(database, pathlib2.Path) and database is not None:
+            raise TypeError(
+                    "input <{input_name}> for 'database' does not match {type_name_1} or {type_name_2}".format(
+                            input_name = str(database),
+                            type_name_1 = pathlib2.Path,
+                            type_name_2 = str
+                        )
+                )
+        self._database = database
+
+    def setEvaluator(self, evaluator):
+        if not isinstance(evaluator, GraphicalEvaluator.GraphicalEvaluator) and evaluator is not None:
+            raise TypeError(
+                    "input <{input_name}> for 'evaluator' does not match {type_name}".format(
+                            input_name = str(evaluator),
+                            type_name = GraphicalEvaluator.GraphicalEvaluator
+                        )
+                )
+        self._evaluator = evaluator
+
+    def setExporter(self, exporter):
+        if not isinstance(exporter, Exporter.Exporter) and exporter is not None:
+            raise TypeError(
+                    "input <{input_name}> for 'exporter' does not match {type_name}".format(
+                            input_name = str(exporter),
+                            type_name = Exporter.Exporter
+                        )
+                )
+        self._exporter = exporter
+
+    def setModel(self, model):
+        if not isinstance(model, CustomModel.CustomSqlModel) and model is not None:
+            raise TypeError(
+                    "input <{input_name}> for 'model' does not match {type_name}".format(
+                            input_name = str(model),
+                            type_name = CustomModel.CustomSqlModel
+                        )
+                )
+        self._model = model
 
 class GridPanel(cc.CustomWidget):
 
@@ -593,16 +679,43 @@ class DynamicLinePanel(cc.CustomWidget):
 
 class RoutineTab(cc.CustomWidget):
 
-    def __init__(self, *args):
+    def __init__(self, model, *args):
         super().__init__(*args)
+        self._model = None
+
+        if self.model():
+            pass
+
+    def model(self):
+        return self._model
+
+    def setModel(self, model):
+        self._model = model
 
 class EvaluatorTab(cc.CustomWidget):
 
-    def __init__(self, *args):
+    def __init__(self, database, graphicalEvaluator, *args):
         super().__init__(*args)
-        self.evaluator = ge.GraphicalEvaluator()
-        self.evaluator.connectEvaluator(self)
-        self.evaluator.initiateQWidgets()
+        self._database = None
+        self._evaluator = None
+
+        self.setDatabase(database)
+        self.setEvaluator(graphicalEvaluator)
+
+        if self.evaluator() and self.database():
+            pass
+
+    def database(self):
+        return self._database
+
+    def evaluator(self):
+        return self._evaluator
+
+    def setDatabase(self, database):
+        self._database = database
+
+    def setEvaluator(self, evaluator):
+        self._evaluator = evaluator
 
 if __name__ == "__main__":
     qapp = QtWidgets.QApplication(sys.argv)
