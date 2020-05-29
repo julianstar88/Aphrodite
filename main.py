@@ -12,29 +12,35 @@ from UtilityModules import CustomModel
 from PyQt5 import QtWidgets
 
 configFile = pathlib2.Path("files/config/config.txt")
-parentDir = pathlib2.Path().parent
+parentDir = pathlib2.Path().cwd()
 configParser = ConfigInterface.ConfigParser()
 configParser.readConfigFile(parentDir / configFile)
 
-print(configParser.readAttributes()["current_routine"])
+database = pathlib2.Path(configParser.readAttributes()["current_routine"])
 
-model = CustomModel.CustomSqlModel(
-        database = configParser.readAttributes()["current_routine"],
+trainingModel = CustomModel.CustomSqlModel(
+        database = str(database),
         table = "training_routine",
-        tableStartIndex = 1,
+        tableStartIndex = 0,
         valueStartIndex = 1
     )
-model.populateModel()
+trainingModel.populateModel()
 
-database = pathlib2.Path(configParser.readAttributes()["current_routine"])
+alternativeModel = CustomModel.CustomSqlModel(
+        database = str(database),
+        table = "training_alternatives",
+        tableStartIndex = 3,
+        valueStartIndex = 1
+    )
+alternativeModel.populateModel()
+
 
 exporter = Exporter.Exporter()
 exporter.setDatabase(database)
+exporter.setModel(trainingModel)
+exporter.setName(configParser.readAttributes()["username"])
 
 evaluator = GraphicalEvaluator.GraphicalEvaluator()
-evaluator.setName(configParser.readAttributes()["username"])
-evaluator.setDatabase(database)
-evaluator.setModel(model)
 
 qapp = QtWidgets.QApplication(sys.argv)
 
@@ -42,7 +48,8 @@ app = mi.MainWindow(
         configParser = configParser,
         evaluator = evaluator,
         exporter = exporter,
-        model = model,
+        routineModel = trainingModel,
+        alternativeModel = alternativeModel,
         database = database
     )
 

@@ -6,9 +6,12 @@ Created on Thu May 14 14:58:37 2020
 """
 
 import sys
+import re
 import pathlib2
+import datetime
 from MainModules import ConfigInterface, Database, Exporter, GraphicalEvaluator
 from UtilityModules import CustomModel
+from GuiModules import CustomTableView
 import GuiModules.CustomGuiComponents as cc
 from PyQt5 import QtWidgets, QtCore, QtGui
 
@@ -19,46 +22,64 @@ class MainWindow(QtWidgets.QMainWindow):
                  database = None,
                  evaluator = None,
                  exporter = None,
-                 model = None):
+                 alternativeModel = None,
+                 routineModel = None):
 
         super().__init__(*args)
         self._configParser = None
         self._database = None
         self._evaluator = None
         self._exporter = None
-        self._model = None
+        self._alternativeModel = None
+        self._routineModel = None
 
         self.setConfigParser(configParser)
         self.setDatabase(database)
         self.setEvaluator(evaluator)
         self.setExporter(exporter)
-        self.setModel(model)
+        self.setAlternativeModel(alternativeModel)
+        self.setRoutineModel(routineModel)
 
         self.setWindowTitle("Aphrodite")
         self.mainWidget = cc.CustomWidget()
         self.mainLayout = QtWidgets.QGridLayout(self.mainWidget)
         self.setCentralWidget(self.mainWidget)
 
-        labels = ["Name:", "Start:", "End:", "Trainingmode:"]
-        values = ["None", "None", "None", "None"]
-        self.panel1 = GridPanel(labels, values, fontSize = 8, split = [1,5])
+        generalLabels = ["Name:", "Start:", "End:", "Trainingmode:"]
+        generalValues = ["None", "None", "None", "None"]
+        noteLabels = ["None:", "None:"]
+        noteValues = ["None", "None"]
 
-        labels = ["None:", "None:"]
-        values = ["None", "None"]
+        if self.database():
+            database = Database.database(self.database())
+
+            data = database.data("general_information")[0]
+            generalValues = [data[0], data[1], self.__calculateEndData(data[1]), data[2]]
+
+            data = database.data("training_notes")
+            noteLabels = list()
+            noteValues = list()
+            for note in data:
+                noteLabels.append(note[1] + ")")
+                noteValues.append(note[3])
+
+        self.panel1 = GridPanel(generalLabels, generalValues, fontSize = 10, split = [1,5])
         self.panel2 = DynamicLinePanel(
-                labels, values,
-                fontSize = 8,
+                noteLabels, noteValues,
+                fontSize = 10,
                 split = [1,5],
                 lineMinHeight = 50,
                 lineMaxHeight = 50
             )
 
-        self.routineTab = RoutineTab(self.model())
-        self.evaluatorTab = EvaluatorTab(self.model(), self.evaluator())
+        self.routineTab = RoutineTab(self.routineModel(), self.alternativeModel())
+        self.evaluatorTab1 = EvaluatorTab(self.routineModel(), GraphicalEvaluator.GraphicalEvaluator())
+        self.evaluatorTab2 = EvaluatorTab(self.alternativeModel(), GraphicalEvaluator.GraphicalEvaluator())
         self.tabWidget = QtWidgets.QTabWidget()
         self.tabWidget.setTabPosition(QtWidgets.QTabWidget.North)
         self.tabWidget.addTab(self.routineTab, "Trainingroutine")
-        self.tabWidget.addTab(self.evaluatorTab, "Evaluation")
+        self.tabWidget.addTab(self.evaluatorTab1, "Evaluation: Trainingroutine")
+        self.tabWidget.addTab(self.evaluatorTab2, "Evaluation: Trainingalternatives")
 
         self.buttonLayout = QtWidgets.QHBoxLayout()
         self.addNoteButton = QtWidgets.QPushButton("+")
@@ -83,6 +104,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.addNoteButton.clicked.connect(self.addNote)
         self.deleteNoteButton.clicked.connect(self.deleteNote)
 
+    def __calculateEndData(self, startDate):
+        pattern = "(?P<day>\d\d).(?P<month>\d\d).(?P<year>\d\d\d\d)"
+        match = re.search(pattern, startDate)
+        year = int(match.group("year"))
+        month = int(match.group("month"))
+        day = int(match.group("day"))
+        start = datetime.date(year, month, day)
+        endDate = start + datetime.timedelta(days = 42)
+        return endDate.strftime("%d.%m.%Y")
+
     def addNote(self, event):
         labels = self.panel2.labels()
         values = self.panel2.values()
@@ -91,6 +122,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.panel2.setLabels(labels)
         self.panel2.setValues(values)
         self.panel2.updatePanel()
+
+    def alternativeModel(self):
+        return self._alternativeModel
+
 
     def configParser(self):
         return self._configParser
@@ -116,8 +151,18 @@ class MainWindow(QtWidgets.QMainWindow):
     def exporter(self):
         return self._exporter
 
-    def model(self):
-        return self._model
+    def routineModel(self):
+        return self._routineModel
+
+    def setAlternativeModel(self, alternativeModel):
+        if not isinstance(alternativeModel, CustomModel.CustomSqlModel) and alternativeModel is not None:
+            raise TypeError(
+                    "input <{input_name}> for 'alternativeModel' does not match {type_name}".format(
+                            input_name = str(alternativeModel),
+                            type_name = CustomModel.CustomSqlModel
+                        )
+                )
+        self._alternativeModel = alternativeModel
 
     def setConfigParser(self, configParser):
         if not isinstance(configParser, ConfigInterface.ConfigParser) and configParser is not None:
@@ -160,15 +205,15 @@ class MainWindow(QtWidgets.QMainWindow):
                 )
         self._exporter = exporter
 
-    def setModel(self, model):
-        if not isinstance(model, CustomModel.CustomSqlModel) and model is not None:
+    def setRoutineModel(self, routineModel):
+        if not isinstance(routineModel, CustomModel.CustomSqlModel) and routineModel is not None:
             raise TypeError(
-                    "input <{input_name}> for 'model' does not match {type_name}".format(
-                            input_name = str(model),
+                    "input <{input_name}> for 'routineModel' does not match {type_name}".format(
+                            input_name = str(routineModel),
                             type_name = CustomModel.CustomSqlModel
                         )
                 )
-        self._model = model
+        self._routineModel = routineModel
 
 class GridPanel(cc.CustomWidget):
 
@@ -232,6 +277,7 @@ class GridPanel(cc.CustomWidget):
             valueFont.setPointSize(self.fontSize())
             valueWidget = QtWidgets.QLabel(valueString)
             valueWidget.setTextFormat(QtCore.Qt.RichText)
+            valueWidget.setFont(valueFont)
 
             layout.addWidget(
                     labelWidget, i, 0, QtCore.Qt.AlignLeft
@@ -487,6 +533,7 @@ class DynamicLinePanel(cc.CustomWidget):
             valueWidget.setWordWrap(True)
             valueWidget.setTextFormat(QtCore.Qt.RichText)
             valueWidget.setMargin(11)
+            valueWidget.setFont(valueFont)
             valueWidget.setMinimumHeight(self.lineMinHeight())
             valueWidget.setMaximumHeight(self.lineMaxHeight())
             valueWidget.setStyleSheet(
@@ -679,43 +726,142 @@ class DynamicLinePanel(cc.CustomWidget):
 
 class RoutineTab(cc.CustomWidget):
 
-    def __init__(self, model, *args):
+    def __init__(self, routineModel, alternativeModel, *args):
         super().__init__(*args)
-        self._model = None
+        self._routineModel = None
+        self._alternativeModel = None
+        self._headerLabels = None
+        self._layout = None
+        self._routineView = None
+        self._alternativeView = None
 
-        if self.model():
-            pass
+        self.setRoutineModel(routineModel)
+        self.setAlternativeModel(alternativeModel)
 
-    def model(self):
+        self.setHeaderLabels([
+                "Exercise",
+                "Sets",
+                "Reps",
+                "Warm Up",
+                "Week 1",
+                "Week 2",
+                "Week 3",
+                "Week 4",
+                "Week 5",
+                "Week 6",
+                "Mode"
+            ])
+
+        if self.routineModel() and self.alternativeModel():
+            self.setLayout(cc.CustomBoxLayout(QtWidgets.QBoxLayout.TopToBottom, self))
+            self.setRoutineView(
+                    CustomTableView.CustomModelView(
+                            self.routineModel(),
+                            headerLabels = self.headerLabels(),
+                            fontSize = 15,
+                            fontWeight = "normal",
+                            fontStyle = "normal",
+                            labelMode = "main",
+                            parent = self
+                        )
+                )
+            self.setAlternativeView(
+                    CustomTableView.CustomModelView(
+                            self.alternativeModel(),
+                            headerLabels = self.headerLabels(),
+                            fontSize = 15,
+                            fontWeight = "normal",
+                            fontStyle = "normal",
+                            labelMode = "alternative",
+                            parent = self
+                        )
+                )
+            self.__harmonizeColumnWidths(self.alternativeView(), self.routineView())
+            self.layout().addWidget(self.routineView())
+            self.layout().addWidget(self.alternativeView())
+
+    def __harmonizeColumnWidths(self, *args):
+        newWidth = list()
+        for table in args:
+            header = table.horizontalHeader()
+            width = list()
+            for i in range(header.count()):
+                width.append(header.sectionSize(i))
+            width = max(width)
+            newWidth.append(width)
+        newWidth = max(newWidth)
+
+        for table in args:
+            header = table.horizontalHeader()
+            table.setColumnWidth(0, newWidth)
+            for i in range(header.count()):
+                if i > 0:
+                    table.resizeColumnToContents(i)
+
+    def alternativeModel(self):
+        return self._alternativeModel
+
+    def alternativeView(self):
+        return self._alternativeView
+
+    def headerLabels(self):
+        return self._headerLabels
+
+    def layout(self):
+        return self._layout
+
+    def routineModel(self):
         return self._model
 
-    def setModel(self, model):
+    def routineView(self):
+        return self._routineView
+
+    def setAlternativeModel(self, model):
+        self._alternativeModel = model
+
+    def setAlternativeView(self, view):
+        self._alternativeView = view
+
+    def setHeaderLabels(self, labels):
+        self._headerLabels = labels
+
+    def setLayout(self, layout):
+        self._layout = layout
+
+    def setRoutineModel(self, model):
         self._model = model
+
+    def setRoutineView(self, view):
+        self._routineView = view
 
 class EvaluatorTab(cc.CustomWidget):
 
-    def __init__(self, database, graphicalEvaluator, *args):
+    def __init__(self, model, graphicalEvaluator, *args):
         super().__init__(*args)
-        self._database = None
+        self._model = None
         self._evaluator = None
 
-        self.setDatabase(database)
+        self.setModel(model)
         self.setEvaluator(graphicalEvaluator)
 
-        if self.evaluator() and self.database():
-            pass
-
-    def database(self):
-        return self._database
+        if self.evaluator() and self.model():
+            self.evaluator().connectEvaluator(self)
+            self.evaluator().setModel(self.model())
+            self.evaluator().initiateQWidgets()
+            self.evaluator().createTabs(self.evaluator().dataFromModel())
+            self.evaluator().plotData(self.evaluator().dataFromModel())
 
     def evaluator(self):
         return self._evaluator
 
-    def setDatabase(self, database):
-        self._database = database
+    def model(self):
+        return self._model
 
     def setEvaluator(self, evaluator):
         self._evaluator = evaluator
+
+    def setModel(self, model):
+        self._model = model
 
 if __name__ == "__main__":
     qapp = QtWidgets.QApplication(sys.argv)

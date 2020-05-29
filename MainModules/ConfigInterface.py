@@ -5,6 +5,7 @@ Created on Tue May 26 22:02:27 2020
 @author: Julian
 """
 import pathlib2
+import re
 
 class ConfigParser():
 
@@ -63,7 +64,9 @@ class ConfigParser():
         data = list()
         for line in rawData:
             stripped = line.strip("\n")
-            data.append(stripped.split(":"))
+            pattern = "(?P<key>\w*):(?P<value>[\w\W]*:?[\\/]?[\w\W]*)"
+            match = re.search(pattern, stripped)
+            data.append([match.group("key"), match.group("value")])
         keys = [key[0] for key in data]
         vals = [val[1] for val in data]
         self.addAttributes(keys, vals)

@@ -500,9 +500,9 @@ class Exporter():
 
         """
 
-        if not isinstance(databasePath, str):
+        if not isinstance(databasePath, str) and not isinstance(databasePath, pathlib2.Path):
             raise TypeError(
-                    "input {input_value} for argument 'databasePath' does not match {type_name}".format(
+                    "input <{input_value}> for argument 'databasePath' does not match {type_name}".format(
                             input_value = databasePath,
                             type_name = type("str")
                         )
@@ -514,7 +514,7 @@ class Exporter():
                             input_name = str(path)
                         )
                 )
-        if len(databasePath) == 0:
+        if str(path) == ".":
             raise ValueError(
                     "invalid input for argument 'databasePath'"
                 )

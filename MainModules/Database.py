@@ -904,20 +904,27 @@ if __name__ == '__main__':
                    ("note", "TEXT"))
     db.createTable("training_notes", columnNames)
 
+    columnNames = (
+            ("username", "TXT"),
+            ("startDate", "TXT"),
+            ("trainingMode", "TXT")
+        )
+    db.createTable("general_information", columnNames)
+
 
     training = [
-        ["Bankdrücken KH", "4", "RBD", "WBD", "BD1", "BD2", "BD3", "BD4", "BD5", "BD6", "gym"],
-        ["Klimmzüge", "4", "RKZ", "WKZ", "KZ1", "KL2", "KL3", "KL4", "KL5", "KL6", "gym"],
-        ["Kniebeugen", "4", "RKB", "WKB", "KB1", "KB2", "KB3", "KB4", "KN5", "KB6", "gym"],
-        ["Bizeps KH", "4", "RBZ", "WBZ", "BZ1", "BZ2", "BZ3", "BZ4", "BZ5", "BZ6", "gym"],
-        ["Trizeps Seilzug", "4", "RTZ", "WTZ", "TZ1", "TZ2", "TZ3", "TZ4", "TZ5", "TZ6", "gym"],
-        ["Seitenheben KH", "4", "RSH", "WSH", "SH1", "SH2", "SH3", "SH4", "SH5", "SH6", "gym"]]
+        ["Bankdrücken KH", "4", "RBD", "WBD", "1.2", "1.4", "1.45", "1.5", "1.6", "1.67", "gym"],
+        ["Klimmzüge", "4", "RKZ", "WKZ", "0.6", "0.67 ", "0.8", "0.89", "0.9", "1 ", "gym"],
+        ["Kniebeugen", "4", "RKB", "WKB", "2.1", "2.2", "2.35", "2.6", "2.66", "2.67", "gym"],
+        ["Bizeps KH", "4", "RBZ", "WBZ", "1.5", "1.45", "1.56", "1.6", "1.67", "1.8", "gym"],
+        ["Trizeps Seilzug", "4", "RTZ", "WTZ", "1.21", "1.34", "1.36", "1.38", "1.7", "1.8 ", "gym"],
+        ["Seitenheben KH", "4", "RSH", "WSH", "0.2", "0.21", "0.25", "0.5", "0.56", "0.8", "gym"]]
     db.addManyEntries("training_routine", training)
 
     trainingAlternatives = [
-            [1, "1", "Bankdrücken LH", "Bankdrücken LH", "4", "RBDA", "WBDA", "BDA1", "BDA2", "BDA3", "BDA4", "BDA5", "BDA6", "gym"],
-            [5, "2", "TZ Dips", "Trizeps Dips", "4", "RSHA", "WSHA", "SHA1", "SHA2", "SHA3", "SHA4", "SHA5", "SHA6", "gym"],
-            [6, "3", "SH Maschine", "Seitenheben Maschine", "4", "RSHA", "WSHA", "SHA1", "SHA2", "SHA3", "SHA4", "SHA5", "SHA6", "gym"],
+            [1, "1", "Bankdrücken LH", "Bankdrücken LH", "4", "RBDA", "WBDA", "1.1", "1.12", "1.2", "1.3", "1.6", "1.65", "gym"],
+            [5, "2", "TZ Dips", "Trizeps Dips", "4", "RSHA", "WSHA", "1.17", "1.18", "1.19", "2.1", "2.5", "2.6", "gym"],
+            [6, "3", "SH Maschine", "Seitenheben Maschine", "4", "RSHA", "WSHA", "1.5", "1.55", "1.54", "1.56", "1.7", "2", "gym"],
         ]
     db.addManyEntries("training_alternatives", trainingAlternatives)
 
@@ -925,3 +932,8 @@ if __name__ == '__main__':
             [2, "a", "note 1", "test training note 1"],
             [4, "b", "note 2", "test training note 2"]]
     db.addManyEntries("training_notes", trainingNotes)
+
+    generalInformation = ["Julian", "28.05.2020", "Mittleres Krafttraining"]
+    db.addEntry("general_information", generalInformation)
+
+

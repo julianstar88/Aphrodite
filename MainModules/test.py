@@ -4,14 +4,21 @@ Created on Thu Apr 30 18:11:28 2020
 
 @author: Julian
 """
-import sys
-import GuiModules.MainInterface as mi
-from PyQt5 import QtWidgets
+import re
+import pathlib2
 
-qapp = QtWidgets.QApplication(sys.argv)
+value = "C:/Users/Julian/Documents/Python/Projekte/Aphrodite/files/config/config.txt"
+key = "test_path"
+string = "{}:{}".format(key, value)
+pattern1 = "(?P<key>\w*):(?P<value>([\w\W]*):?([\\/]?[\w\W])*)"
+pattern2 = "(?P<key>\w*):(?P<value>[\w\W]*:?[\\/]?[\w\W]*)"
 
-app = mi.MainWindow()
+stripped = string.strip("\n")
+match = re.search(pattern2, string)
 
-sys.exit(qapp.exec_())
+print(match)
+print("key:", match.group("key"))
+print("value:", match.group("value"))
 
+t = int("2")
 
