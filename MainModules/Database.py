@@ -581,7 +581,7 @@ class database():
 
         if self.databaseName() is None:
             raise TypeError(
-                    "Databse.addEntry: before adding many etries to a database, set a valid databaseName"
+                    "before retrieving data from a databse, set a valid database"
                 )
 
         if not isinstance(tableName, str):

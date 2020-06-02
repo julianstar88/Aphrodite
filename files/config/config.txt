@@ -1,5 +1,5 @@
 username:Julian
 current_routine:C:/Users/Julian/Documents/Python/Projekte/Aphrodite/files/test_files/test_database_2.db
-export_routine_directory:None
-new_routine_directory:None
-last_opened_routine:None
+export_routine_directory:
+new_routine_directory:
+last_opened_routine:

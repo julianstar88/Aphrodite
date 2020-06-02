@@ -16,12 +16,47 @@ class CustomModelView(QtWidgets.QTableView):
     leftClicked = QtCore.pyqtSignal("QModelIndex")
     rightClicked = QtCore.pyqtSignal("QModelIndex")
 
-    def __init__(self, model, *args, headerLabels = None, parent = None, fontSize = 15, fontWeight = "normal",
-                 fontStyle = "normal", exerciseNameColumn = 0, labelMode = "main"):
+    def __init__(self, model, *args,
+                 viewParent = None,
+                 labelFontSize = 10,
+                 labelFontWeight = "normal",
+                 labelFontStyle = "normal",
+                 labelMargin = 2,
+                 headerLabels = None,
+                 headerFontSize = 15,
+                 headerFontStyle = "normal",
+                 headerFontWeight = "normal",
+                 exerciseNameColumn = 0,
+                 labelMode = "main"):
 
         super().__init__(*args)
-        self._labelFontSize = 10
-        self._labelMargin = 2
+        self._labelFontSize = None
+        self._labelMargin = None
+        self._labelFontWeight = None
+        self._labelFontStyle = None
+
+        self._headerLabels = None
+        self._headerFontSize = None
+        self._headerFontWeight = None
+        self._headerFontStyle = None
+
+        self._labelMode = None
+        self._exerciseNameColumn = None
+        self._viewParent = None
+
+        self.setLabelFontSize(labelFontSize)
+        self.setLabelMargin(labelMargin)
+        self.setLabelFontWeight(labelFontWeight)
+        self.setLabelFontStyle(labelFontStyle)
+
+        self.setHeaderLabels(headerLabels)
+        self.setHeaderFontSize(headerFontSize)
+        self.setHeaderFontWeight(headerFontWeight)
+        self.setHeaderFontStyle(headerFontStyle)
+
+        self.setLabelMode(labelMode)
+        self.setExerciseNameColumn(exerciseNameColumn)
+        self.setViewParent(viewParent)
 
         self.setModel(model)
         self.model().setParent(self)
@@ -38,14 +73,12 @@ class CustomModelView(QtWidgets.QTableView):
 
         self.setItemDelegate(CustomDelegate.CustomItemDelegate(self))
 
-        if parent:
-            self.setParent(parent)
+        if self.viewParent():
+            self.setParent(self.viewParent())
 
-        self.__setHorizontalHeaderLabels(headerLabels, fontSize, fontWeight, fontStyle)
+        self.__setHorizontalHeaderLabels()
         self.__setResizeMode()
-
-        # self.renderItemToPixmap(labelMode)
-        self.renderItemToHtml(labelMode)
+        self.renderItemToHtml()
         self.resizeTable()
 
         self.leftClicked.connect(self.onSingleLeftClick)
@@ -76,11 +109,11 @@ class CustomModelView(QtWidgets.QTableView):
             self.timer.start()
             self.clickMode = "single"
 
-    def __createLabelText(self, item, mode):
+    def __createLabelText(self, item):
         row = item.row()
         exerciseID = row + 1
 
-        if mode == "main":
+        if self.labelMode() == "main":
             text = item.userData()
             alternatives = [item[1] for item in item.trainingAlternatives if exerciseID == item[0]]
             if alternatives:
@@ -113,7 +146,7 @@ class CustomModelView(QtWidgets.QTableView):
                     )
                 return labelText
 
-        elif mode == "alternative":
+        elif self.labelMode() == "alternative":
             alternative = item.trainingAlternatives[row]
             labelText = "{label}) {itemText}".format(
                     label = alternative[1],
@@ -124,11 +157,11 @@ class CustomModelView(QtWidgets.QTableView):
         else:
             return
 
-    def __createHtmlLabelText(self, item, mode):
+    def __createHtmlLabelText(self, item):
         row = item.row()
         exerciseID = row + 1
 
-        if mode == "main":
+        if self.labelMode() == "main":
             text = item.userData()
             alternatives = [item[1] for item in item.trainingAlternatives if exerciseID == item[0]]
             if alternatives:
@@ -161,7 +194,7 @@ class CustomModelView(QtWidgets.QTableView):
                     )
                 return labelText
 
-        elif mode == "alternative":
+        elif self.labelMode() == "alternative":
             alternative = item.trainingAlternatives[row]
             labelText = "{label}) {itemText}".format(
                     label = alternative[1],
@@ -172,18 +205,23 @@ class CustomModelView(QtWidgets.QTableView):
         else:
             return
 
-    def __setHorizontalHeaderLabels(self, headerLabels, fontSize, fontWeight, fontStyle):
+    def __setHorizontalHeaderLabels(self):
         qpixmaps = list()
+        labels = self.headerLabels()
 
-        if not headerLabels:
-            headerLabels = ["I"] * self.model().columnCount()
+        if not labels:
+            labels = ["I"] * self.model().columnCount()
             color = "none"
         else:
             color = "black"
 
-        for i, label in enumerate(headerLabels):
-            canvas = GraphicUtilityModules.CreateCanvas(label, fontSize = fontSize, fontWeight = fontWeight,
-                                  fontColor = color)
+        for i, label in enumerate(labels):
+            canvas = GraphicUtilityModules.CreateCanvas(
+                    label,
+                    fontSize = self.headerFontSize(),
+                    fontWeight = self.headerFontWeight(),
+                    fontColor = color
+                )
 
             pixmap = GraphicUtilityModules.CreateQPixmap(canvas)
             qpixmaps.append(pixmap)
@@ -198,11 +236,36 @@ class CustomModelView(QtWidgets.QTableView):
             else:
                 self.horizontalHeader().setSectionResizeMode(i, QtWidgets.QHeaderView.Stretch)
 
+    def exerciseNameColumn(self):
+        return self._exerciseNameColumn
+
+    def headerFontSize(self):
+        return self._headerFontSize
+
+    def headerFontStyle(self):
+        return self._headerFontStyle
+
+    def headerFontWeight(self):
+        return self._headerFontWeight
+
+    def headerLabels(self):
+        return self._headerLabels
+
     def labelFontSize(self):
         return self._labelFontSize
 
+    def labelFontStyle(self):
+        return self._labelFontSize
+
+    def labelFontWeight(self):
+        return self._labelFontWeight
+
     def labelMargin(self):
         return self._labelMargin
+
+    def labelMode(self):
+        return self._labelMode
+
 
     def mouseReleaseEvent(self, event):
         index = self.indexAt(event.pos())
@@ -215,12 +278,12 @@ class CustomModelView(QtWidgets.QTableView):
 
         super().mouseReleaseEvent(event)
 
-    def renderItemToHtml(self, labelMode):
+    def renderItemToHtml(self):
         for row in range(self.model().rowCount()):
             item = self.model().item(row, column = self.exerciseNameColumn)
             index = self.model().indexFromItem(item)
 
-            labelText = self.__createHtmlLabelText(item, labelMode)
+            labelText = self.__createHtmlLabelText(item)
 
             labelFont = QtGui.QFont()
             labelFont.setPointSize(self.labelFontSize())
@@ -234,13 +297,13 @@ class CustomModelView(QtWidgets.QTableView):
 
         self.resizeColumnToContents(0)
 
-    def renderItemToPixmap(self, labelMode):
+    def renderItemToPixmap(self):
 
         for row in range(self.model().rowCount()):
             item = self.model().item(row, column = self.exerciseNameColumn)
             index = self.model().indexFromItem(item)
 
-            labelText = self.__createLabelText(item, labelMode)
+            labelText = self.__createLabelText(item)
 
             canvas = GraphicUtilityModules.CreateCanvas(labelText, fontSize = self.labelFontSize())
             qpixmap = GraphicUtilityModules.CreateQPixmap(canvas)
@@ -273,11 +336,47 @@ class CustomModelView(QtWidgets.QTableView):
         self.setMinimumHeight(generalHeight)
         self.setMinimumWidth(tableWidth)
 
+    def setExerciseNameColumn(self, col):
+        self._exerciseNameColumn = col
+
+    def setHeaderFontSize(self, fontSize):
+        self._headerFontSize = fontSize
+
+    def setHeaderFontStyle(self, fontStyle):
+        self._headerFontStyle = fontStyle
+
+    def setHeaderFontWeight(self, fontWeight):
+        self._headerFontWeight = fontWeight
+
+    def setHeaderLabels(self, labels):
+        self._headerLabels = labels
+
     def setLabelFontSize(self, size):
         self._labelFontSize = size
 
+    def setLabelFontStyle(self, style):
+        self._labelFontStyle = style
+
+    def setLabelFontWeight(self, fontWeight):
+        self._labelFontWeight = fontWeight
+
     def setLabelMargin(self, margin):
         self._labelMargin = margin
+
+    def setLabelMode(self, mode):
+        self._labelMode = mode
+
+    def setViewParent(self, parent):
+        self._viewParent = parent
+
+    def updateView(self):
+        self.__setHorizontalHeaderLabels()
+        self.__setResizeMode()
+        self.renderItemToHtml()
+        self.resizeTable()
+
+    def viewParent(self):
+        return self._viewParent
 
     # Slots
     def onSingleLeftClick(self, index):

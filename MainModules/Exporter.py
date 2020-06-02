@@ -587,7 +587,7 @@ class Exporter():
 
         if not isinstance(model, CustomSqlModel):
             raise TypeError(
-                    "input <{input_name}> for 'setModel' does not match {type_name}".format(
+                    "input {input_name} for 'setModel' does not match {type_name}".format(
                             input_name = type(model),
                             type_name = CustomSqlModel
                         )
@@ -618,17 +618,17 @@ class Exporter():
 
         """
 
-        if not type(name) == str:
+        if not isinstance(name, str):
             raise TypeError(
-                "input argument {name} does not match {type_name}".format(
-                        name = name,
-                        type_name = type("str")
+                "input <{name}> does not match {type_name}".format(
+                        name = str(name),
+                        type_name = str,
                     )
                 )
-        elif len(name) == 0:
+        if len(name) == 0:
             raise ValueError("empty input for the attribute 'name'")
-        else:
-            self._name = name
+
+        self._name = name
 
     def setRoutineName(self, routineName):
         """

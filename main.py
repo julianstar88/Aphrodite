@@ -7,50 +7,60 @@ Created on Wed May 27 16:59:00 2020
 import sys
 import pathlib2
 import GuiModules.MainInterface as mi
-from MainModules import ConfigInterface, Exporter, GraphicalEvaluator
+from MainModules import ConfigInterface, Database, Exporter, GraphicalEvaluator
 from UtilityModules import CustomModel
 from PyQt5 import QtWidgets
 
-configFile = pathlib2.Path("files/config/config.txt")
+"""settings"""
+configFile = pathlib2.Path("files/config/config1.txt")
 parentDir = pathlib2.Path().cwd()
 configParser = ConfigInterface.ConfigParser()
 configParser.readConfigFile(parentDir / configFile)
 
-database = pathlib2.Path(configParser.readAttributes()["current_routine"])
+databaseFile = pathlib2.Path(configParser.readAttributes()["last_opened_routine"])
 
-trainingModel = CustomModel.CustomSqlModel(
-        database = str(database),
-        table = "training_routine",
-        tableStartIndex = 0,
-        valueStartIndex = 1
-    )
-trainingModel.populateModel()
+if databaseFile.is_file():
 
-alternativeModel = CustomModel.CustomSqlModel(
-        database = str(database),
-        table = "training_alternatives",
-        tableStartIndex = 3,
-        valueStartIndex = 1
-    )
-alternativeModel.populateModel()
+    databaseObject = Database.database(databaseFile)
+
+    trainingModel = CustomModel.CustomSqlModel(
+            database = str(databaseFile),
+            table = "training_routine",
+            tableStartIndex = 0,
+            valueStartIndex = 1
+        )
+    trainingModel.populateModel()
+
+    alternativeModel = CustomModel.CustomSqlModel(
+            database = str(databaseFile),
+            table = "training_alternatives",
+            tableStartIndex = 3,
+            valueStartIndex = 1
+        )
+    alternativeModel.populateModel()
+
+    exporterData = databaseObject.data("general_information")
+    exporter = Exporter.Exporter()
+    exporter.setDatabase(databaseFile)
+    exporter.setModel(trainingModel)
+    exporter.setName(exporterData[0][0])
+
+    evaluator = GraphicalEvaluator.GraphicalEvaluator()
+else:
+    trainingModel = None
+    alternativeModel = None
+    exporter = None
+    evaluator = None
 
 
-exporter = Exporter.Exporter()
-exporter.setDatabase(database)
-exporter.setModel(trainingModel)
-exporter.setName(configParser.readAttributes()["username"])
-
-evaluator = GraphicalEvaluator.GraphicalEvaluator()
-
+"""start app"""
 qapp = QtWidgets.QApplication(sys.argv)
-
 app = mi.MainWindow(
         configParser = configParser,
         evaluator = evaluator,
         exporter = exporter,
         routineModel = trainingModel,
         alternativeModel = alternativeModel,
-        database = database
+        database = databaseObject
     )
-
 sys.exit(qapp.exec_())
