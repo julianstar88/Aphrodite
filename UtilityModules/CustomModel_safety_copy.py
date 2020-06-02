@@ -20,17 +20,11 @@ class CustomSqlModel(QtGui.QStandardItemModel):
                  tableStartIndex = 1, valueStartIndex = 1):
 
         super().__init__(parent)
-        self._database = None
-        self._table = None
-        self._tableData = None
-        self._tableStartIndex = None
-        self._valueStartIndex = None
-
-        self.setDatabase(database)
-        self.setTable(table)
-        self.setTableData([])
-        self.setTableStartIndex(tableStartIndex)
-        self.setValueStartIndex(valueStartIndex)
+        self.database = database
+        self.table = table
+        self.tableData = list()
+        self.tableStartIndex = tableStartIndex
+        self.valueStartIndex = valueStartIndex
 
         self.itemChanged.connect(self.onItemChanged)
 
@@ -58,14 +52,11 @@ class CustomSqlModel(QtGui.QStandardItemModel):
         item = self.itemFromIndex(index)
         col = item.column()
 
-        if col >= self.valueStartIndex():
+        if col >= self.valueStartIndex:
             brush = QtGui.QBrush(QtGui.QColor(160,160,160,120), QtCore.Qt.SolidPattern)
             item.setBackground(brush)
 
         return super().data(index, role)
-
-    def database(self):
-        return self._database
 
     def onItemChanged(self, item, defaultPurpose):
         if defaultPurpose:
@@ -74,56 +65,29 @@ class CustomSqlModel(QtGui.QStandardItemModel):
 
 
     def populateModel(self):
-        path = pathlib2.Path(self.database())
+        path = pathlib2.Path(self.database)
         if not path.is_file():
             return
         con = sqlite3.connect(path)
         with con:
             c = con.cursor()
-            sqlCommand = "SELECT * FROM {tableName}".format(tableName = self.table())
+            sqlCommand = "SELECT * FROM {tableName}".format(tableName = self.table)
             c.execute(sqlCommand)
             data = c.fetchall()
         con.close()
 
-        CustomModelItem.fetchAlternativesFromDatabase(self.database())
-        CustomModelItem.fetchNotesFromDatabase(self.database())
+        CustomModelItem.fetchAlternativesFromDatabase(self.database)
+        CustomModelItem.fetchNotesFromDatabase(self.database)
 
         for row in data:
-            l = [CustomModelItem(item) for item in row[self.tableStartIndex():]]
-            self.tableData().append(l)
+            l = [CustomModelItem(item) for item in row[self.tableStartIndex:]]
+            self.tableData.append(l)
 
-        for row in self.tableData():
+        for row in self.tableData:
             self.appendRow(row)
-
-    def setDatabase(self, database):
-        self._database = database
-
-    def setTable(self, table):
-        self._table = table
-
-    def setTableData(self, data):
-        self._tableData = data
-
-    def setTableStartIndex(self, index):
-        self._tableStartIndex = index
-
-    def setValueStartIndex(self, index):
-        self._valueStartIndex = index
-
-    def table(self):
-        return self._table
-
-    def tableData(self):
-        return self._tableData
-
-    def tableStartIndex(self):
-        return self._tableStartIndex
 
     def updateModel(self):
         pass
-
-    def valueStartIndex(self):
-        return self._valueStartIndex
 
 if __name__ == "__main__":
     model = CustomSqlModel()
