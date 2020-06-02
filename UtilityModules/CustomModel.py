@@ -6,6 +6,7 @@ Created on Tue Mar 17 23:47:14 2020
 """
 
 import sqlite3
+import pathlib2
 from GuiModules.CustomGuiComponents import CustomModelItem
 from PyQt5 import QtGui, QtCore
 
@@ -13,6 +14,7 @@ class CustomSqlModel(QtGui.QStandardItemModel):
 
     ObjectType = "CustomSqlModel"
     itemChanged = QtCore.pyqtSignal(CustomModelItem, bool)
+    dataChanged = QtCore.pyqtSignal()
 
     def __init__(self, database = None, table = "training_routine", parent = None,
                  tableStartIndex = 1, valueStartIndex = 1):
@@ -63,7 +65,10 @@ class CustomSqlModel(QtGui.QStandardItemModel):
 
 
     def populateModel(self):
-        con = sqlite3.connect(self.database)
+        path = pathlib2.Path(self.database)
+        if not path.is_file():
+            return
+        con = sqlite3.connect(path)
         with con:
             c = con.cursor()
             sqlCommand = "SELECT * FROM {tableName}".format(tableName = self.table)
@@ -80,6 +85,9 @@ class CustomSqlModel(QtGui.QStandardItemModel):
 
         for row in self.tableData:
             self.appendRow(row)
+
+    def updateModel(self):
+        pass
 
 if __name__ == "__main__":
     model = CustomSqlModel()

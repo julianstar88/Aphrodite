@@ -429,8 +429,8 @@ class CustomModelItem(QtGui.QStandardItem):
     trainingNotes = list()
     lowercaseLetters = string.ascii_lowercase
 
-    def __init__(self, displayData, *args, **kwargs):
-        super().__init__(displayData, *args, **kwargs)
+    def __init__(self, displayData, *args):
+        super().__init__(displayData, *args)
         self.setUserData(displayData)
 
     def addTrainingAlternative(self, exerciseID, alternativeExercise, warmUp, repetition,
@@ -593,15 +593,15 @@ class CustomModelItem(QtGui.QStandardItem):
                 CustomModelItem.trainingNotes.append(l)
 
     def setData(self, value, role, defaultPurpose = True):
-        if role == QtCore.Qt.DisplayData:
-            self.setUserData(value)
+        # if role == QtCore.Qt.DisplayRole:
+        #     self.setUserData(value)
         super().setData(value, role)
         self.model().itemChanged.emit(self, defaultPurpose)
 
     def setUserData(self, data):
         if not type(data) == str:
             raise TypeError(
-                    "input <{input_name}> for 'setDisplayData' does not match {type_name}".format(
+                    "input <{input_name}> for 'setUserData' does not match {type_name}".format(
                             input_name = str(data),
                             type_name = str
                         )

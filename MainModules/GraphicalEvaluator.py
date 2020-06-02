@@ -370,7 +370,7 @@ class GraphicalEvaluator():
 
         return self._parentWidget
 
-    def plotData(self, data):
+    def plotData(self, data, replacePlot = False):
         """
         plot the data of a data source into every tab, created by 'createTabs()'
 
@@ -422,8 +422,16 @@ class GraphicalEvaluator():
                         )
                 )
 
+        if not isinstance(replacePlot, bool):
+            raise TypeError(
+                    "input <{input_name}> does not match {type_name}".format(
+                            input_name = str(replacePlot),
+                            type_name = bool
+                        )
+                )
+
         for i in range(self.mainWidget().count()):
-            self.mainWidget().widget(i).plotData(data[i])
+            self.mainWidget().widget(i).plotData(data[i], replacePlot = replacePlot)
 
     def setDatabase(self, database):
         """
@@ -488,8 +496,8 @@ class GraphicalEvaluator():
 
         if not isinstance(model, CustomSqlModel):
             raise TypeError(
-                    "input <{input_name}> for 'setModel' does not match {type_name}".format(
-                            input_name = str(model),
+                    "input {input_name} for 'setModel' does not match {type_name}".format(
+                            input_name = type(model),
                             type_name = CustomSqlModel
                         )
                 )
@@ -568,7 +576,7 @@ class EvaluatorTab(QtWidgets.QWidget):
     def data(self):
         return self._data
 
-    def plotData(self, data = None):
+    def plotData(self, data = None, replacePlot = False):
         if data:
             self.setData(data)
 
@@ -577,6 +585,9 @@ class EvaluatorTab(QtWidgets.QWidget):
 
         x = np.linspace(1,6,6)
         y = self.data()
+
+        if replacePlot:
+            self.ax.clear()
         self.ax.plot(x,y)
 
         labels = ["Week " + str(i) for i in range(0,7,1)]
