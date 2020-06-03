@@ -33,12 +33,18 @@ class MainWindow(QtWidgets.QMainWindow):
         self._alternativeModel = None
         self._routineModel = None
 
-        self.setConfigParser(configParser)
-        self.setDatabase(database)
-        self.setEvaluator(evaluator)
-        self.setExporter(exporter)
-        self.setAlternativeModel(alternativeModel)
-        self.setRoutineModel(routineModel)
+        if configParser:
+            self.setConfigParser(configParser)
+        if database:
+            self.setDatabase(database)
+        if evaluator:
+            self.setEvaluator(evaluator)
+        if exporter:
+            self.setExporter(exporter)
+        if alternativeModel:
+            self.setAlternativeModel(alternativeModel)
+        if routineModel:
+            self.setRoutineModel(routineModel)
 
         self.setWindowTitle("Aphrodite")
         self.mainWidget = cc.CustomWidget()
@@ -157,7 +163,7 @@ class MainWindow(QtWidgets.QMainWindow):
         return self._routineModel
 
     def setAlternativeModel(self, alternativeModel):
-        if not isinstance(alternativeModel, CustomModel.CustomSqlModel) and alternativeModel is not None:
+        if not isinstance(alternativeModel, CustomModel.CustomSqlModel):
             raise TypeError(
                     "input <{input_name}> for 'alternativeModel' does not match {type_name}".format(
                             input_name = str(alternativeModel),
@@ -167,7 +173,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._alternativeModel = alternativeModel
 
     def setConfigParser(self, configParser):
-        if not isinstance(configParser, ConfigInterface.ConfigParser) and configParser is not None:
+        if not isinstance(configParser, ConfigInterface.ConfigParser):
             raise TypeError(
                     "input <{input_name}> for 'configParser' does not match {type_name}".format(
                             input_name = str(configParser),
@@ -177,7 +183,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._configParser = configParser
 
     def setDatabase(self, database):
-        if not isinstance(database, Database.database) and database is not None:
+        if not isinstance(database, Database.database):
             raise TypeError(
                     "input <{input_name}> for 'database' does not match {type_name}".format(
                             input_name = str(database),
@@ -187,7 +193,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._database = database
 
     def setEvaluator(self, evaluator):
-        if not isinstance(evaluator, GraphicalEvaluator.GraphicalEvaluator) and evaluator is not None:
+        if not isinstance(evaluator, GraphicalEvaluator.GraphicalEvaluator):
             raise TypeError(
                     "input <{input_name}> for 'evaluator' does not match {type_name}".format(
                             input_name = str(evaluator),
@@ -197,7 +203,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._evaluator = evaluator
 
     def setExporter(self, exporter):
-        if not isinstance(exporter, Exporter.Exporter) and exporter is not None:
+        if not isinstance(exporter, Exporter.Exporter):
             raise TypeError(
                     "input <{input_name}> for 'exporter' does not match {type_name}".format(
                             input_name = str(exporter),
@@ -207,7 +213,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._exporter = exporter
 
     def setRoutineModel(self, routineModel):
-        if not isinstance(routineModel, CustomModel.CustomSqlModel) and routineModel is not None:
+        if not isinstance(routineModel, CustomModel.CustomSqlModel):
             raise TypeError(
                     "input <{input_name}> for 'routineModel' does not match {type_name}".format(
                             input_name = str(routineModel),
@@ -856,30 +862,99 @@ class RoutineTab(cc.CustomWidget):
         return self._routineView
 
     def setAlternativeHeaderLabels(self, labels):
+        if not isinstance(labels, list):
+            raise TypeError(
+                    "input <{input_name}> for 'setAlternativeHeaderLabels' does not match {type_name}".format(
+                            input_name = str(labels),
+                            type_name = list
+                        )
+                )
+        for val in labels:
+            if not isinstance(val, str):
+                raise TypeError(
+                        "element <{element}> in 'labels' for 'setAlternativeHeaderLabels' does not match {type_name}".format(
+                                element = val,
+                                type_name = str
+                            )
+                    )
         self._alternativeHeaderLabels = labels
 
     def setAlternativeModel(self, model):
+        if not isinstance(model, CustomModel.CustomSqlModel):
+            raise TypeError(
+                    "input <{input_name}> does not match {type_name}".format(
+                            input_name = str(model),
+                            type_name = CustomModel.CustomSqlModel
+                        )
+                )
         self._alternativeModel = model
 
     def setAlternativeView(self, view):
+        if not isinstance(view, CustomTableView.CustomModelView):
+            raise TypeError(
+                    "input <{input_name}> for 'setAlternativeView' does not match {type_name}".format(
+                            input_name = str(view),
+                            type_name = CustomTableView.CustomModelView
+                        )
+                )
         self._alternativeView = view
 
     def setLayout(self, layout):
+        if not isinstance(layout, QtWidgets.QBoxLayout):
+            raise TypeError(
+                    "input <{input_name}> for 'setLayout' does not match {type_name}".format(
+                            input_name = str(layout),
+                            type_name = QtWidgets.QBoxLayout
+                        )
+                )
         self._layout = layout
 
     def setRoutineHeaderLabels(self, labels):
+        if not isinstance(labels, list):
+            raise TypeError(
+                    "input <{input_name}> for 'setRoutineHeaderLabels' does not match {type_name}".format(
+                            input_name = str(labels),
+                            type_name = list
+                        )
+                )
+        for val in labels:
+            if not isinstance(val, str):
+                raise TypeError(
+                        "element <{element}> in 'labels' for 'setRoutineHeaderLabels' does not match {type_name}".format(
+                                element = val,
+                                type_name = str
+                            )
+                    )
         self._routineHeaderLabels = labels
 
     def setRoutineModel(self, model):
+        if not isinstance(model, CustomModel.CustomSqlModel):
+            raise TypeError(
+                    "input <{input_name}> for 'setRoutineModel' does not match {type_name}".format(
+                            input_name = str(model),
+                            type_name = CustomModel.CustomSqlModel
+                        )
+                )
         self._model = model
 
     def setRoutineView(self, view):
+        if not isinstance(view, CustomTableView.CustomModelView):
+            raise TypeError(
+                    "input <{input_name}> for 'setRoutineView' does not match {type_name}".format(
+                            input_name = str(view),
+                            type_name = CustomTableView.CustomModelView
+                        )
+                )
         self._routineView = view
 
     def updatePanel(self):
-        self.routineView().updateView()
-        self.alternativeView().updateView()
-        self.__harmonizeColumnWidths(self.alternativeView(), self.routineView())
+        if self.routineView() and self.alternativeView():
+            self.routineView().updateView()
+            self.alternativeView().updateView()
+            self.__harmonizeColumnWidths(self.alternativeView(), self.routineView())
+            return True
+        else:
+            return False
 
 class EvaluatorTab(cc.CustomWidget):
 

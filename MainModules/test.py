@@ -4,6 +4,7 @@ Created on Thu Apr 30 18:11:28 2020
 
 @author: Julian
 """
-t = 1
+import pathlib2
 
-print(isinstance(t, bool))
+path = pathlib2.Path("C:/Users/Julian/Documents/Python/Projekte/Aphrodite/files/config/config1.txt")
+print(path.parent)
