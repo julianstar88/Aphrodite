@@ -120,7 +120,13 @@ class CustomSqlModel(QtGui.QStandardItemModel):
         return self._tableStartIndex
 
     def updateModel(self):
-        pass
+        CustomModelItem.fetchAlternativesFromDatabase(self.database())
+        CustomModelItem.fetchNotesFromDatabase(self.database())
+
+        self.removeRows(0, self.rowCount())
+        for row in self.tableData():
+            itemList = [CustomModelItem(val.userData()) for val in row]
+            self.appendRow(itemList)
 
     def valueStartIndex(self):
         return self._valueStartIndex

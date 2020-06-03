@@ -370,8 +370,6 @@ class CustomModelView(QtWidgets.QTableView):
         self._viewParent = parent
 
     def updateView(self):
-        self.__setHorizontalHeaderLabels()
-        self.__setResizeMode()
         self.renderItemToHtml()
         self.resizeTable()
 

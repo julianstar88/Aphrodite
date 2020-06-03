@@ -123,7 +123,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.panel2.setValues(values)
         self.panel2.updatePanel()
 
-        self.routineTab.updateView()
+        self.routineTab.updatePanel()
 
     def alternativeModel(self):
         return self._alternativeModel
@@ -876,7 +876,7 @@ class RoutineTab(cc.CustomWidget):
     def setRoutineView(self, view):
         self._routineView = view
 
-    def updateView(self):
+    def updatePanel(self):
         self.routineView().updateView()
         self.alternativeView().updateView()
         self.__harmonizeColumnWidths(self.alternativeView(), self.routineView())
