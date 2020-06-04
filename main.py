@@ -19,11 +19,13 @@ configParser.readConfigFile()
 
 databaseFile = pathlib2.Path(configParser.readAttributes()["last_opened_routine"])
 
+"""critical error, if config-file is invalid"""
 if not databaseFile.is_file():
     raise RuntimeError(
             "no config-file found"
         )
 
+"""neccessary objects for aphrodite"""
 databaseObject = Database.database(databaseFile)
 
 trainingModel = CustomModel.CustomSqlModel(
@@ -49,13 +51,6 @@ exporter.setModel(trainingModel)
 exporter.setName(exporterData[0][0])
 
 evaluator = GraphicalEvaluator.GraphicalEvaluator()
-# else:
-#     databaseObject = None
-#     trainingModel = None
-#     alternativeModel = None
-#     exporter = None
-#     evaluator = None
-
 
 """start app"""
 qapp = QtWidgets.QApplication(sys.argv)
