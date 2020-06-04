@@ -19,39 +19,42 @@ configParser.readConfigFile()
 
 databaseFile = pathlib2.Path(configParser.readAttributes()["last_opened_routine"])
 
-if databaseFile.is_file():
-
-    databaseObject = Database.database(databaseFile)
-
-    trainingModel = CustomModel.CustomSqlModel(
-            database = str(databaseFile),
-            table = "training_routine",
-            tableStartIndex = 0,
-            valueStartIndex = 1
+if not databaseFile.is_file():
+    raise RuntimeError(
+            "no config-file found"
         )
-    trainingModel.populateModel()
 
-    alternativeModel = CustomModel.CustomSqlModel(
-            database = str(databaseFile),
-            table = "training_alternatives",
-            tableStartIndex = 3,
-            valueStartIndex = 1
-        )
-    alternativeModel.populateModel()
+databaseObject = Database.database(databaseFile)
 
-    exporterData = databaseObject.data("general_information")
-    exporter = Exporter.Exporter()
-    exporter.setDatabase(databaseFile)
-    exporter.setModel(trainingModel)
-    exporter.setName(exporterData[0][0])
+trainingModel = CustomModel.CustomSqlModel(
+        database = str(databaseFile),
+        table = "training_routine",
+        tableStartIndex = 0,
+        valueStartIndex = 1
+    )
+trainingModel.populateModel()
 
-    evaluator = GraphicalEvaluator.GraphicalEvaluator()
-else:
-    databaseObject = None
-    trainingModel = None
-    alternativeModel = None
-    exporter = None
-    evaluator = None
+alternativeModel = CustomModel.CustomSqlModel(
+        database = str(databaseFile),
+        table = "training_alternatives",
+        tableStartIndex = 3,
+        valueStartIndex = 1
+    )
+alternativeModel.populateModel()
+
+exporterData = databaseObject.data("general_information")
+exporter = Exporter.Exporter()
+exporter.setDatabase(databaseFile)
+exporter.setModel(trainingModel)
+exporter.setName(exporterData[0][0])
+
+evaluator = GraphicalEvaluator.GraphicalEvaluator()
+# else:
+#     databaseObject = None
+#     trainingModel = None
+#     alternativeModel = None
+#     exporter = None
+#     evaluator = None
 
 
 """start app"""
