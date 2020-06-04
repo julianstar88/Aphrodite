@@ -26,6 +26,8 @@ class MainWindow(QtWidgets.QMainWindow):
                  routineModel = None):
 
         super().__init__(*args)
+
+        """initialize private properties"""
         self._configParser = None
         self._database = None
         self._evaluator = None
@@ -33,24 +35,114 @@ class MainWindow(QtWidgets.QMainWindow):
         self._alternativeModel = None
         self._routineModel = None
 
-        if configParser:
-            self.setConfigParser(configParser)
-        if database:
-            self.setDatabase(database)
-        if evaluator:
-            self.setEvaluator(evaluator)
-        if exporter:
-            self.setExporter(exporter)
-        if alternativeModel:
-            self.setAlternativeModel(alternativeModel)
-        if routineModel:
-            self.setRoutineModel(routineModel)
+        """initialize public properties"""
+        self.panel1 = None
+        self.panel2 = None
+        self.routineTab = None
+        self.evaluatorTab1 = None
+        self.evaluatorTab2 = None
+        self.tabWidget = None
+        self.buttonLayout = None
+        self.addNoteButton = None
+        self.deleteNoteButton = None
 
+        """process input parameter"""
+        self.setConfigParser(configParser)
+        self.setDatabase(database)
+        self.setEvaluator(evaluator)
+        self.setExporter(exporter)
+        self.setAlternativeModel(alternativeModel)
+        self.setRoutineModel(routineModel)
+
+        """general settings for app"""
         self.setWindowTitle("Aphrodite")
         self.mainWidget = cc.CustomWidget()
         self.mainLayout = QtWidgets.QGridLayout(self.mainWidget)
         self.setCentralWidget(self.mainWidget)
 
+        """populate app app"""
+        self.openRoutine()
+
+        """show the app"""
+        # self.showMaximized()
+        self.show()
+
+    def __connectButtons(self):
+        self.addNoteButton.clicked.connect(self.addNote)
+        self.deleteNoteButton.clicked.connect(self.deleteNote)
+
+    def __calculateEndData(self, startDate):
+        pattern = "(?P<day>\d\d).(?P<month>\d\d).(?P<year>\d\d\d\d)"
+        match = re.search(pattern, startDate)
+        year = int(match.group("year"))
+        month = int(match.group("month"))
+        day = int(match.group("day"))
+        start = datetime.date(year, month, day)
+        endDate = start + datetime.timedelta(days = 42)
+        return endDate.strftime("%d.%m.%Y")
+
+    def addNote(self, event):
+        labels = self.panel2.labels()
+        values = self.panel2.values()
+        labels.append("None")
+        values.append("0123456789----- "*10)
+        self.panel2.setLabels(labels)
+        self.panel2.setValues(values)
+        self.panel2.updatePanel()
+
+        self.closeRoutine()
+
+    def alternativeModel(self):
+        return self._alternativeModel
+
+    def closeRoutine(self):
+
+        def deleteTabWidget(widget):
+            for i in range(widget.count()):
+                children = widget.widget(i).children()
+                childrenTypes = [type(element) for element in children]
+                childWidget = widget.widget(i)
+                if QtWidgets.QTabWidget in childrenTypes:
+                    childWidget.evaluator().clearTabs()
+            widget.deleteLater()
+
+        for i in reversed(range(self.mainLayout.count())):
+            child = self.mainLayout.itemAt(i)
+            if child.widget():
+                if not isinstance(child.widget(), QtWidgets.QTabWidget):
+                    child.widget().deleteLater()
+                else:
+                    deleteTabWidget(child.widget())
+            else:
+                for n in reversed(range(child.count())):
+                    grandChild = child.takeAt(n)
+                    grandChild.widget().deleteLater()
+
+    def configParser(self):
+        return self._configParser
+
+    def database(self):
+        return self._database
+
+    def deleteNote(self, event):
+        labels = self.panel2.labels()
+        values = self.panel2.values()
+        if len(labels) == 0 or len(values) == 0:
+            return
+        else:
+            labels.pop()
+            values.pop()
+            self.panel2.setLabels(labels)
+            self.panel2.setValues(values)
+            self.panel2.updatePanel()
+
+    def evaluator(self):
+        return self._evaluator
+
+    def exporter(self):
+        return self._exporter
+
+    def openRoutine(self):
         generalLabels = ["Name:", "Start:", "End:", "Trainingmode:"]
         generalValues = ["None", "None", "None", "None"]
         noteLabels = []
@@ -61,7 +153,7 @@ class MainWindow(QtWidgets.QMainWindow):
             data = self.database().data("general_information")[0]
             generalValues = [data[0], data[1], self.__calculateEndData(data[1]), data[2]]
 
-            data = database.data("training_notes")
+            data = self.database().data("training_notes")
             noteLabels = list()
             noteValues = list()
             for note in data:
@@ -92,6 +184,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.buttonLayout.addWidget(self.addNoteButton)
         self.buttonLayout.addWidget(self.deleteNoteButton)
 
+        self.__connectButtons()
+
         self.mainLayout.addWidget(self.panel1, 0, 0)
         self.mainLayout.addWidget(self.panel2, 1, 0)
         self.mainLayout.addLayout(self.buttonLayout, 2, 0)
@@ -101,123 +195,71 @@ class MainWindow(QtWidgets.QMainWindow):
         self.mainLayout.setColumnStretch(1, 2)
         self.mainLayout.setSpacing(20)
 
-        self.__connectButtons()
-
-        # self.showMaximized()
-        self.show()
-
-    def __connectButtons(self):
-        self.addNoteButton.clicked.connect(self.addNote)
-        self.deleteNoteButton.clicked.connect(self.deleteNote)
-
-    def __calculateEndData(self, startDate):
-        pattern = "(?P<day>\d\d).(?P<month>\d\d).(?P<year>\d\d\d\d)"
-        match = re.search(pattern, startDate)
-        year = int(match.group("year"))
-        month = int(match.group("month"))
-        day = int(match.group("day"))
-        start = datetime.date(year, month, day)
-        endDate = start + datetime.timedelta(days = 42)
-        return endDate.strftime("%d.%m.%Y")
-
-    def addNote(self, event):
-        labels = self.panel2.labels()
-        values = self.panel2.values()
-        labels.append("None:")
-        values.append("0123456789----- "*10)
-        self.panel2.setLabels(labels)
-        self.panel2.setValues(values)
-        self.panel2.updatePanel()
-
-        self.routineTab.updatePanel()
-
-    def alternativeModel(self):
-        return self._alternativeModel
-
-
-    def configParser(self):
-        return self._configParser
-
-    def database(self):
-        return self._database
-
-    def deleteNote(self, event):
-        labels = self.panel2.labels()
-        values = self.panel2.values()
-        if len(labels) == 0 or len(values) == 0:
-            return
-        else:
-            labels.pop()
-            values.pop()
-            self.panel2.setLabels(labels)
-            self.panel2.setValues(values)
-            self.panel2.updatePanel()
-
-    def evaluator(self):
-        return self._evaluator
-
-    def exporter(self):
-        return self._exporter
-
     def routineModel(self):
         return self._routineModel
 
     def setAlternativeModel(self, alternativeModel):
-        if not isinstance(alternativeModel, CustomModel.CustomSqlModel):
+        if not isinstance(alternativeModel, CustomModel.CustomSqlModel) and alternativeModel is not None:
             raise TypeError(
-                    "input <{input_name}> for 'alternativeModel' does not match {type_name}".format(
+                    "input <{input_name}> for 'alternativeModel' does not match {type_name_1} or {type_name_2}".format(
                             input_name = str(alternativeModel),
-                            type_name = CustomModel.CustomSqlModel
+                            type_name_1 = CustomModel.CustomSqlModel,
+                            type_name_2 = None
                         )
                 )
         self._alternativeModel = alternativeModel
 
     def setConfigParser(self, configParser):
-        if not isinstance(configParser, ConfigInterface.ConfigParser):
+        if not isinstance(configParser, ConfigInterface.ConfigParser) and configParser is not None:
             raise TypeError(
-                    "input <{input_name}> for 'configParser' does not match {type_name}".format(
+                    "input <{input_name}> for 'configParser' does not match {type_name_1} or {type_name_2}".format(
                             input_name = str(configParser),
-                            type_name = ConfigInterface.ConfigParser
+                            type_name_1 = ConfigInterface.ConfigParser,
+                            type_name_2 = None
                         )
                 )
         self._configParser = configParser
 
     def setDatabase(self, database):
-        if not isinstance(database, Database.database):
+        if not isinstance(database, Database.database) and database is not None:
             raise TypeError(
-                    "input <{input_name}> for 'database' does not match {type_name}".format(
+                    "input <{input_name}> for 'database' does not match {type_name_1} or {type_name_2}".format(
                             input_name = str(database),
-                            type_name = pathlib2.Path,
+                            type_name_1 = pathlib2.Path,
+                            type_name_2 = None
                         )
                 )
         self._database = database
 
     def setEvaluator(self, evaluator):
-        if not isinstance(evaluator, GraphicalEvaluator.GraphicalEvaluator):
+        if not isinstance(evaluator, GraphicalEvaluator.GraphicalEvaluator) and evaluator is not None:
             raise TypeError(
-                    "input <{input_name}> for 'evaluator' does not match {type_name}".format(
+                    "input <{input_name}> for 'evaluator' does not match {type_name_1} or {type_name_2}".format(
                             input_name = str(evaluator),
-                            type_name = GraphicalEvaluator.GraphicalEvaluator
+                            type_name_1 = GraphicalEvaluator.GraphicalEvaluator,
+                            type_name_2 = None
                         )
                 )
         self._evaluator = evaluator
 
     def setExporter(self, exporter):
-        if not isinstance(exporter, Exporter.Exporter):
+        if not isinstance(exporter, Exporter.Exporter) and exporter is not None:
             raise TypeError(
-                    "input <{input_name}> for 'exporter' does not match {type_name}".format(
+                    "input <{input_name}> for 'exporter' does not match {type_name_1} or {type_name_2}".format(
                             input_name = str(exporter),
-                            type_name = Exporter.Exporter
+                            type_name_1 = Exporter.Exporter,
+                            type_name_2 = None
                         )
                 )
         self._exporter = exporter
 
     def setRoutineModel(self, routineModel):
-        if not isinstance(routineModel, CustomModel.CustomSqlModel):
+        if not isinstance(routineModel, CustomModel.CustomSqlModel) and routineModel is not None:
             raise TypeError(
-                    "input <{input_name}> for 'routineModel' does not match {type_name}".format(
+                    "input <{input_name}> for 'routineModel' does not match {type_name_1} or {type_name_2}".format(
                             input_name = str(routineModel),
-                            type_name = CustomModel.CustomSqlModel
+                            type_name_1 = CustomModel.CustomSqlModel,
+                            type_name_2 = None
                         )
                 )
         self._routineModel = routineModel
@@ -225,6 +267,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def updateWindow(self):
         self.panel1.updatePanel()
         self.panel2.updatePanel()
+        self.routineTab.updatePanel()
         self.evaluatorTab1.updatePanel()
         self.evaluatorTab2.updatePanel()
 
@@ -523,7 +566,7 @@ class DynamicLinePanel(cc.CustomWidget):
             label = self.labels()[i]
             value = self.values()[i]
 
-            labelString = label
+            labelString = label + ")"
             labelFont = QtGui.QFont()
             labelFont.setBold(True)
             labelFont.setPointSize(self.fontSize())
@@ -880,11 +923,12 @@ class RoutineTab(cc.CustomWidget):
         self._alternativeHeaderLabels = labels
 
     def setAlternativeModel(self, model):
-        if not isinstance(model, CustomModel.CustomSqlModel):
+        if not isinstance(model, CustomModel.CustomSqlModel) and model is not None:
             raise TypeError(
-                    "input <{input_name}> does not match {type_name}".format(
+                    "input <{input_name}> does not match {type_name_1} or {type_name_2}".format(
                             input_name = str(model),
-                            type_name = CustomModel.CustomSqlModel
+                            type_name_1 = CustomModel.CustomSqlModel,
+                            type_name_2 = None
                         )
                 )
         self._alternativeModel = model
@@ -928,11 +972,12 @@ class RoutineTab(cc.CustomWidget):
         self._routineHeaderLabels = labels
 
     def setRoutineModel(self, model):
-        if not isinstance(model, CustomModel.CustomSqlModel):
+        if not isinstance(model, CustomModel.CustomSqlModel) and model is not None:
             raise TypeError(
-                    "input <{input_name}> for 'setRoutineModel' does not match {type_name}".format(
+                    "input <{input_name}> for 'setRoutineModel' does not match {type_name_1} or {type_name_2}".format(
                             input_name = str(model),
-                            type_name = CustomModel.CustomSqlModel
+                            type_name_1 = CustomModel.CustomSqlModel,
+                            type_name_2 = None
                         )
                 )
         self._model = model
@@ -983,16 +1028,33 @@ class EvaluatorTab(cc.CustomWidget):
         return self._model
 
     def setEvaluator(self, evaluator):
+        if not isinstance(evaluator, GraphicalEvaluator.GraphicalEvaluator) and evaluator is not None:
+            raise TypeError(
+                    "input <{input_name}> for 'setEvaluator' does not match {type_name_1} or {type_name_2}".format(
+                            input_name = str(evaluator),
+                            type_name_1 = GraphicalEvaluator.GraphicalEvaluator,
+                            type_name_2 = None
+                        )
+                )
         self._evaluator = evaluator
 
     def setModel(self, model):
+        if not isinstance(model, CustomModel.CustomSqlModel) and model is not None:
+            raise TypeError(
+                    "input <{input_name}> for 'setModel' does not match {type_name_1} or {type_name_2}".format(
+                            input_name = str(model),
+                            type_name_1 = CustomModel.CustomSqlModel,
+                            type_name_2 = None
+                        )
+                )
         self._model = model
 
     def updatePanel(self):
-        for i in range(self.evaluator().mainWidget().count()):
-            self.evaluator().mainWidget().removeTab(i)
-        self.evaluator().createTabs(self.evaluator().dataFromModel())
-        self.evaluator().plotData(self.evaluator().dataFromModel())
+        if self.evaluator() and self.model():
+            for i in range(self.evaluator().mainWidget().count()):
+                self.evaluator().mainWidget().removeTab(i)
+            self.evaluator().createTabs(self.evaluator().dataFromModel())
+            self.evaluator().plotData(self.evaluator().dataFromModel())
 
 if __name__ == "__main__":
     qapp = QtWidgets.QApplication(sys.argv)

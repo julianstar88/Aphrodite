@@ -180,6 +180,10 @@ class GraphicalEvaluator():
         for i, label in enumerate(labels):
             self.mainWidget().addTab(EvaluatorTab(), label)
 
+    def clearTabs(self):
+        for i in range(self.mainWidget().count()):
+            self.mainWidget().widget(i).clearTab()
+
     def connectEvaluator(self, parentWidget = None):
         """
         connect a GraphicalEvaluator-object to the parent application. the
@@ -573,6 +577,14 @@ class EvaluatorTab(QtWidgets.QWidget):
         self.fig.tight_layout()
         self.ax.grid(which = "major")
 
+    def __readData(self, data):
+
+        validator = ModelInputValidation()
+        return [validator.readValue(val)[0] for val in data]
+
+    def clearTab(self):
+        plt.close(self.fig)
+
     def data(self):
         return self._data
 
@@ -592,11 +604,6 @@ class EvaluatorTab(QtWidgets.QWidget):
 
         labels = ["Week " + str(i) for i in range(0,7,1)]
         self.ax.set_xticklabels(labels)
-
-    def __readData(self, data):
-
-        validator = ModelInputValidation()
-        return [validator.readValue(val)[0] for val in data]
 
     def setData(self, data):
         if not isinstance(data, tuple) and not isinstance(data, list):
