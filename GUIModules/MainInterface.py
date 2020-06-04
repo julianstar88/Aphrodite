@@ -27,7 +27,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         super().__init__(*args)
 
-        """initialize private properties"""
+        """initialize private properties (Main-Objects)"""
         self._configParser = None
         self._database = None
         self._evaluator = None
@@ -139,6 +139,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def exporter(self):
         return self._exporter
+
+    def initiateMainObjects(self):
+        self.configParser().readConfigFile()
 
     def openRoutine(self):
         generalLabels = ["Name:", "Start:", "End:", "Trainingmode:"]
