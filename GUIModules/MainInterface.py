@@ -90,8 +90,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.panel2.setValues(values)
         self.panel2.updatePanel()
 
-        # self.closeRoutine()
-
     def alternativeModel(self):
         return self._alternativeModel
 

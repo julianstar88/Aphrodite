@@ -17,40 +17,46 @@ parentDir = pathlib2.Path().cwd()
 configParser = ConfigInterface.ConfigParser(parentDir / configFile)
 configParser.readConfigFile()
 
-databaseFile = pathlib2.Path(configParser.readAttributes()["last_opened_routine"])
-
-"""critical error, if config-file is invalid"""
-if not databaseFile.is_file():
+if not configParser.configFile().is_file():
     raise RuntimeError(
-            "no config-file found"
+            "no valid config-file found"
         )
 
-"""neccessary objects for aphrodite"""
-databaseObject = Database.database(databaseFile)
+databaseFile = pathlib2.Path(configParser.readAttributes()["last_opened_routine"])
+if databaseFile.is_file():
 
-trainingModel = CustomModel.CustomSqlModel(
-        database = str(databaseFile),
-        table = "training_routine",
-        tableStartIndex = 0,
-        valueStartIndex = 1
-    )
-trainingModel.populateModel()
+    """neccessary objects for aphrodite"""
+    databaseObject = Database.database(databaseFile)
 
-alternativeModel = CustomModel.CustomSqlModel(
-        database = str(databaseFile),
-        table = "training_alternatives",
-        tableStartIndex = 3,
-        valueStartIndex = 1
-    )
-alternativeModel.populateModel()
+    trainingModel = CustomModel.CustomSqlModel(
+            database = str(databaseFile),
+            table = "training_routine",
+            tableStartIndex = 0,
+            valueStartIndex = 1
+        )
+    trainingModel.populateModel()
 
-exporterData = databaseObject.data("general_information")
-exporter = Exporter.Exporter()
-exporter.setDatabase(databaseFile)
-exporter.setModel(trainingModel)
-exporter.setName(exporterData[0][0])
+    alternativeModel = CustomModel.CustomSqlModel(
+            database = str(databaseFile),
+            table = "training_alternatives",
+            tableStartIndex = 3,
+            valueStartIndex = 1
+        )
+    alternativeModel.populateModel()
 
-evaluator = GraphicalEvaluator.GraphicalEvaluator()
+    exporterData = databaseObject.data("general_information")
+    exporter = Exporter.Exporter()
+    exporter.setDatabase(databaseFile)
+    exporter.setModel(trainingModel)
+    exporter.setName(exporterData[0][0])
+
+    evaluator = GraphicalEvaluator.GraphicalEvaluator()
+else:
+    databaseObject = None
+    trainingModel = None
+    alternativeModel = None
+    exporter = None
+    evaluator = None
 
 """start app"""
 qapp = QtWidgets.QApplication(sys.argv)
