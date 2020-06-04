@@ -90,7 +90,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.panel2.setValues(values)
         self.panel2.updatePanel()
 
-        self.closeRoutine()
+        # self.closeRoutine()
 
     def alternativeModel(self):
         return self._alternativeModel
@@ -157,7 +157,7 @@ class MainWindow(QtWidgets.QMainWindow):
             noteLabels = list()
             noteValues = list()
             for note in data:
-                noteLabels.append(note[1] + ")")
+                noteLabels.append(note[1])
                 noteValues.append(note[3])
 
         self.panel1 = GridPanel(generalLabels, generalValues, fontSize = 10, split = [1,5])
