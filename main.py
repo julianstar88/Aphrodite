@@ -12,10 +12,10 @@ from UtilityModules import CustomModel
 from PyQt5 import QtWidgets
 
 """settings"""
-configFile = pathlib2.Path("files/config/config1.txt")
+configFile = pathlib2.Path("files/config/config.txt")
 parentDir = pathlib2.Path().cwd()
-configParser = ConfigInterface.ConfigParser()
-configParser.readConfigFile(parentDir / configFile)
+configParser = ConfigInterface.ConfigParser(parentDir / configFile)
+configParser.readConfigFile()
 
 databaseFile = pathlib2.Path(configParser.readAttributes()["last_opened_routine"])
 
@@ -47,6 +47,7 @@ if databaseFile.is_file():
 
     evaluator = GraphicalEvaluator.GraphicalEvaluator()
 else:
+    databaseObject = None
     trainingModel = None
     alternativeModel = None
     exporter = None

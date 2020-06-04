@@ -17,6 +17,16 @@ class ConfigParser():
         "export_routine_directory"
     )
 
+    def __init__(self, configFile = None, configDir = None):
+        self._configFile = None
+        self._configDir = None
+
+        if configFile is not None:
+            self.setConfigFile(configFile)
+
+        if configDir is not None:
+            self.setConfigDir(configDir)
+
     def addAttributes(self, attributes, values):
         if not isinstance(attributes, list) and not isinstance(attributes, tuple):
             raise TypeError(
@@ -37,28 +47,24 @@ class ConfigParser():
         for (key, value) in zip(attributes, values):
             self.__dict__[key] = value
 
+    def configDir(self):
+        return self._configDir
+
+    def configFile(self):
+        return self._configFile
+
     def readAttributes(self):
         return self.__dict__
 
 
-    def readConfigFile(self, file):
-        if not isinstance(file, str) and not isinstance(file, pathlib2.Path):
-            raise TypeError(
-                    "input <{input_name}> does not match {type_name_1} or {type_name_2}".format(
-                            input_name = str(file),
-                            type_name_1 = pathlib2.Path,
-                            type_name_2 = str
-                        )
-                )
-        file = pathlib2.Path(file)
-        if not file.is_file():
-            raise ValueError(
-                    "input <{input_name}> does not point to an existing file".format(
-                            input_name = str(file)
-                        )
-                )
+    def readConfigFile(self, file = None):
+        if file is not None:
+            self.setConfigFile(file)
 
-        with open(file, "r") as fh:
+        if not self.configFile():
+            return False
+
+        with open(self.configFile(), "r") as fh:
             rawData = fh.readlines()
 
         data = list()
@@ -71,10 +77,12 @@ class ConfigParser():
         vals = [val[1] for val in data]
         self.addAttributes(keys, vals)
 
-    def writeConfigFile(self, wdir, mode = "w"):
-        if not isinstance(wdir, str) and not isinstance(wdir, pathlib2.Path):
-            raise TypeError(
-                    "input <{input_name}> for 'wdir' does not match {type_name_1} or {type_name_2}".format(
+        return True
+
+    def setConfigDir(self, wdir):
+        if not isinstance(wdir, pathlib2.Path) and not isinstance(wdir, str):
+            raise ValueError(
+                    "input <{input_name}> for 'setConfigDir' does not match {type_name_1} or {type_name_2}".format(
                             input_name = str(wdir),
                             type_name_1 = pathlib2.Path,
                             type_name_2 = str
@@ -83,10 +91,35 @@ class ConfigParser():
         path = pathlib2.Path(wdir)
         if not path.is_dir():
             raise ValueError(
-                    "input <{input_name}> for 'wdir' does not point to an existing directory".format(
+                    "input <{input_name}> does not point to an existing directory".format(
                             input_name = str(path)
                         )
                 )
+        self._configDir = path
+
+    def setConfigFile(self, file):
+        if not isinstance(file, pathlib2.Path) and not isinstance(file, str):
+            raise TypeError(
+                    "input <{input_name}> for 'setConfigFile' does not match {type_name_1} or {type_name_2}".format(
+                            input_name = str(file),
+                            type_name_1 = pathlib2.Path,
+                            type_name_2 = str
+                        )
+                )
+        path = pathlib2.Path(file)
+        if not path.is_file():
+            raise ValueError(
+                    "input <{input_name}> does not point to an existing file".format(
+                            input_name = str(path)
+                        )
+                )
+        self.setConfigDir(path.parent)
+        self._configFile = path
+
+    def writeConfigFile(self, wdir = None, mode = "w"):
+        if wdir is not None:
+            self.setConfigDir(wdir)
+
         if not isinstance(mode, str):
             raise TypeError(
                     "input <{input_name}> for 'mode' does not match {type_name}".format(
@@ -100,13 +133,12 @@ class ConfigParser():
                         )
                 )
         name = "config.txt"
-        with open(path/name, mode) as fh:
-            container = self.readAttributes()
-            keys = container.keys()
+        with open(self.configDir() / name, mode) as fh:
+            keys = self.readAttributes().keys()
             for key in keys:
                 line = "{key}:{val}\n".format(
                         key = key,
-                        val = container[key]
+                        val = self.readAttributes()[key]
                     )
                 fh.write(line)
 
