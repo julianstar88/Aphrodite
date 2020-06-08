@@ -12,7 +12,7 @@ from UtilityModules import CustomModel
 from PyQt5 import QtWidgets
 
 """settings"""
-configFile = pathlib2.Path("files/config/config.txt")
+configFile = pathlib2.Path("files/config/config1.txt")
 parentDir = pathlib2.Path().cwd()
 configParser = ConfigInterface.ConfigParser(parentDir / configFile)
 configParser.readConfigFile()

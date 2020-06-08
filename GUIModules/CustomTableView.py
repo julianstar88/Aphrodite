@@ -15,6 +15,7 @@ class CustomModelView(QtWidgets.QTableView):
     leftDoubleClicked = QtCore.pyqtSignal("QModelIndex")
     leftClicked = QtCore.pyqtSignal("QModelIndex")
     rightClicked = QtCore.pyqtSignal("QModelIndex")
+    focusLost = QtCore.pyqtSignal("QWidget", "QFocusEvent")
 
     def __init__(self, model, *args,
                  viewParent = None,
@@ -238,6 +239,10 @@ class CustomModelView(QtWidgets.QTableView):
 
     def exerciseNameColumn(self):
         return self._exerciseNameColumn
+
+    def focusOutEvent(self, event):
+        self.focusLost.emit(self, event)
+        super().focusOutEvent(event)
 
     def headerFontSize(self):
         return self._headerFontSize

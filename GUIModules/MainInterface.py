@@ -170,7 +170,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 lineMaxHeight = 55
             )
 
-        self.routineTab = RoutineTab(self.routineModel(), self.alternativeModel())
+        self.routineTab = RoutineTab(self.routineModel(), self.alternativeModel(), self.database())
         self.evaluatorTab1 = EvaluatorTab(self.routineModel(), GraphicalEvaluator.GraphicalEvaluator())
         self.evaluatorTab2 = EvaluatorTab(self.alternativeModel(), GraphicalEvaluator.GraphicalEvaluator())
         self.tabWidget = QtWidgets.QTabWidget()
@@ -783,8 +783,9 @@ class DynamicLinePanel(cc.CustomWidget):
 
 class RoutineTab(cc.CustomWidget):
 
-    def __init__(self, routineModel, alternativeModel, *args):
+    def __init__(self, routineModel, alternativeModel, database, *args):
         super().__init__(*args)
+        self._database = None
         self._routineModel = None
         self._alternativeModel = None
         self._routineHeaderLabels = None
@@ -793,6 +794,7 @@ class RoutineTab(cc.CustomWidget):
         self._routineView = None
         self._alternativeView = None
 
+        self.setDatabase(database)
         self.setRoutineModel(routineModel)
         self.setAlternativeModel(alternativeModel)
 
@@ -893,8 +895,25 @@ class RoutineTab(cc.CustomWidget):
             self.layout().addWidget(self.routineView())
             self.layout().addWidget(self.alternativeView())
 
+    def database(self):
+        return self._database
+
     def layout(self):
         return self._layout
+
+    def onAlternativeLostFocus(self, sender, event):
+        pass
+
+    def onRoutineLostFocus(self, sender, event):
+        modelData = list()
+        for i in range(sender.model().rowCount()):
+            rowData = [sender.model().item(i, col) for col in range(sender.model().columnCount())]
+            modelData.append(rowData)
+
+        tableData = self.database().data("training_routine")
+
+        print("rows in Model:", str(len(modelData)))
+        print("rows in Table:", str(len(tableData)))
 
     def routineHeaderLabels(self):
         return self._routineHeaderLabels
@@ -942,7 +961,18 @@ class RoutineTab(cc.CustomWidget):
                             type_name = CustomTableView.CustomModelView
                         )
                 )
+        view.focusLost.connect(self.onAlternativeLostFocus)
         self._alternativeView = view
+
+    def setDatabase(self, database):
+        if not isinstance(database, Database.database):
+            raise TypeError(
+                    "input {input_name} for 'setDatabase' does not match {input_type}".format(
+                            input_name = str(type(database)),
+                            input_type = Database.database
+                        )
+                )
+        self._database = database
 
     def setLayout(self, layout):
         if not isinstance(layout, QtWidgets.QBoxLayout):
@@ -991,6 +1021,7 @@ class RoutineTab(cc.CustomWidget):
                             type_name = CustomTableView.CustomModelView
                         )
                 )
+        view.focusLost.connect(self.onRoutineLostFocus)
         self._routineView = view
 
     def updatePanel(self):
