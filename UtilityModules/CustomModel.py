@@ -70,8 +70,7 @@ class CustomSqlModel(QtGui.QStandardItemModel):
     def onItemChanged(self, item, defaultPurpose):
         if defaultPurpose:
             return
-        print(item, defaultPurpose)
-
+        pass
 
     def populateModel(self):
         path = pathlib2.Path(self.database())

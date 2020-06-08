@@ -16,6 +16,8 @@ class CustomModelView(QtWidgets.QTableView):
     leftClicked = QtCore.pyqtSignal("QModelIndex")
     rightClicked = QtCore.pyqtSignal("QModelIndex")
     focusLost = QtCore.pyqtSignal("QWidget", "QFocusEvent")
+    keyPressed = QtCore.pyqtSignal("QWidget", "QKeyEvent")
+    mousePressed = QtCore.pyqtSignal("QWidget", "QMouseEvent")
 
     def __init__(self, model, *args,
                  viewParent = None,
@@ -256,6 +258,10 @@ class CustomModelView(QtWidgets.QTableView):
     def headerLabels(self):
         return self._headerLabels
 
+    def keyPressEvent(self, event):
+        self.keyPressed.emit(self, event)
+        super().keyPressEvent(event)
+
     def labelFontSize(self):
         return self._labelFontSize
 
@@ -282,6 +288,10 @@ class CustomModelView(QtWidgets.QTableView):
             self.rightClicked.emit(index)
 
         super().mouseReleaseEvent(event)
+
+    def mousPressEvent(self, event):
+        self.mousePressed.emit(self, event)
+        super().mousePressEvent(event)
 
     def renderItemToHtml(self):
         for row in range(self.model().rowCount()):

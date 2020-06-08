@@ -901,20 +901,6 @@ class RoutineTab(cc.CustomWidget):
     def layout(self):
         return self._layout
 
-    def onAlternativeLostFocus(self, sender, event):
-        pass
-
-    def onRoutineLostFocus(self, sender, event):
-        modelData = list()
-        for i in range(sender.model().rowCount()):
-            rowData = [sender.model().item(i, col) for col in range(sender.model().columnCount())]
-            modelData.append(rowData)
-
-        tableData = self.database().data("training_routine")
-
-        print("rows in Model:", str(len(modelData)))
-        print("rows in Table:", str(len(tableData)))
-
     def routineHeaderLabels(self):
         return self._routineHeaderLabels
 
@@ -961,7 +947,6 @@ class RoutineTab(cc.CustomWidget):
                             type_name = CustomTableView.CustomModelView
                         )
                 )
-        view.focusLost.connect(self.onAlternativeLostFocus)
         self._alternativeView = view
 
     def setDatabase(self, database):
@@ -1021,7 +1006,9 @@ class RoutineTab(cc.CustomWidget):
                             type_name = CustomTableView.CustomModelView
                         )
                 )
-        view.focusLost.connect(self.onRoutineLostFocus)
+        # view.focusLost.connect(self.commitToRoutineTable)
+        # view.mousePressed.connect(self.commitToRoutineTable)
+        view.keyPressed.connect(self.commitToRoutineTable)
         self._routineView = view
 
     def updatePanel(self):
@@ -1032,6 +1019,33 @@ class RoutineTab(cc.CustomWidget):
             return True
         else:
             return False
+
+    """slots"""
+    def commitToAlternativeTable(self, tableView, event):
+        pass
+
+    def commitToRoutineTable(self, tableView, *args):
+        modelData = list()
+        for i in range(tableView.model().rowCount()):
+            rowData = [tableView.model().item(i, col).userData() for col in range(tableView.model().columnCount())]
+            modelData.append(rowData)
+
+        self.database().deleteAllEntries("training_routine")
+        self.database().addManyEntries("training_routine", modelData)
+
+    # def onAlternativeLostFocus(self, tableView, event):
+    #     pass
+
+    # def onRoutineLostFocus(self, sender, event):
+    #     modelData = list()
+    #     for i in range(sender.model().rowCount()):
+    #         rowData = [sender.model().item(i, col).userData() for col in range(sender.model().columnCount())]
+    #         modelData.append(rowData)
+
+    #     self.database().deleteAllEntries("training_routine")
+    #     self.database().addManyEntries("training_routine", modelData)
+
+
 
 class EvaluatorTab(cc.CustomWidget):
 

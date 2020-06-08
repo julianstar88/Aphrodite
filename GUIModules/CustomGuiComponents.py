@@ -593,8 +593,9 @@ class CustomModelItem(QtGui.QStandardItem):
                 CustomModelItem.trainingNotes.append(l)
 
     def setData(self, value, role, defaultPurpose = True):
-        # if role == QtCore.Qt.DisplayRole:
-        #     self.setUserData(value)
+        if role == QtCore.Qt.DisplayRole:
+            if len(value) != 0:
+                self.setUserData(value)
         super().setData(value, role)
         self.model().itemChanged.emit(self, defaultPurpose)
 

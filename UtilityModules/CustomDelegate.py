@@ -68,6 +68,11 @@ class CustomItemDelegate(QtWidgets.QStyledItemDelegate):
             self.view.setColumnWidth(col, self.size["width"])
         return False
 
+    def eventFilter(self, editor, event):
+        if event.type() == QtCore.QEvent.Leave:
+            self.closeEditor.emit(editor)
+        return super().eventFilter(editor, event)
+
     def setEditorData(self, editor, index):
         editor.edit.setText(index.data())
 
@@ -83,7 +88,6 @@ class CustomItemDelegate(QtWidgets.QStyledItemDelegate):
     def onClosed(self, editor, hint):
         self.view.setColumnWidth(self.data[1], self.data[3])
         self.view.setRowHeight(self.data[0], self.data[2])
-
         self.commitData.emit(editor)
 
     def onCommitData(self, editor):
