@@ -1006,8 +1006,6 @@ class RoutineTab(cc.CustomWidget):
                             type_name = CustomTableView.CustomModelView
                         )
                 )
-        # view.focusLost.connect(self.commitToRoutineTable)
-        # view.mousePressed.connect(self.commitToRoutineTable)
         view.keyPressed.connect(self.commitToRoutineTable)
         self._routineView = view
 
@@ -1021,31 +1019,29 @@ class RoutineTab(cc.CustomWidget):
             return False
 
     """slots"""
-    def commitToAlternativeTable(self, tableView, event):
-        pass
+    def commitToAlternativeTable(self, tableView, *args, newTable = None):
+        if newTable:
+            modelData = newTable
+        else:
+            modelData = list()
+            for i in range(tableView.model().rowCount()):
+                rowData = [tableView.model().item(i, col).userData() for col in range(tableView.model().columnCount())]
+                modelData.append(rowData)
 
-    def commitToRoutineTable(self, tableView, *args):
-        modelData = list()
-        for i in range(tableView.model().rowCount()):
-            rowData = [tableView.model().item(i, col).userData() for col in range(tableView.model().columnCount())]
-            modelData.append(rowData)
+        self.database().deleteAllEntries("training_alternative")
+        self.database().addManyEntries("training_alternative", modelData)
+
+    def commitToRoutineTable(self, tableView, *args, newTable = None):
+        if newTable:
+            modelData = newTable
+        else:
+            modelData = list()
+            for i in range(tableView.model().rowCount()):
+                rowData = [tableView.model().item(i, col).userData() for col in range(tableView.model().columnCount())]
+                modelData.append(rowData)
 
         self.database().deleteAllEntries("training_routine")
         self.database().addManyEntries("training_routine", modelData)
-
-    # def onAlternativeLostFocus(self, tableView, event):
-    #     pass
-
-    # def onRoutineLostFocus(self, sender, event):
-    #     modelData = list()
-    #     for i in range(sender.model().rowCount()):
-    #         rowData = [sender.model().item(i, col).userData() for col in range(sender.model().columnCount())]
-    #         modelData.append(rowData)
-
-    #     self.database().deleteAllEntries("training_routine")
-    #     self.database().addManyEntries("training_routine", modelData)
-
-
 
 class EvaluatorTab(cc.CustomWidget):
 
