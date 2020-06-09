@@ -81,6 +81,34 @@ class MainWindow(QtWidgets.QMainWindow):
         endDate = start + datetime.timedelta(days = 42)
         return endDate.strftime("%d.%m.%Y")
 
+    def __createMenuBar(self):
+
+        """top level menus"""
+        self.menu = self.menuBar()
+        self.fileMenu = self.menu.addMenu("&File")
+        self.editMenu = self.menu.addMenu("&Edit")
+        self.helpMenu = self.menu.addMenu("&Help")
+
+        """1. level menus"""
+        folderIcon = QtGui.QIcon("files/icons/black_folder.svg")
+        sheetIcon = QtGui.QIcon("files/icons/sheet.svg")
+        pencilIcon = QtGui.QIcon("files/icons/pencil.svg")
+        infoIcon = QtGui.QIcon("files/icons/info.svg")
+        quitIcon = QtGui.QIcon("files/icons/quit.svg")
+        self.newRoutineAction = self.fileMenu.addAction(folderIcon, "&New Trainingroutine...")
+        self.fileMenu.addSeparator()
+        self.openRoutineAction = self.fileMenu.addAction(sheetIcon, "&Open Trainingroutine...")
+        self.openLastClosedAction = self.fileMenu.addAction("O&pen last closed")
+        self.fileMenu.addSeparator()
+        self.quitAction = self.fileMenu.addAction(quitIcon, "&Quit")
+
+        self.editRoutineAction = self.editMenu.addAction(pencilIcon, "&Edit Trainingroutine...")
+        self.editMenu.addSeparator()
+
+        self.aboutAphroditeAction = self.helpMenu.addAction(infoIcon, "&About Aphrodite...")
+
+
+
     def addNote(self, event):
         labels = self.panel2.labels()
         values = self.panel2.values()
@@ -185,16 +213,24 @@ class MainWindow(QtWidgets.QMainWindow):
         self.buttonLayout.addWidget(self.addNoteButton)
         self.buttonLayout.addWidget(self.deleteNoteButton)
 
+        self.routineEditButtonLayout = QtWidgets.QHBoxLayout()
+        self.editTableButton = QtWidgets.QPushButton("Edit Trainingroutine...")
+        self.routineEditButtonLayout.addStretch(2)
+        self.routineEditButtonLayout.addWidget(self.editTableButton)
+
         self.__connectButtons()
 
         self.mainLayout.addWidget(self.panel1, 0, 0)
         self.mainLayout.addWidget(self.panel2, 1, 0)
-        self.mainLayout.addLayout(self.buttonLayout, 2, 0)
+        self.mainLayout.addLayout(self.buttonLayout, 3, 0)
         self.mainLayout.addWidget(self.tabWidget, 0, 1, 3, 1)
+        self.mainLayout.addLayout(self.routineEditButtonLayout, 3, 1)
         self.mainLayout.setRowStretch(1, 2)
         self.mainLayout.setColumnStretch(0, 1)
         self.mainLayout.setColumnStretch(1, 2)
-        self.mainLayout.setSpacing(20)
+        self.mainLayout.setSpacing(5)
+
+        self.__createMenuBar()
 
     def routineModel(self):
         return self._routineModel
