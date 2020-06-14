@@ -19,11 +19,6 @@ class CustomItemDelegate(QtWidgets.QStyledItemDelegate):
 
         self.size = {"width":200, "height":65}
 
-    def createEditor(self, parent, option, index):
-        message = self.__createMessage(index)
-        editor = CustomStandardEditorWidget(message, parent=parent)
-        return editor
-
     def __createMessage(self, index):
         col = index.column()
         row = index.row()
@@ -55,6 +50,11 @@ class CustomItemDelegate(QtWidgets.QStyledItemDelegate):
             message = "insert value:"
         return message
 
+    def createEditor(self, parent, option, index):
+        message = self.__createMessage(index)
+        editor = CustomStandardEditorWidget(message, parent=parent)
+        return editor
+
     def editorEvent(self, event, model, option, index):
         if event.type() == QtCore.QEvent.MouseButtonDblClick:
             row = index.row()
@@ -69,12 +69,15 @@ class CustomItemDelegate(QtWidgets.QStyledItemDelegate):
         return False
 
     def eventFilter(self, editor, event):
+        !cls
+        print(event)
         if event.type() == QtCore.QEvent.Leave:
             self.closeEditor.emit(editor)
         return super().eventFilter(editor, event)
 
     def setEditorData(self, editor, index):
         editor.edit.setText(index.data())
+        editor.edit.setSelection(0, len(index.data()))
 
     def setModelData(self, editor, model, index):
         item = model.itemFromIndex(index)

@@ -121,32 +121,44 @@ class EvaluatorLayout(unittest.TestCase):
                 {},
             ]
         self.raiseValueErrors = [
-                [],
                 [1,2,3],
-                (),
                 (1,2,3),
             ]
-        self.database = pathlib2.Path("examples/Qt_ModelView/database/test_database.db")
+
+        self.database = pathlib2.Path("test_files/test_database_2.db")
         self.parentDir = pathlib2.Path().cwd().parent
-        self.app = QtWidgets.QApplication(sys.argv)
         self.evaluator = GraphicalEvaluator()
-        self.evaluator.setDatabase(str(self.parentDir / self.database))
+        self.evaluator.setDatabase(self.database)
 
     def test_initiateQWidgets(self):
+        app = QtWidgets.QApplication(sys.argv)
+        mainWindow = QtWidgets.QMainWindow()
+        testWidget = QtWidgets.QWidget()
+        mainWindow.setCentralWidget(testWidget)
         self.evaluator.initiateQWidgets()
         self.assertTrue(
                 isinstance(self.evaluator.mainWidget(), QtWidgets.QTabWidget)
             )
+        app.quit()
 
     def test_connectEvaluator(self):
-        self.evaluator.connectEvaluator(QtWidgets.QWidget())
+        app = QtWidgets.QApplication(sys.argv)
+        mainWindow = QtWidgets.QMainWindow()
+        testWidget = QtWidgets.QWidget()
+        mainWindow.setCentralWidget(testWidget)
+        self.evaluator.connectEvaluator(testWidget)
         self.assertTrue(
                 isinstance(self.evaluator.parentWidget(), QtWidgets.QWidget)
             )
+        app.quit()
 
     def test_createTabs(self):
+        app = QtWidgets.QApplication(sys.argv)
+        mainWindow = QtWidgets.QMainWindow()
+        testWidget = QtWidgets.QWidget()
+        mainWindow.setCentralWidget(testWidget)
         self.evaluator.initiateQWidgets()
-        self.evaluator.connectEvaluator(QtWidgets.QWidget())
+        self.evaluator.connectEvaluator(testWidget)
         self.evaluator.createTabs(self.evaluator.dataFromDatabase())
 
         data = self.evaluator.dataFromDatabase()
@@ -172,10 +184,7 @@ class EvaluatorLayout(unittest.TestCase):
                 self.assertEqual(
                         self.evaluator.mainWidget().tabText(i), val
                     )
-
-    def tearDown(self):
-        if self.app:
-            self.app.quit()
+        app.quit()
 
 if __name__ == "__main__":
     unittest.main()

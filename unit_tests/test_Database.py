@@ -92,15 +92,18 @@ class DatabaseProperties(unittest.TestCase):
                     )
 
     def test_tables_setter(self):
-        file = pathlib2.Path("files/test_files/test_database_2.db")
-        parentDir = pathlib2.Path().cwd().parent
-        path = parentDir / file
+        file = pathlib2.Path("test_files/test_database_2.db")
+
+        # TODO this is obsolete, one can work with relative paths instead of
+        # absolute ones
+        # parentDir = pathlib2.Path().cwd().parent
+        # path = parentDir / file
 
         # the setter will be invoked implicit by using the setPath method
         # by instantiating db.database(path)
-        database = db.database(path)
+        database = db.database(file)
 
-        con = lite.connect(path)
+        con = lite.connect(file)
         with con:
             c = con.cursor()
             c.execute("SELECT name FROM sqlite_master WHERE type='table';")
@@ -128,10 +131,15 @@ class DatabaseMethods(unittest.TestCase):
         self.databaseFile = self.currentDir / (self.databaseName + self.database.extension())
 
     def test_data(self):
-        file = pathlib2.Path("files/test_files/test_database_2.db")
-        parentDir = pathlib2.Path().cwd().parent
-        path = parentDir / file
-        database = db.database(path)
+        # TODO this is obsolete. one can work with relative paths instead of
+        # createing absolute ones
+        #
+        # file = pathlib2.Path("files/test_files/test_database_2.db")
+        # parentDir = pathlib2.Path().cwd().parent
+        # path = parentDir / file
+        # database = db.database(path)
+        file = pathlib2.Path("test_files/test_database_2.db")
+        database = db.database(file)
         tableName = "training_routine"
         data = database.data(tableName)
         array = np.array(data)

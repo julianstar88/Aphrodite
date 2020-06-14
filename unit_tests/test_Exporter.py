@@ -30,7 +30,7 @@ class ExporterProperties(unittest.TestCase):
                 "randomParent/randomPath/randomFile",
                 ""
             ]
-        self.database = pathlib2.Path("files/test_files/test_database_2.db")
+        self.database = pathlib2.Path("test_files/test_database_2.db")
         self.currentDir = pathlib2.Path().cwd()
         self.parentDir = pathlib2.Path().cwd().parent
         self.exporter = Exporter()
@@ -124,9 +124,9 @@ class ExporterProperties(unittest.TestCase):
             )
 
     def test_database_setter(self):
-        self.exporter.setDatabase(str(self.parentDir / self.database))
+        self.exporter.setDatabase(self.database)
         self.assertEqual(
-                self.exporter.database(), str(self.parentDir / self.database)
+                self.exporter.database(), str(self.database)
             )
         for val in self.raiseTypeErrors:
             with self.subTest(val = val):
@@ -259,7 +259,7 @@ class TrainingRoutineLayout(unittest.TestCase):
                 "randomParent/randomPath/randomFile",
                 ""
             ]
-        self.database = pathlib2.Path("files/test_files/test_database_2.db")
+        self.database = pathlib2.Path("test_files/test_database_2.db")
         self.currentDir = pathlib2.Path().cwd()
         self.parentDir = pathlib2.Path().cwd().parent
         self.databaseName = self.database.stem
@@ -270,10 +270,10 @@ class TrainingRoutineLayout(unittest.TestCase):
         self.columnCount = 10
         self.rowCountValues = [6, 10, 20, 40, 60]
 
-        self.db = db.database(self.parentDir / pathlib2.Path("files/test_files"))
+        self.db = db.database(self.database)
 
         self.model = CustomSqlModel(
-                database = self.parentDir / self.database,
+                database = self.database,
                 table = self.tableName,
                 valueStartIndex = 0,
                 tableStartIndex = 0
@@ -281,7 +281,7 @@ class TrainingRoutineLayout(unittest.TestCase):
         self.model.populateModel()
 
         self.exporter = Exporter()
-        self.exporter.setDatabase(str(self.parentDir / self.database))
+        self.exporter.setDatabase(self.database)
         self.exporter.setModel(self.model)
         self.exporter.setName(self.name)
         self.exporter.setRoutineName(self.routineName)
@@ -294,7 +294,7 @@ class TrainingRoutineLayout(unittest.TestCase):
         self.assertIsInstance(wb, openpyxl.Workbook)
 
     def test_dataFromDatabase(self):
-        data = self.exporter.dataFromDatabase(str(self.parentDir / self.database))
+        data = self.exporter.dataFromDatabase(str(self.database))
 
         self.assertEqual(
                 len(np.array(data).shape), 2
@@ -306,7 +306,6 @@ class TrainingRoutineLayout(unittest.TestCase):
 
     def test_dataFromModel(self):
         data = self.exporter.dataFromModel()
-
         self.assertEqual(
                 len(np.array(data).shape), 2
             )

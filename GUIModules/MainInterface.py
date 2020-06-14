@@ -199,8 +199,10 @@ class MainWindow(QtWidgets.QMainWindow):
             )
 
         self.routineTab = RoutineTab(self.routineModel(), self.alternativeModel(), self.database())
+
         self.evaluatorTab1 = EvaluatorTab(self.routineModel(), GraphicalEvaluator.GraphicalEvaluator())
         self.evaluatorTab2 = EvaluatorTab(self.alternativeModel(), GraphicalEvaluator.GraphicalEvaluator())
+
         self.tabWidget = QtWidgets.QTabWidget()
         self.tabWidget.setTabPosition(QtWidgets.QTabWidget.North)
         self.tabWidget.addTab(self.routineTab, "Trainingroutine")
@@ -872,6 +874,10 @@ class RoutineTab(cc.CustomWidget):
             width = list()
             for i in range(header.count()):
                 width.append(header.sectionSize(i))
+
+            if len(width) == 0:
+                return False
+
             width = max(width)
             newWidth.append(width)
         newWidth = max(newWidth)
@@ -882,6 +888,7 @@ class RoutineTab(cc.CustomWidget):
             for i in range(header.count()):
                 if i > 0:
                     table.resizeColumnToContents(i)
+        return True
 
     def alternativeHeaderLabels(self):
         return self._alternativeHeaderLabels
@@ -983,6 +990,7 @@ class RoutineTab(cc.CustomWidget):
                             type_name = CustomTableView.CustomModelView
                         )
                 )
+        view.keyPressed.connect(self.updateAlternativeTable)
         self._alternativeView = view
 
     def setDatabase(self, database):
@@ -1042,7 +1050,7 @@ class RoutineTab(cc.CustomWidget):
                             type_name = CustomTableView.CustomModelView
                         )
                 )
-        view.keyPressed.connect(self.commitToRoutineTable)
+        view.keyPressed.connect(self.updateRoutineTable)
         self._routineView = view
 
     def updatePanel(self):
@@ -1055,26 +1063,24 @@ class RoutineTab(cc.CustomWidget):
             return False
 
     """slots"""
-    def commitToAlternativeTable(self, tableView, *args, newTable = None):
-        if newTable:
-            modelData = newTable
-        else:
-            modelData = list()
-            for i in range(tableView.model().rowCount()):
-                rowData = [tableView.model().item(i, col).userData() for col in range(tableView.model().columnCount())]
-                modelData.append(rowData)
+    def updateAlternativeTable(self, tableView, *args):
+        modelData = list()
+        for i in range(tableView.model().rowCount()):
+            rowData = [tableView.model().item(i, col).userData() for col in range(tableView.model().columnCount())]
+            modelData.append(rowData)
 
-        self.database().deleteAllEntries("training_alternative")
-        self.database().addManyEntries("training_alternative", modelData)
+        # tableData = self.database().data()
 
-    def commitToRoutineTable(self, tableView, *args, newTable = None):
-        if newTable:
-            modelData = newTable
-        else:
-            modelData = list()
-            for i in range(tableView.model().rowCount()):
-                rowData = [tableView.model().item(i, col).userData() for col in range(tableView.model().columnCount())]
-                modelData.append(rowData)
+        # print(tableData)
+
+        # self.database().deleteAllEntries("training_alternatives")
+        # self.database().addManyEntries("training_alternatives", modelData)
+
+    def updateRoutineTable(self, tableView, *args):
+        modelData = list()
+        for i in range(tableView.model().rowCount()):
+            rowData = [tableView.model().item(i, col).userData() for col in range(tableView.model().columnCount())]
+            modelData.append(rowData)
 
         self.database().deleteAllEntries("training_routine")
         self.database().addManyEntries("training_routine", modelData)

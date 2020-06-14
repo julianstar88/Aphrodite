@@ -157,18 +157,29 @@ class GraphicalEvaluator():
                 )
         if not isinstance(data, tuple) and not isinstance(data, list):
             raise TypeError(
-                    "input {input_type} does not match {expected_type_1} nor {expected_type_2}".format(
+                    "input {input_type} does not match neither {expected_type_1} nor {expected_type_2}".format(
                             input_type = type(data),
                             expected_type_1 = tuple,
                             expected_type_2 = list
                         )
                 )
-        if not len(np.array(data).shape) == 2:
-            raise ValueError(
-                    "dim = {input_dim} for argument 'data' does not match the expected dim = 2".format(
-                            input_dim = str(len(np.array(data).shape))
-                        )
-                )
+        for val in data:
+            if not isinstance(val, tuple) and not isinstance(val, list):
+                raise ValueError(
+                        "elements <{input_name}> of 'data' does not match neither {type_name_1} nor {type_name_2}".format(
+                                input_name = str(val),
+                                type_name_1 = tuple,
+                                type_name_2 = list
+                            )
+                    )
+        # TODO might change to show up a waring in Aphrodites status bar (issue: #1)
+        # !adapt unit test!
+        # if not len(np.array(data).shape) == 2:
+        #     raise ValueError(
+        #             "dim = {input_dim} for argument 'data' does not match the expected dim = 2".format(
+        #                     input_dim = str(len(np.array(data).shape))
+        #                 )
+        #         )
 
         if tabLabels:
             labels = tabLabels
@@ -407,10 +418,15 @@ class GraphicalEvaluator():
             raise TypeError(
                     "before plotting data into tabs, set mainWidget to a valid QTabWidget"
                 )
-        if self.mainWidget().count() == 0:
-            raise ValueError(
-                    "befor plotting data into tabs, create tabs in mainWidget using the createTabs() method"
-                )
+
+        # TODO (belongs to issue: #1)
+        # if input table is empty, there are no tabs created --> count() == 0
+        # but only the fact that there are no table entries, doesn´t mean that the programm should cursh.
+        # !adapt unittests!
+        # if self.mainWidget().count() == 0:
+        #     raise ValueError(
+        #             "befor plotting data into tabs, create tabs in mainWidget using the createTabs() method"
+        #         )
         if not isinstance(data, tuple) and not isinstance(data, list):
             raise TypeError(
                     "input {input_type} does not match {expected_type_1} nor {expected_type_2}".format(
@@ -419,12 +435,17 @@ class GraphicalEvaluator():
                             expected_type_2 = list
                         )
                 )
-        if not len(np.array(data).shape) == 2:
-            raise ValueError(
-                    "dim = {input_dim} for argument 'data' does not match the expected dim = 2".format(
-                            input_dim = str(len(np.array(data).shape))
-                        )
-                )
+
+        # TODO (belongs to issue: #1)
+        # if input table is empty, 'np.array(data).shape' results in (0,) and has
+        # a length of 1. this is no reason, why the programm should crush
+        # !adapt unittests!
+        # if not len(np.array(data).shape) == 2:
+        #     raise ValueError(
+        #             "dim = {input_dim} for argument 'data' does not match the expected dim = 2".format(
+        #                     input_dim = str(len(np.array(data).shape))
+        #                 )
+        #         )
 
         if not isinstance(replacePlot, bool):
             raise TypeError(
@@ -458,11 +479,12 @@ class GraphicalEvaluator():
         None.
 
         """
-        if not isinstance(database, str):
+        if not isinstance(database, str) and not isinstance(database, pathlib2.Path):
             raise TypeError(
-                    "input <{input_name}> for 'setDatabase' does not match {type_name}".format(
+                    "input <{input_name}> for 'setDatabase' does not match {type_name_1} or {type_name_2}".format(
                             input_name = str(database),
-                            type_name = type("123")
+                            type_name_1 = pathlib2.Path,
+                            type_name_2 = str
                         )
                 )
 
