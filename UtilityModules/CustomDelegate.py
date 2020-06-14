@@ -4,8 +4,7 @@ Created on Fri Mar 27 00:46:05 2020
 
 @author: Julian
 """
-
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets, QtCore, QtGui
 from GuiModules.CustomGuiComponents import CustomStandardEditorWidget
 
 class CustomItemDelegate(QtWidgets.QStyledItemDelegate):
@@ -15,7 +14,7 @@ class CustomItemDelegate(QtWidgets.QStyledItemDelegate):
         self.data = None
         self.view = None
         self.closeEditor.connect(self.onClosed)
-        self.commitData.connect(self.onCommitData)
+        # self.commitData.connect(self.onCommitData)
 
         self.size = {"width":200, "height":65}
 
@@ -52,7 +51,7 @@ class CustomItemDelegate(QtWidgets.QStyledItemDelegate):
 
     def createEditor(self, parent, option, index):
         message = self.__createMessage(index)
-        editor = CustomStandardEditorWidget(message, parent=parent)
+        editor = CustomStandardEditorWidget(message, parent = parent)
         return editor
 
     def editorEvent(self, event, model, option, index):
@@ -69,10 +68,13 @@ class CustomItemDelegate(QtWidgets.QStyledItemDelegate):
         return False
 
     def eventFilter(self, editor, event):
-        !cls
-        print(event)
         if event.type() == QtCore.QEvent.Leave:
             self.closeEditor.emit(editor)
+        if event.type() == QtCore.QEvent.FocusIn:
+            editor.edit.setFocus(QtCore.Qt.MouseFocusReason)
+        if isinstance(event, QtGui.QKeyEvent):
+            if event.key() == QtCore.Qt.Key_Tab:
+                self.closeEditor.emit(editor)
         return super().eventFilter(editor, event)
 
     def setEditorData(self, editor, index):
@@ -81,7 +83,7 @@ class CustomItemDelegate(QtWidgets.QStyledItemDelegate):
 
     def setModelData(self, editor, model, index):
         item = model.itemFromIndex(index)
-        item.setData(editor.edit.text(), False)
+        item.setData(editor.edit.text(), QtCore.Qt.DisplayRole, defaultPurpose = True)
 
     def updateEditorGeometry(self, editor, option, index):
         super().updateEditorGeometry(editor, option, index)
@@ -91,7 +93,7 @@ class CustomItemDelegate(QtWidgets.QStyledItemDelegate):
     def onClosed(self, editor, hint):
         self.view.setColumnWidth(self.data[1], self.data[3])
         self.view.setRowHeight(self.data[0], self.data[2])
-        self.commitData.emit(editor)
+        # self.commitData.emit(editor)
 
-    def onCommitData(self, editor):
-        pass
+    # def onCommitData(self, editor):
+    #     pass

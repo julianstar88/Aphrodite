@@ -1020,7 +1020,6 @@ class CustomStandardEditorWidget(QtWidgets.QWidget):
         self.layout = QtWidgets.QVBoxLayout(self)
         self.label = QtWidgets.QLabel(self)
         self.edit = QtWidgets.QLineEdit("Enter new Value", self)
-        # self.setFocusProxy(self.edit)
 
         canvas = CreateCanvas(
                 self.message,
