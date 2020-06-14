@@ -58,6 +58,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle("Aphrodite")
         self.mainWidget = cc.CustomWidget()
         self.mainLayout = QtWidgets.QGridLayout(self.mainWidget)
+        self.setGeometry(100,200,1500,500)
         self.setCentralWidget(self.mainWidget)
 
         """populate app app"""
@@ -1069,12 +1070,14 @@ class RoutineTab(cc.CustomWidget):
             rowData = [tableView.model().item(i, col).userData() for col in range(tableView.model().columnCount())]
             modelData.append(rowData)
 
-        # tableData = self.database().data()
+        tableData = self.database().data("training_alternatives")
 
-        # print(tableData)
+        for i, row in enumerate(tableData):
+            row[3:] = modelData[i]
+            tableData[i] = row
 
-        # self.database().deleteAllEntries("training_alternatives")
-        # self.database().addManyEntries("training_alternatives", modelData)
+        self.database().deleteAllEntries("training_alternatives")
+        self.database().addManyEntries("training_alternatives", tableData)
 
     def updateRoutineTable(self, tableView, *args):
         modelData = list()

@@ -624,6 +624,9 @@ class database():
         # close connection
         self.closeConnection(con)
 
+        # chagne datatype to list
+        data = [list(row) for row in data]
+
         return data
 
     def establishConnection(self, databaseName = None):
