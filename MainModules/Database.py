@@ -7,6 +7,7 @@ Created on Wed Feb 19 13:53:18 2020
 
 import sqlite3 as lite
 import pathlib2
+import sys
 
 class database():
     """
@@ -73,6 +74,89 @@ class database():
 
     - setPath : path
         setter for the 'path' property
+
+    Convenient Methods
+    --------------------
+    convenient functions, explicitly for working with Trainingroutines,
+    trainingalternatives and trainingnotes. all convenient methods return True,
+    if they were able to achive their targets and False if not. There is also
+    a debugging mode, which can be useful to determine the reason why those
+    methods return False.
+
+    - addTrainingAlternative : exerciesID, alternativeExercise, sets, warmUp, week_1, week_2, week_3, week_4, week_5, week_6, mode, short = None, label = None
+
+        - exerciseID : int
+        - alternativeExercise : str
+        - sets : str
+        - repetiations : str
+        - warmUp : str
+        - week_1 : str
+        - week_2 : str
+        - week_3 : str
+        - week_4 : str
+        - week_5 : str
+        - week_6 : str
+        - mode: str
+        - short : str (default = None)
+        - label : str (default = None)
+
+        add the input values to the table 'training_alternatives'. if 'short'
+        or 'label' remain None, the values for them will be calculated
+        automatically.
+
+    - addTrainingNote : exerciseID, short, note, label = None
+
+        - exerciseID : int
+        - short : str
+        - note : str
+        - label : str (default = None)
+
+        add the input values to the table 'training_notes'. if label remain None,
+        the value for it will be calulated automatically
+
+    - addTrainingRoutine : exercise, sets, reps, warmUp, week_1, week_2, week_3, week_4, week_5, week_6, mode
+
+        - exercise : str
+        - sets : str
+        - reps : str
+        - warmUp : str
+        - week_1 : str
+        - week_2 : str
+        - week_3 : str
+        - week_4 : str
+        - week_5 : str
+        - week_6 : str
+        - mode : str
+
+        add the input values to the tabel 'training_routine'
+
+    - createRoutineTables : databaseName = None, debugging = False
+
+        create all neccessary tables of a trainingroutine in a database. these
+        tabels are:
+            - training_routine : contains the main exercises
+            - training_alternatives: contains alternative exercises
+            - training_notes: containse additional notes for exercises or alternatives
+            - general_information: contains context information about the training and the user
+
+        if 'databaseName' is not None, the tables will be created in 'databaseName' instead.
+        if 'databaseName' is not an existing File in the directory specified by 'path',
+        an ValueError will be raised
+
+    - deleteTable : table
+
+        - tabel : str
+
+        remove the table 'table' from the database
+
+    - setGeneralInformation : username, startDate, trainingMode
+
+        - username : str
+        - startDate : str (dd.mm.yyyy)
+        - trainingMode: str
+
+        set the general information in a trainingroutine to 'username',
+        'startDate' (endDate will be calulated automatically) and 'trainingMode'
 
     Protected Methods
     -----------------
@@ -144,6 +228,14 @@ class database():
     def __checkPath(self):
         if self.path() is None:
             self.setPath(pathlib2.Path().cwd())
+
+    def __displayException(self, exceptionType, value, traceBack):
+        string = "Traceback: {traceback} \n Exception Type: {etype} \n Value: {value}".format(
+                traceback = traceBack,
+                etype = exceptionType,
+                value = str(value)
+            )
+        print(string)
 
     def addEntry(self, tableName, insert, databaseName = None):
         """
@@ -299,6 +391,19 @@ class database():
         # close connection
         self.closeConnection(con)
 
+    def addTrainingAlternative(self, exerciseID, alternativeExercise, sets, warmUp,
+                               week_1, week_2, week_3, week_4, week_5, week_6,
+                               mode, short = None, label = None):
+        pass
+
+    def addTrainingNote(self, exerciseID, short, note, label = None):
+        pass
+
+    def addTrainingRoutine(self, exercise, sets, reps, warmUp,
+                           week_1, week_2, week_3, week_4, week_5, week_6,
+                           mode):
+        pass
+
     def closeConnection(self, connectionObject):
         """
         close a connection specified by 'connectionObject'
@@ -346,6 +451,90 @@ class database():
 
         con = self.establishConnection(self.databaseName())
         self.closeConnection(con)
+
+    def createRoutineTables(self, databaseName = None, debugging = False):
+
+        # create training_routine
+        try:
+            columnNames = ( ("exercise", "TEXT"),
+                            ("sets", "TEXT"),
+                            ("repetitions", "TEXT"),
+                            ("warm_up", "TEXT"),
+                            ("week_1", "TEXT"),
+                            ("week_2", "TEXT"),
+                            ("week_3", "TEXT"),
+                            ("week_4", "TEXT"),
+                            ("week_5", "TEXT"),
+                            ("week_6", "TEXT"),
+                            ("mode", "TEXT"),
+                        )
+            self.createTable("training_routine", columnNames, databaseName = databaseName)
+        except:
+            if debugging:
+                etype, value, traceBack = sys.exc_info()
+                self.__displayException(etype, value, traceBack)
+            return False
+
+        # create training_alternatives
+        try:
+            columnNames = (("exerciseID", "INT"),
+                           ("label", "TEXT"),
+                           ("short", "TEXT"),
+                           ("alternative", "TEXT"),
+                           ("sets", "TEXT"),
+                           ("Repetitions", "TEXT"),
+                           ("warm_up", "TEXT"),
+                           ("week_1", "TEXT"),
+                           ("week_2", "TEXT"),
+                           ("week_3", "TEXT"),
+                           ("week_4", "TEXT"),
+                           ("week_5", "TEXT"),
+                           ("week_6", "TEXT"),
+                           ("mode", "TEXT"),
+                          )
+            self.createTable("training_alternatives", columnNames, databaseName = databaseName)
+        except:
+            if debugging:
+                etype, value, traceBack = sys.exc_info()
+                self.__displayException(etype, value, traceBack)
+            return False
+
+        # create training_notes
+        try:
+            columnNames = (("excerciseID", "INT"),
+                           ("label", "TEXT"),
+                           ("short", "TEXT"),
+                           ("note", "TEXT"))
+            self.createTable("training_notes", columnNames, databaseName = databaseName)
+        except:
+            if debugging:
+                etype, value, traceBack = sys.exc_info()
+                self.__displayException(etype, value, traceBack)
+            return False
+
+        # create general_information
+        try:
+            columnNames = (
+                    ("username", "TXT"),
+                    ("startDate", "TXT"),
+                    ("trainingMode", "TXT")
+                )
+            self.createTable("general_information", columnNames, databaseName = databaseName)
+        except:
+            if debugging:
+                etype, value, traceBack = sys.exc_info()
+                self.__displayException(etype, value, traceBack)
+            return False
+
+        try:
+            self.setTables(databaseName = databaseName)
+        except:
+            if debugging:
+                etype, value, traceBack = sys.exc_info()
+                self.__displayException(etype, value, traceBack)
+            return False
+
+        return True
 
     def createTable(self, tableName, columnNames, databaseName = None):
         """
@@ -554,6 +743,9 @@ class database():
 
         # close connection
         self.closeConnection(con)
+
+    def deleteTable(self, table):
+        pass
 
     def data(self, tableName, databaseName = None):
         """
@@ -780,6 +972,9 @@ class database():
 
         self.__extension = extension
 
+    def setGeneralInformation(self, username, startDate, trainingMode):
+        pass
+
     def setPath(self, path):
         """
         set a new path for the property 'path'. the path should point to the
@@ -862,6 +1057,16 @@ class database():
 
 if __name__ == '__main__':
 
+    path = pathlib2.Path("C:/Users/Julian/Documents/Python/Projekte/Aphrodite/files/test_files")
+    databaseName = "test_convenient_methods"
+    database = database()
+    database.setDatabaseName(databaseName)
+    database.setPath(path)
+    database.createDatabase()
+
+    database.createRoutineTables(debugging = True)
+
+    """
     # create database
     path = pathlib2.Path("C:/Users/Julian/Documents/Python/Projekte/Aphrodite/examples/Qt_ModelView/database")
     dbName = "test_database_2"
@@ -938,5 +1143,5 @@ if __name__ == '__main__':
 
     generalInformation = ["Julian", "28.05.2020", "Mittleres Krafttraining"]
     db.addEntry("general_information", generalInformation)
-
+    """
 

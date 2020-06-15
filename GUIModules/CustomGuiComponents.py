@@ -436,10 +436,10 @@ class CustomModelItem(QtGui.QStandardItem):
         self.setUserData(displayData)
 
     def addTrainingAlternative(self, exerciseID, alternativeExercise, warmUp, repetition,
-                               w1, w2, w3, w4, w5, w6,
-                               alternativeID = None, label = None, short = None):
-        if not alternativeID:
-            alternativeID = len(type(self).trainingAlternatives) + 1
+                               w1, w2, w3, w4, w5, w6, mode,
+                               label = None, short = None):
+        # if not alternativeID:
+        #     alternativeID = len(type(self).trainingAlternatives) + 1
 
         if not label:
             label = "{num}".format(num = str(len(type(self).trainingAlternatives) + 1))
@@ -460,6 +460,7 @@ class CustomModelItem(QtGui.QStandardItem):
                 w4,
                 w5,
                 w6,
+                mode
                 ]
         type(self).trainingAlternatives.append(data)
 
