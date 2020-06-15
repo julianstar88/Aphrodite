@@ -972,8 +972,56 @@ class database():
 
         self.__extension = extension
 
-    def setGeneralInformation(self, username, startDate, trainingMode):
-        pass
+    def setGeneralInformation(self, username, startDate, trainingMode, databaseName = None, debugging = False):
+
+        if not isinstance(username, str):
+            if debugging:
+                raise TypeError(
+                        "input {input_name} for 'username' does not match {type_name}".format(
+                                input_name = str(username),
+                                type_name = str
+                            )
+                    )
+            return False
+
+        if not isinstance(startDate, str):
+            if debugging:
+                raise TypeError(
+                        "input {input_name} for 'startDate' does not match {type_name}".format(
+                                input_name = str(startDate),
+                                type_namej = str
+                            )
+                    )
+            return False
+
+        if not isinstance(trainingMode, str):
+            if debugging:
+                raise TypeError(
+                        "input {input_name} for 'trainingMode' does not match {type_name}".format(
+                                input_name = str(trainingMode),
+                                type_name = str
+                            )
+                    )
+            return False
+
+        if "general_information" not in self.tables():
+            if debugging:
+                raise RuntimeError(
+                        "the table 'general_information' does not exist. try to invoke 'createRoutineTables' first"
+                    )
+            return False
+
+        try:
+            self.deleteAllEntries("general_information", databaseName = databaseName)
+            self.addEntry("general_information", [username, startDate, trainingMode], databaseName = None)
+        except:
+            if debugging:
+                etype, value, traceBack = sys.exc_info()
+                self.__displayException(etype, value, traceBack)
+            return False
+
+        return True
+
 
     def setPath(self, path):
         """
@@ -1064,7 +1112,9 @@ if __name__ == '__main__':
     database.setPath(path)
     database.createDatabase()
 
+
     database.createRoutineTables(debugging = True)
+    database.setGeneralInformation("test", "11.11.2020", "testMode")
 
     """
     # create database

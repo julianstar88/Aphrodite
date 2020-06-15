@@ -296,5 +296,46 @@ class DatabaseMethods(unittest.TestCase):
         except FileNotFoundError: # self.databaseFile does not exist
             pass
 
+class ConvenientMethods(unittest.TestCase):
+
+    def setUp(self):
+        self.path = pathlib2.Path().cwd()
+        self.databaseName = "test_convenient_methods"
+        self.database = db.database()
+        self.database.setDatabaseName(self.databaseName)
+        self.database.setPath(self.path)
+        self.database.createDatabase()
+        self.file = self.database.path() / (self.database.databaseName() + self.database.extension())
+
+    def test_createRoutineTables(self):
+        result = self.database.createRoutineTables()
+        self.assertTrue(result)
+
+    def test_setGeneralInformation(self):
+        fails = [
+                    [1, 1, 1],
+                    [123, 123, 123],
+                    [123.123, 123.123, 123.123],
+                    [(), (), ()],
+                    [[], [], []],
+                    [{}, {}, {}]
+            ]
+        self.database.createRoutineTables()
+
+        for val in fails:
+            with self.subTest(val = val):
+                self.assertRaises(
+                        TypeError, self.database.setGeneralInformation, val[0], val[1], val[2], debugging = True
+                    )
+
+        result = self.database.setGeneralInformation("testUser", "11.11.2020", "testMode")
+        self.assertTrue(result)
+
+    def tearDown(self):
+        try:
+            self.file.unlink()
+        except FileNotFoundError: # self.databaseFile does not exist
+            pass
+
 if __name__ == "__main__":
     unittest.main()
