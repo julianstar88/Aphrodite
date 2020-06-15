@@ -14,9 +14,8 @@ class CustomItemDelegate(QtWidgets.QStyledItemDelegate):
         self.data = None
         self.view = None
         self.closeEditor.connect(self.onClosed)
-        # self.commitData.connect(self.onCommitData)
 
-        self.size = {"width":200, "height":65}
+        self.size = {"width":100, "height":65}
 
     def __createMessage(self, index):
         col = index.column()
@@ -63,6 +62,7 @@ class CustomItemDelegate(QtWidgets.QStyledItemDelegate):
                          col,
                          self.view.rowHeight(row),
                          self.view.columnWidth(col)]
+            self.view.horizontalHeader().setSectionResizeMode(col, QtWidgets.QHeaderView.Fixed)
             self.view.setRowHeight(row, self.size["height"])
             self.view.setColumnWidth(col, self.size["width"])
         return False
@@ -93,7 +93,8 @@ class CustomItemDelegate(QtWidgets.QStyledItemDelegate):
     def onClosed(self, editor, hint):
         self.view.setColumnWidth(self.data[1], self.data[3])
         self.view.setRowHeight(self.data[0], self.data[2])
-        # self.commitData.emit(editor)
-
-    # def onCommitData(self, editor):
-    #     pass
+        for i in range(self.view.horizontalHeader().count()):
+            if i != 0:
+            #     self.view.horizontalHeader().setSectionResizeMode(i, QtWidgets.QHeaderView.Fixed)
+            # else:
+                self.view.horizontalHeader().setSectionResizeMode(i, QtWidgets.QHeaderView.Stretch)

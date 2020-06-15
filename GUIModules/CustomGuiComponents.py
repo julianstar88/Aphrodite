@@ -431,6 +431,8 @@ class CustomModelItem(QtGui.QStandardItem):
 
     def __init__(self, displayData, *args):
         super().__init__(displayData, *args)
+        self._userData = None
+
         self.setUserData(displayData)
 
     def addTrainingAlternative(self, exerciseID, alternativeExercise, warmUp, repetition,
