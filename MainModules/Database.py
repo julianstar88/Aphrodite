@@ -389,10 +389,43 @@ class database():
         # close connection
         self.closeConnection(con)
 
-    def addTrainingAlternative(self, exerciseID, alternativeExercise, sets, warmUp,
-                               week_1, week_2, week_3, week_4, week_5, week_6,
-                               mode, short = None, label = None):
-        pass
+    def addTrainingAlternative(self, exerciseID, alternativeExercise, sets, reps, warmUp,
+                               week_1, week_2, week_3, week_4, week_5, week_6, mode,
+                               short = None, label = None,
+                               databaseName = None, debugging = False):
+
+        if not isinstance(debugging, bool):
+            raise TypeError(
+                    "input <{input_name}> for 'debugging' does not match {type_name}".format(
+                            input_name = str(debugging),
+                            type_name = bool
+                        )
+                )
+
+        args = [val.name for val in inspect.signature(self.addTrainingAlternative).parameters.values()][:-4]
+        alternatives = self.data("training_alternatives")
+
+        if short is None:
+            short = "alternative {num}".format(num = str(len(alternatives) + 1))
+        if label is None:
+            label = "{num}".format(num = str(len(alternatives) + 1))
+
+        insert = list()
+        for arg in args:
+            insert.append(eval(arg))
+        insert.insert(1, short)
+        insert.insert(1, label)
+
+        try:
+            self.addEntry("training_alternatives", insert)
+        except:
+            if debugging:
+                etype, value, traceBack = sys.exc_info()
+                self.__displayException(etype, value, traceBack)
+            return False
+        return True
+
+
 
     def addTrainingNote(self, exerciseID, short, note, label = None):
         pass
@@ -1194,19 +1227,22 @@ if __name__ == '__main__':
 
     database.createRoutineTables(debugging = True)
     database.setGeneralInformation("test", "11.11.2020", "testMode")
-    database.addTrainingRoutine(
-            "testExercise",
-            "4",
-            "12",
-            "14",
-            "14.5",
-            "14.6",
-            "15",
-            "15.2",
-            "15.4",
-            "15.6",
-            "gym"
+    database.addTrainingAlternative(
+            1,
+            "testAlternativeExercise",
+            "testSets",
+            "testReps",
+            "testWarmUp",
+            "testWeek1",
+            "testWeek2",
+            "testWeek3",
+            "testWeek4",
+            "testWeek5",
+            "testWeek6",
+            "testMode",
+            debugging = True
         )
+    print(database.data("training_alternatives"))
 
     """
     # create database

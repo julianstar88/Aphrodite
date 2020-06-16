@@ -369,6 +369,24 @@ class ConvenientMethods(unittest.TestCase):
             )
         self.assertTrue(result)
 
+    def test_addTrainingAlternative(self):
+        self.database.createRoutineTables()
+        result = self.database.addTrainingAlternative(
+                1,
+                "testAlternativeExercise",
+                "testSets",
+                "testReps",
+                "testWarmUp",
+                "testWeek1",
+                "testWeek2",
+                "testWeek3",
+                "testWeek4",
+                "testWeek5",
+                "testWeek6",
+                "testMode",
+            )
+        self.assertTrue(result)
+
     def tearDown(self):
         try:
             self.file.unlink()
