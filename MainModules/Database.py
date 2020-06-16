@@ -57,6 +57,9 @@ class database():
         delete only certain rows specified by 'row_id_list' from
         'tableName' in 'databaseName'
 
+    - deleteTable : tableName, databaseName = None
+        remove the table 'tableName' from the database
+
     - data : tableName, databaseName = None
         get all data from 'tableName' in 'databaseName'
 
@@ -142,12 +145,6 @@ class database():
         if 'databaseName' is not None, the tables will be created in 'databaseName' instead.
         if 'databaseName' is not an existing File in the directory specified by 'path',
         an ValueError will be raised
-
-    - deleteTable : table
-
-        - tabel : str
-
-        remove the table 'table' from the database
 
     - setGeneralInformation : username, startDate, trainingMode
 
@@ -700,7 +697,7 @@ class database():
 
         if self.databaseName() is None:
             raise TypeError(
-                    "Databse.deleteEntries: before deleting many etries to a database, set a valid databaseName"
+                    "Databse.deleteEntries: before deleting many etries of a database, set a valid databaseName"
                 )
 
         if not isinstance(tableName, str):
@@ -733,7 +730,7 @@ class database():
                 )
 
         # establish connection
-        con = self.establishConnection(databaseName)
+        con = self.establishConnection()
         with con:
             c = con.cursor()
             for idx in row_id_list:
@@ -744,8 +741,60 @@ class database():
         # close connection
         self.closeConnection(con)
 
-    def deleteTable(self, table):
-        pass
+    def deleteTable(self, tableName, databaseName = None):
+        """
+        remove the table "tableName" from the connected database. if "databaseName"
+        has been set, this database will be the new connected database instead.
+
+        Parameters
+        ----------
+        tableName : str
+            table to be removed.
+        databaseName : str or None, optional
+            the database, to be connected with. The default is None.
+
+        Raises
+        ------
+        TypeError
+            will be raised, if "tableName" or "databseName" are not type str.
+        ValueError
+            will be raised, if table does not exist in the connected database.
+
+        Returns
+        -------
+        None.
+
+        """
+        if not isinstance(tableName, str):
+            raise TypeError(
+                    "input {input_name} for 'tableName' does not match {type_name}".format(
+                            input_name = str(tableName),
+                            type_name = str
+                        )
+                )
+        if tableName not in self.tables():
+            raise ValueError(
+                    "input {input_name} for 'tableName' does not exist in connected database".format(
+                            input_name = str(tableName)
+                        )
+                )
+        if databaseName:
+            self.setDatabaseName(databaseName)
+
+        if self.databaseName() is None:
+            raise TypeError(
+                    "there is no valid database to delete a tabel from"
+                )
+
+        con = self.establishConnection()
+        with con:
+            c = con.cursor()
+            sql_command = "DROP TABLE IF EXISTS {name}".format(
+                    name = tableName
+                )
+            c.execute(sql_command)
+        self.closeConnection(con)
+        self.setTables()
 
     def data(self, tableName, databaseName = None):
         """
@@ -1115,6 +1164,8 @@ if __name__ == '__main__':
 
     database.createRoutineTables(debugging = True)
     database.setGeneralInformation("test", "11.11.2020", "testMode")
+    database.deleteTable("general_information")
+    print(database.tables())
 
     """
     # create database

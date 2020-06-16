@@ -290,6 +290,27 @@ class DatabaseMethods(unittest.TestCase):
                 array.size, 0
             )
 
+    def test_deleteTable(self):
+        type_error = [1, 123, 123.123, (), [], {}]
+        value_error = "failTableName"
+        self.database.createDatabase(self.databaseName)
+        columnNames = (
+                ("test1", "TXT"),
+                ("test2", "TXT"),
+                ("test3", "TXT")
+            )
+        self.database.createTable("testTable", columnNames)
+        for val in type_error:
+            with self.subTest(val = val):
+                self.assertRaises(
+                        TypeError, self.database.deleteTable, val
+                    )
+        self.assertRaises(
+                ValueError, self.database.deleteTable, value_error
+            )
+        self.database.deleteTable("testTable")
+        self.assertEqual(len(self.database.tables()), 0)
+
     def tearDown(self):
         try:
             self.databaseFile.unlink()
