@@ -290,9 +290,114 @@ class DatabaseMethods(unittest.TestCase):
                 array.size, 0
             )
 
+    def test_deleteTable(self):
+        type_error = [1, 123, 123.123, (), [], {}]
+        value_error = "failTableName"
+        self.database.createDatabase(self.databaseName)
+        columnNames = (
+                ("test1", "TXT"),
+                ("test2", "TXT"),
+                ("test3", "TXT")
+            )
+        self.database.createTable("testTable", columnNames)
+        for val in type_error:
+            with self.subTest(val = val):
+                self.assertRaises(
+                        TypeError, self.database.deleteTable, val
+                    )
+        self.assertRaises(
+                ValueError, self.database.deleteTable, value_error
+            )
+        self.database.deleteTable("testTable")
+        self.assertEqual(len(self.database.tables()), 0)
+
     def tearDown(self):
         try:
             self.databaseFile.unlink()
+        except FileNotFoundError: # self.databaseFile does not exist
+            pass
+
+class ConvenientMethods(unittest.TestCase):
+
+    def setUp(self):
+        self.path = pathlib2.Path().cwd()
+        self.databaseName = "test_convenient_methods"
+        self.database = db.database()
+        self.database.setDatabaseName(self.databaseName)
+        self.database.setPath(self.path)
+        self.database.createDatabase()
+        self.file = self.database.path() / (self.database.databaseName() + self.database.extension())
+
+    def test_createRoutineTables(self):
+        result = self.database.createRoutineTables()
+        self.assertTrue(result)
+
+    def test_setGeneralInformation(self):
+        fails = [
+                    [1, 1, 1],
+                    [123, 123, 123],
+                    [123.123, 123.123, 123.123],
+                    [(), (), ()],
+                    [[], [], []],
+                    [{}, {}, {}]
+            ]
+        self.database.createRoutineTables()
+
+        for val in fails:
+            with self.subTest(val = val):
+                self.assertRaises(
+                        TypeError, self.database.setGeneralInformation, val[0], val[1], val[2], debugging = True
+                    )
+
+        result = self.database.setGeneralInformation("testUser", "11.11.2020", "testMode")
+        self.assertTrue(result)
+
+    def test_addTrainingRoutine(self):
+        self.database.createRoutineTables()
+        result = self.database.addTrainingRoutine(
+                "testValue",
+                "testValue",
+                "testValue",
+                "testValue",
+                "testValue",
+                "testValue",
+                "testValue",
+                "testValue",
+                "testValue",
+                "testValue",
+                "testMode"
+            )
+        self.assertTrue(result)
+
+    def test_addTrainingAlternative(self):
+        self.database.createRoutineTables()
+        result = self.database.addTrainingAlternative(
+                1,
+                "testAlternativeExercise",
+                "testSets",
+                "testReps",
+                "testWarmUp",
+                "testWeek1",
+                "testWeek2",
+                "testWeek3",
+                "testWeek4",
+                "testWeek5",
+                "testWeek6",
+                "testMode",
+            )
+        self.assertTrue(result)
+
+    def test_addTrainingNote(self):
+        self.database.createRoutineTables()
+        result = self.database.addTrainingNote(
+                1,
+                "ThisIsATestNote",
+            )
+        self.assertTrue(result)
+
+    def tearDown(self):
+        try:
+            self.file.unlink()
         except FileNotFoundError: # self.databaseFile does not exist
             pass
 

@@ -7,6 +7,9 @@ Created on Wed Feb 19 13:53:18 2020
 
 import sqlite3 as lite
 import pathlib2
+import sys
+import inspect
+import string
 
 class database():
     """
@@ -56,6 +59,9 @@ class database():
         delete only certain rows specified by 'row_id_list' from
         'tableName' in 'databaseName'
 
+    - deleteTable : tableName, databaseName = None
+        remove the table 'tableName' from the database
+
     - data : tableName, databaseName = None
         get all data from 'tableName' in 'databaseName'
 
@@ -73,6 +79,83 @@ class database():
 
     - setPath : path
         setter for the 'path' property
+
+    Convenient Methods
+    --------------------
+    convenient functions, explicitly for working with Trainingroutines,
+    trainingalternatives and trainingnotes. all convenient methods return True,
+    if they were able to achive their targets and False if not. There is also
+    a debugging mode, which can be useful to determine the reason why those
+    methods return False.
+
+    - addTrainingAlternative : exerciesID, alternativeExercise, sets, warmUp, week_1, week_2, week_3, week_4, week_5, week_6, mode, short = None, label = None
+
+        - exerciseID : int
+        - alternativeExercise : str
+        - sets : str
+        - repetiations : str
+        - warmUp : str
+        - week_1 : str
+        - week_2 : str
+        - week_3 : str
+        - week_4 : str
+        - week_5 : str
+        - week_6 : str
+        - mode: str
+        - short : str (default = None)
+        - label : str (default = None)
+
+        add the input values to the table 'training_alternatives'. if 'short'
+        or 'label' remain None, the values for them will be calculated
+        automatically.
+
+    - addTrainingNote : exerciseID, short, note, label = None
+
+        - exerciseID : int
+        - short : str
+        - note : str
+        - label : str (default = None)
+
+        add the input values to the table 'training_notes'. if label remain None,
+        the value for it will be calulated automatically
+
+    - addTrainingRoutine : exercise, sets, reps, warmUp, week_1, week_2, week_3, week_4, week_5, week_6, mode
+
+        - exercise : str
+        - sets : str
+        - reps : str
+        - warmUp : str
+        - week_1 : str
+        - week_2 : str
+        - week_3 : str
+        - week_4 : str
+        - week_5 : str
+        - week_6 : str
+        - mode : str
+
+        add the input values to the tabel 'training_routine'
+
+    - createRoutineTables : databaseName = None, debugging = False
+
+        create all neccessary tables of a trainingroutine in a database. these
+        tabels are:
+            - training_routine : contains the main exercises
+            - training_alternatives: contains alternative exercises
+            - training_notes: containse additional notes for exercises or alternatives
+            - general_information: contains context information about the training and the user
+
+        if 'databaseName' is not None, the tables will be created in 'databaseName' instead.
+        if 'databaseName' is not an existing File in the directory specified by 'path',
+        an ValueError will be raised
+
+    - setGeneralInformation : username, startDate, trainingMode
+
+        - username : str
+        - startDate : str (dd.mm.yyyy)
+        - trainingMode: str
+
+        set the general information in a trainingroutine to 'username',
+        'startDate' (endDate will be calulated automatically) and 'trainingMode'
 
     Protected Methods
     -----------------
@@ -126,6 +209,7 @@ class database():
     """
 
     allowedExtensions = (".db")
+    lowercaseLetters = string.ascii_lowercase
 
     def __init__(self, path = None, extension = ".db"):
         self.__path = None
@@ -144,6 +228,14 @@ class database():
     def __checkPath(self):
         if self.path() is None:
             self.setPath(pathlib2.Path().cwd())
+
+    def __displayException(self, exceptionType, value, traceBack):
+        string = "Traceback: {traceback} \n Exception Type: {etype} \n Value: {value}".format(
+                traceback = traceBack,
+                etype = exceptionType,
+                value = str(value)
+            )
+        print(string)
 
     def addEntry(self, tableName, insert, databaseName = None):
         """
@@ -299,6 +391,107 @@ class database():
         # close connection
         self.closeConnection(con)
 
+    def addTrainingAlternative(self, exerciseID, alternativeExercise, sets, reps, warmUp,
+                               week_1, week_2, week_3, week_4, week_5, week_6, mode,
+                               short = None, label = None,
+                               databaseName = None, debugging = False):
+
+        if not isinstance(debugging, bool):
+            raise TypeError(
+                    "input <{input_name}> for 'debugging' does not match {type_name}".format(
+                            input_name = str(debugging),
+                            type_name = bool
+                        )
+                )
+
+        args = [val.name for val in inspect.signature(self.addTrainingAlternative).parameters.values()][:-4]
+        alternatives = self.data("training_alternatives")
+
+        if short is None:
+            short = "alternative {num}".format(num = str(len(alternatives) + 1))
+        if label is None:
+            label = "{num}".format(num = str(len(alternatives) + 1))
+
+        insert = list()
+        for arg in args:
+            insert.append(eval(arg))
+        insert.insert(1, short)
+        insert.insert(1, label)
+
+        try:
+            self.addEntry("training_alternatives", insert)
+        except:
+            if debugging:
+                etype, value, traceBack = sys.exc_info()
+                self.__displayException(etype, value, traceBack)
+            return False
+        return True
+
+
+
+    def addTrainingNote(self, exerciseID, note, label = None, short = None,
+                        databaseName = None, debugging = False):
+
+        if not isinstance(debugging, bool):
+            raise TypeError(
+                    "input <{input_name}> for 'debugging' does not match {type_name}".format(
+                            input_name = str(debugging),
+                            type_name = bool
+                        )
+                )
+
+        args = [val.name for val in inspect.signature(self.addTrainingNote).parameters.values()][:-4]
+        notes = self.data("training_notes")
+
+        if label is None:
+            label = type(self).lowercaseLetters[len(notes)]
+        if short is None:
+            short = "note {num}".format(
+                    num = type(self).lowercaseLetters[len(notes)]
+                )
+
+        insert = list()
+        for arg in args:
+            insert.append(eval(arg))
+        insert.insert(1, short)
+        insert.insert(1, label)
+
+        try:
+            self.addEntry("training_notes", insert)
+        except:
+            if debugging:
+                etype, value, traceBack = sys.exc_info()
+                self.__displayException(etype, value, traceBack)
+            return False
+        return True
+
+
+    def addTrainingRoutine(self, exercise, sets, reps, warmUp,
+                           week_1, week_2, week_3, week_4, week_5, week_6,
+                           mode, databaseName = None, debugging = False):
+
+        if not isinstance(debugging, bool):
+            raise TypeError(
+                    "input <{input_name}> for 'debugging' does not match {type_name}".format(
+                            input_name = str(debugging),
+                            type_name = bool
+                        )
+                )
+
+        args = [val.name for val in inspect.signature(self.addTrainingRoutine).parameters.values()][:-2]
+        insert = list()
+        for arg in args:
+            insert.append(eval(arg))
+
+        try:
+            self.addEntry("training_routine", insert, databaseName = databaseName)
+        except:
+            if debugging:
+                etype, value, traceBack = sys.exc_info()
+                self.__displayException(etype, value, traceBack)
+            return False
+        return True
+
     def closeConnection(self, connectionObject):
         """
         close a connection specified by 'connectionObject'
@@ -346,6 +539,90 @@ class database():
 
         con = self.establishConnection(self.databaseName())
         self.closeConnection(con)
+
+    def createRoutineTables(self, databaseName = None, debugging = False):
+
+        # create training_routine
+        try:
+            columnNames = ( ("exercise", "TEXT"),
+                            ("sets", "TEXT"),
+                            ("repetitions", "TEXT"),
+                            ("warm_up", "TEXT"),
+                            ("week_1", "TEXT"),
+                            ("week_2", "TEXT"),
+                            ("week_3", "TEXT"),
+                            ("week_4", "TEXT"),
+                            ("week_5", "TEXT"),
+                            ("week_6", "TEXT"),
+                            ("mode", "TEXT"),
+                        )
+            self.createTable("training_routine", columnNames, databaseName = databaseName)
+        except:
+            if debugging:
+                etype, value, traceBack = sys.exc_info()
+                self.__displayException(etype, value, traceBack)
+            return False
+
+        # create training_alternatives
+        try:
+            columnNames = (("exerciseID", "INT"),
+                           ("label", "TEXT"),
+                           ("short", "TEXT"),
+                           ("alternative", "TEXT"),
+                           ("sets", "TEXT"),
+                           ("Repetitions", "TEXT"),
+                           ("warm_up", "TEXT"),
+                           ("week_1", "TEXT"),
+                           ("week_2", "TEXT"),
+                           ("week_3", "TEXT"),
+                           ("week_4", "TEXT"),
+                           ("week_5", "TEXT"),
+                           ("week_6", "TEXT"),
+                           ("mode", "TEXT"),
+                          )
+            self.createTable("training_alternatives", columnNames, databaseName = databaseName)
+        except:
+            if debugging:
+                etype, value, traceBack = sys.exc_info()
+                self.__displayException(etype, value, traceBack)
+            return False
+
+        # create training_notes
+        try:
+            columnNames = (("excerciseID", "INT"),
+                           ("label", "TEXT"),
+                           ("short", "TEXT"),
+                           ("note", "TEXT"))
+            self.createTable("training_notes", columnNames, databaseName = databaseName)
+        except:
+            if debugging:
+                etype, value, traceBack = sys.exc_info()
+                self.__displayException(etype, value, traceBack)
+            return False
+
+        # create general_information
+        try:
+            columnNames = (
+                    ("username", "TXT"),
+                    ("startDate", "TXT"),
+                    ("trainingMode", "TXT")
+                )
+            self.createTable("general_information", columnNames, databaseName = databaseName)
+        except:
+            if debugging:
+                etype, value, traceBack = sys.exc_info()
+                self.__displayException(etype, value, traceBack)
+            return False
+
+        try:
+            self.setTables(databaseName = databaseName)
+        except:
+            if debugging:
+                etype, value, traceBack = sys.exc_info()
+                self.__displayException(etype, value, traceBack)
+            return False
+
+        return True
 
     def createTable(self, tableName, columnNames, databaseName = None):
         """
@@ -511,7 +788,7 @@ class database():
 
         if self.databaseName() is None:
             raise TypeError(
-                    "Databse.deleteEntries: before deleting many etries to a database, set a valid databaseName"
+                    "Databse.deleteEntries: before deleting many etries of a database, set a valid databaseName"
                 )
 
         if not isinstance(tableName, str):
@@ -544,7 +821,7 @@ class database():
                 )
 
         # establish connection
-        con = self.establishConnection(databaseName)
+        con = self.establishConnection()
         with con:
             c = con.cursor()
             for idx in row_id_list:
@@ -554,6 +831,61 @@ class database():
 
         # close connection
         self.closeConnection(con)
+
+    def deleteTable(self, tableName, databaseName = None):
+        """
+        remove the table "tableName" from the connected database. if "databaseName"
+        has been set, this database will be the new connected database instead.
+
+        Parameters
+        ----------
+        tableName : str
+            table to be removed.
+        databaseName : str or None, optional
+            the database, to be connected with. The default is None.
+
+        Raises
+        ------
+        TypeError
+            will be raised, if "tableName" or "databseName" are not type str.
+        ValueError
+            will be raised, if table does not exist in the connected database.
+
+        Returns
+        -------
+        None.
+
+        """
+        if not isinstance(tableName, str):
+            raise TypeError(
+                    "input {input_name} for 'tableName' does not match {type_name}".format(
+                            input_name = str(tableName),
+                            type_name = str
+                        )
+                )
+        if tableName not in self.tables():
+            raise ValueError(
+                    "input {input_name} for 'tableName' does not exist in connected database".format(
+                            input_name = str(tableName)
+                        )
+                )
+        if databaseName:
+            self.setDatabaseName(databaseName)
+
+        if self.databaseName() is None:
+            raise TypeError(
+                    "there is no valid database to delete a tabel from"
+                )
+
+        con = self.establishConnection()
+        with con:
+            c = con.cursor()
+            sql_command = "DROP TABLE IF EXISTS {name}".format(
+                    name = tableName
+                )
+            c.execute(sql_command)
+        self.closeConnection(con)
+        self.setTables()
 
     def data(self, tableName, databaseName = None):
         """
@@ -780,6 +1112,65 @@ class database():
 
         self.__extension = extension
 
+    def setGeneralInformation(self, username, startDate, trainingMode, databaseName = None, debugging = False):
+
+        if not isinstance(debugging, bool):
+            raise TypeError(
+                    "input <{input_name}> for 'debugging' does not match {type_name}".format(
+                            input_name = str(debugging),
+                            type_name = bool
+                        )
+                )
+
+        if not isinstance(username, str):
+            if debugging:
+                raise TypeError(
+                        "input {input_name} for 'username' does not match {type_name}".format(
+                                input_name = str(username),
+                                type_name = str
+                            )
+                    )
+            return False
+
+        if not isinstance(startDate, str):
+            if debugging:
+                raise TypeError(
+                        "input {input_name} for 'startDate' does not match {type_name}".format(
+                                input_name = str(startDate),
+                                type_namej = str
+                            )
+                    )
+            return False
+
+        if not isinstance(trainingMode, str):
+            if debugging:
+                raise TypeError(
+                        "input {input_name} for 'trainingMode' does not match {type_name}".format(
+                                input_name = str(trainingMode),
+                                type_name = str
+                            )
+                    )
+            return False
+
+        if "general_information" not in self.tables():
+            if debugging:
+                raise RuntimeError(
+                        "the table 'general_information' does not exist. try to invoke 'createRoutineTables' first"
+                    )
+            return False
+
+        try:
+            self.deleteAllEntries("general_information", databaseName = databaseName)
+            self.addEntry("general_information", [username, startDate, trainingMode], databaseName = None)
+        except:
+            if debugging:
+                etype, value, traceBack = sys.exc_info()
+                self.__displayException(etype, value, traceBack)
+            return False
+
+        return True
+
+
     def setPath(self, path):
         """
         set a new path for the property 'path'. the path should point to the
@@ -862,6 +1253,24 @@ class database():
 
 if __name__ == '__main__':
 
+    path = pathlib2.Path("C:/Users/Julian/Documents/Python/Projekte/Aphrodite/files/test_files")
+    databaseName = "test_convenient_methods"
+    database = database()
+    database.setDatabaseName(databaseName)
+    database.setPath(path)
+    database.createDatabase()
+
+
+    database.createRoutineTables(debugging = True)
+    database.setGeneralInformation("test", "11.11.2020", "testMode")
+    database.addTrainingNote(
+            1,
+            "ThisIsATestNote",
+            debugging = True
+        )
+    print(database.data("training_notes"))
+
+    """
     # create database
     path = pathlib2.Path("C:/Users/Julian/Documents/Python/Projekte/Aphrodite/examples/Qt_ModelView/database")
     dbName = "test_database_2"
@@ -938,5 +1347,5 @@ if __name__ == '__main__':
 
     generalInformation = ["Julian", "28.05.2020", "Mittleres Krafttraining"]
     db.addEntry("general_information", generalInformation)
-
+    """
 
