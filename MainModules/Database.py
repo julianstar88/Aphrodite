@@ -1252,23 +1252,16 @@ class database():
         return self.__tables
 
 if __name__ == '__main__':
+    pass
 
+    """
     path = pathlib2.Path("C:/Users/Julian/Documents/Python/Projekte/Aphrodite/files/test_files")
     databaseName = "test_convenient_methods"
     database = database()
     database.setDatabaseName(databaseName)
     database.setPath(path)
     database.createDatabase()
-
-
-    database.createRoutineTables(debugging = True)
-    database.setGeneralInformation("test", "11.11.2020", "testMode")
-    database.addTrainingNote(
-            1,
-            "ThisIsATestNote",
-            debugging = True
-        )
-    print(database.data("training_notes"))
+    """
 
     """
     # create database
