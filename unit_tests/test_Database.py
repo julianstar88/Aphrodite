@@ -352,6 +352,23 @@ class ConvenientMethods(unittest.TestCase):
         result = self.database.setGeneralInformation("testUser", "11.11.2020", "testMode")
         self.assertTrue(result)
 
+    def test_addTrainingRoutine(self):
+        self.database.createRoutineTables()
+        result = self.database.addTrainingRoutine(
+                "testValue",
+                "testValue",
+                "testValue",
+                "testValue",
+                "testValue",
+                "testValue",
+                "testValue",
+                "testValue",
+                "testValue",
+                "testValue",
+                "testMode"
+            )
+        self.assertTrue(result)
+
     def tearDown(self):
         try:
             self.file.unlink()

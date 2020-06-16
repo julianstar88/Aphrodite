@@ -8,6 +8,7 @@ Created on Wed Feb 19 13:53:18 2020
 import sqlite3 as lite
 import pathlib2
 import sys
+import inspect
 
 class database():
     """
@@ -398,8 +399,29 @@ class database():
 
     def addTrainingRoutine(self, exercise, sets, reps, warmUp,
                            week_1, week_2, week_3, week_4, week_5, week_6,
-                           mode):
-        pass
+                           mode, databaseName = None, debugging = False):
+
+        if not isinstance(debugging, bool):
+            raise TypeError(
+                    "input <{input_name}> for 'debugging' does not match {type_name}".format(
+                            input_name = str(debugging),
+                            type_name = bool
+                        )
+                )
+
+        args = [val.name for val in inspect.signature(self.addTrainingRoutine).parameters.values()][:-2]
+        insert = list()
+        for arg in args:
+            insert.append(eval(arg))
+
+        try:
+            self.addEntry("training_routine", insert, databaseName = databaseName)
+        except:
+            if debugging:
+                etype, value, traceBack = sys.exc_info()
+                self.__displayException(etype, value, traceBack)
+            return False
+        return True
 
     def closeConnection(self, connectionObject):
         """
@@ -1023,6 +1045,14 @@ class database():
 
     def setGeneralInformation(self, username, startDate, trainingMode, databaseName = None, debugging = False):
 
+        if not isinstance(debugging, bool):
+            raise TypeError(
+                    "input <{input_name}> for 'debugging' does not match {type_name}".format(
+                            input_name = str(debugging),
+                            type_name = bool
+                        )
+                )
+
         if not isinstance(username, str):
             if debugging:
                 raise TypeError(
@@ -1164,8 +1194,19 @@ if __name__ == '__main__':
 
     database.createRoutineTables(debugging = True)
     database.setGeneralInformation("test", "11.11.2020", "testMode")
-    database.deleteTable("general_information")
-    print(database.tables())
+    database.addTrainingRoutine(
+            "testExercise",
+            "4",
+            "12",
+            "14",
+            "14.5",
+            "14.6",
+            "15",
+            "15.2",
+            "15.4",
+            "15.6",
+            "gym"
+        )
 
     """
     # create database
