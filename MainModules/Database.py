@@ -9,6 +9,7 @@ import sqlite3 as lite
 import pathlib2
 import sys
 import inspect
+import string
 
 class database():
     """
@@ -208,6 +209,7 @@ class database():
     """
 
     allowedExtensions = (".db")
+    lowercaseLetters = string.ascii_lowercase
 
     def __init__(self, path = None, extension = ".db"):
         self.__path = None
@@ -427,8 +429,42 @@ class database():
 
 
 
-    def addTrainingNote(self, exerciseID, short, note, label = None):
-        pass
+    def addTrainingNote(self, exerciseID, note, label = None, short = None,
+                        databaseName = None, debugging = False):
+
+        if not isinstance(debugging, bool):
+            raise TypeError(
+                    "input <{input_name}> for 'debugging' does not match {type_name}".format(
+                            input_name = str(debugging),
+                            type_name = bool
+                        )
+                )
+
+        args = [val.name for val in inspect.signature(self.addTrainingNote).parameters.values()][:-4]
+        notes = self.data("training_notes")
+
+        if label is None:
+            label = type(self).lowercaseLetters[len(notes)]
+        if short is None:
+            short = "note {num}".format(
+                    num = type(self).lowercaseLetters[len(notes)]
+                )
+
+        insert = list()
+        for arg in args:
+            insert.append(eval(arg))
+        insert.insert(1, short)
+        insert.insert(1, label)
+
+        try:
+            self.addEntry("training_notes", insert)
+        except:
+            if debugging:
+                etype, value, traceBack = sys.exc_info()
+                self.__displayException(etype, value, traceBack)
+            return False
+        return True
+
 
     def addTrainingRoutine(self, exercise, sets, reps, warmUp,
                            week_1, week_2, week_3, week_4, week_5, week_6,
@@ -1227,22 +1263,12 @@ if __name__ == '__main__':
 
     database.createRoutineTables(debugging = True)
     database.setGeneralInformation("test", "11.11.2020", "testMode")
-    database.addTrainingAlternative(
+    database.addTrainingNote(
             1,
-            "testAlternativeExercise",
-            "testSets",
-            "testReps",
-            "testWarmUp",
-            "testWeek1",
-            "testWeek2",
-            "testWeek3",
-            "testWeek4",
-            "testWeek5",
-            "testWeek6",
-            "testMode",
+            "ThisIsATestNote",
             debugging = True
         )
-    print(database.data("training_alternatives"))
+    print(database.data("training_notes"))
 
     """
     # create database

@@ -387,6 +387,14 @@ class ConvenientMethods(unittest.TestCase):
             )
         self.assertTrue(result)
 
+    def test_addTrainingNote(self):
+        self.database.createRoutineTables()
+        result = self.database.addTrainingNote(
+                1,
+                "ThisIsATestNote",
+            )
+        self.assertTrue(result)
+
     def tearDown(self):
         try:
             self.file.unlink()
