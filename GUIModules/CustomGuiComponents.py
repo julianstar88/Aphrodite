@@ -446,8 +446,6 @@ class CustomEditAlternativesDialog(QtWidgets.QDialog):
         self.acceptButton.setDefault(True)
         self.rejectButton = QtWidgets.QPushButton("Cancel", self)
 
-        self.exerciseCombo = Custom
-
         # Layout Setting
         self.mainLayout.addWidget(self.editor)
         self.buttonLayout.addStretch()
@@ -463,6 +461,9 @@ class CustomEditAlternativesDialog(QtWidgets.QDialog):
         width = self.editor.horizontalHeader().length()
         self.setGeometry(200,100,width,300)
 
+        # populate editor model
+        self.populateEditorModel()
+
         # Show Dialog
         self.exec()
 
@@ -470,8 +471,10 @@ class CustomEditAlternativesDialog(QtWidgets.QDialog):
         return self._database
 
     def populateEditorModel(self):
-
         data = self.database().data("training_alternatives")
+        modelData = [CustomModelItem(data[row][col]) for row in range(len(data)) for col in range(len(data[0]))]
+        for row in modelData:
+            self.editor.model().appendRow(row)
 
     def setDatabase(self, database):
         self._database = database
@@ -680,11 +683,12 @@ class CustomModelItem(QtGui.QStandardItem):
         self.model().itemChanged.emit(self, defaultPurpose)
 
     def setUserData(self, data):
-        if not type(data) == str:
+        if not isinstance(data, str) and not isinstance(data, int):
             raise TypeError(
-                    "input <{input_name}> for 'setUserData' does not match {type_name}".format(
+                    "input <{input_name}> for 'setUserData' does neither match {type_name_1} nor {type_name_2}".format(
                             input_name = str(data),
-                            type_name = str
+                            type_name_1 = str,
+                            type_name_2 = int
                         )
                 )
         self._userData = data
