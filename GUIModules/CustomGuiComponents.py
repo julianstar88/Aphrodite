@@ -401,6 +401,83 @@ class CustomDeleteNoteDialog(QtWidgets.QDialog):
     def __init__(self, *args):
         super().__init__(*args)
 
+class CustomEditAlternativesDialog(QtWidgets.QDialog):
+
+    def __init__(self, database, *args, parent = None):
+        super().__init__(parent, *args)
+        self.setWindowTitle("Edit Trainingalternatives")
+        self.toCommit = {}
+        self._database = None
+
+        self.setDatabase(database)
+
+        # Groups
+        self.buttonGroup = QtWidgets.QWidget(self)
+
+        # Layouts
+        self.mainLayout = QtWidgets.QVBoxLayout(self)
+        self.buttonLayout = QtWidgets.QHBoxLayout(self)
+
+        # Members
+        self.editor = CustomRoutineEditor(
+                parent = self,
+                modelRows = 0,
+                modelColumns = 14
+            )
+        labels = [
+                "Exercise ID",
+                "Label",
+                "Short",
+                "Alternative",
+                "Sets",
+                "Reps",
+                "Warm Up",
+                "Week 1",
+                "Week 2",
+                "Week 3",
+                "Week 4",
+                "Week 5",
+                "Week 6",
+                "Mode"
+            ]
+        self.editor.model().setHorizontalHeaderLabels(labels)
+
+        self.acceptButton = QtWidgets.QPushButton("OK", self)
+        self.acceptButton.setDefault(True)
+        self.rejectButton = QtWidgets.QPushButton("Cancel", self)
+
+        self.exerciseCombo = Custom
+
+        # Layout Setting
+        self.mainLayout.addWidget(self.editor)
+        self.buttonLayout.addStretch()
+        self.buttonLayout.addWidget(self.acceptButton)
+        self.buttonLayout.addWidget(self.rejectButton)
+        self.mainLayout.addLayout(self.buttonLayout)
+
+        # connections
+        self.acceptButton.clicked.connect(self.accept)
+        self.rejectButton.clicked.connect(self.reject)
+
+        # Window Geometry
+        width = self.editor.horizontalHeader().length()
+        self.setGeometry(200,100,width,300)
+
+        # Show Dialog
+        self.exec()
+
+    def database(self):
+        return self._database
+
+    def populateEditorModel(self):
+
+        data = self.database().data("training_alternatives")
+
+    def setDatabase(self, database):
+        self._database = database
+
+
+
 class CustomEventFilter(QtCore.QObject):
 
     def __init__(self, *args):
@@ -950,22 +1027,44 @@ class CustomRoutineEditor(QtWidgets.QTableView):
 
     ObjectType = "CustomRoutineEditor"
 
-    def __init__(self, parent=None):
+    def __init__(self, parent = None, modelRows = 0, modelColumns = 10,
+                 headerLabels = None):
+
         super().__init__(parent)
-        self.__model = QtGui.QStandardItemModel(0, 10, self)
-        self.__model.setHorizontalHeaderLabels(["Excercise",
-                                              "Sets",
-                                              "Reps",
-                                              "Warm Up",
-                                              "Week 1",
-                                              "Week 2",
-                                              "Week 3",
-                                              "Week 4",
-                                              "Week 5",
-                                              "Week 6",
-                                              "Mode"])
+        self._modelRows = None
+        self._modelColumns = None
+        self._headerLabels = None
+
+        self.setModelRows(modelRows)
+        self.setModelColumns(modelColumns)
+        self.setHeaderLabels(headerLabels)
+
+        self.__model = QtGui.QStandardItemModel(modelRows, modelColumns, self)
+        self.__setHorizontalHeaderLabels()
         self.setModel(self.model())
         self.setColumnResizeMode()
+
+    def __setHorizontalHeaderLabels(self):
+        if self.headerLabels():
+            labels = self.headerLabels()
+        else:
+            if self.modelColumns() != 10:
+                labels = ["Column {}".format(i) for i in range(self.modelColumns())]
+            else:
+                labels = (
+                        ["Excercise",
+                        "Sets",
+                        "Reps",
+                        "Warm Up",
+                        "Week 1",
+                        "Week 2",
+                        "Week 3",
+                        "Week 4",
+                        "Week 5",
+                        "Week 6",
+                        "Mode"]
+                    )
+        self.model().setHorizontalHeaderLabels(labels)
 
     def setColumnResizeMode(self):
         for i in range(self.model().columnCount()):
@@ -974,8 +1073,26 @@ class CustomRoutineEditor(QtWidgets.QTableView):
             else:
                 self.horizontalHeader().setSectionResizeMode(i, QtWidgets.QHeaderView.Stretch)
 
+    def headerLabels(self):
+        return self._headerLabels
+
     def model(self):
         return self.__model
+
+    def modelColumns(self):
+        return self._modelColumns
+
+    def modelRows(self):
+        return self._modelRows
+
+    def setHeaderLabels(self, labels):
+        self._headerLabels = labels
+
+    def setModelColumns(self, count):
+        self._modelColumns = count
+
+    def setModelRows(self, count):
+        self._modelRows = count
 
 class CustomScrollArea(QtWidgets.QScrollArea):
 

@@ -5,6 +5,7 @@ Created on Thu Apr 30 18:11:28 2020
 @author: Julian
 """
 import sys
+import MainModules.Database as db
 import GuiModules.CustomGuiComponents as cc
 from PyQt5 import QtWidgets
 
@@ -18,7 +19,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle("Dialog Test")
         self.show()
 
-        self.dialog = cc.CustomEditAlternativesDialog(self)
+        database = db.database("C:/Users/Julian/Documents/Python/Projekte/Aphrodite/files/test_files/test_database_2.db")
+
+        self.dialog = cc.CustomEditAlternativesDialog(database, parent = self)
         if self.dialog.result():
             sys.exit()
         else:
