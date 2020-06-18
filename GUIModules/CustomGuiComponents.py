@@ -346,11 +346,13 @@ class CustomComboBox(QtWidgets.QComboBox):
         self.text = {
                 "exercises_gym":[
                         "Bankdrücken KH",
-                        "Bankdürcken LH",
+                        "Bankdrücken LH",
                         "Klimmzüge",
                         "Kniebeugen",
                         "Seitenheben KH",
                         "Seitenheben M",
+                        "Trizeps Dips F",
+                        "Trizeps Dips M",
                     ],
                 "exercises_running":[
                         "2K Interval",
@@ -441,6 +443,8 @@ class CustomEditAlternativesDialog(QtWidgets.QDialog):
                 "Mode"
             ]
         self.editor.model().setHorizontalHeaderLabels(labels)
+        self.editor.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.editor.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
 
         self.acceptButton = QtWidgets.QPushButton("OK", self)
         self.acceptButton.setDefault(True)
@@ -472,9 +476,31 @@ class CustomEditAlternativesDialog(QtWidgets.QDialog):
 
     def populateEditorModel(self):
         data = self.database().data("training_alternatives")
-        modelData = [CustomModelItem(data[row][col]) for row in range(len(data)) for col in range(len(data[0]))]
+        modelData = list()
+        for row in data:
+            line = [CustomModelItem(str(row[i])) for i in range(len(row))]
+            modelData.append(line)
+
         for row in modelData:
             self.editor.model().appendRow(row)
+
+        for i in range(len(data)):
+            exerciseCombo = CustomComboBox()
+            exerciseCombo.insertItems(0, [], mode = "gym")
+            text = data[i][3]
+            index = exerciseCombo.findText(text)
+            exerciseCombo.setCurrentIndex(index)
+
+            modeCombo = CustomComboBox()
+            modeCombo.insertItems(0, [], mode = "modes")
+            text = data[i][-1]
+            index = modeCombo.findText(text)
+            modeCombo.setCurrentIndex(index)
+
+            modelIndexCombo = self.editor.model().index(i, 3)
+            modelIndexMode = self.editor.model().index(i, 13)
+            self.editor.setIndexWidget(modelIndexCombo, exerciseCombo)
+            self.editor.setIndexWidget(modelIndexMode, modeCombo)
 
     def setDatabase(self, database):
         self._database = database
@@ -683,12 +709,11 @@ class CustomModelItem(QtGui.QStandardItem):
         self.model().itemChanged.emit(self, defaultPurpose)
 
     def setUserData(self, data):
-        if not isinstance(data, str) and not isinstance(data, int):
+        if not isinstance(data, str):
             raise TypeError(
-                    "input <{input_name}> for 'setUserData' does neither match {type_name_1} nor {type_name_2}".format(
+                    "input <{input_name}> for 'setUserData' does not match {type_name_1}".format(
                             input_name = str(data),
-                            type_name_1 = str,
-                            type_name_2 = int
+                            type_name_1 = str
                         )
                 )
         self._userData = data
