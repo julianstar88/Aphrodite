@@ -417,7 +417,7 @@ class CustomEditAlternativesDialog(QtWidgets.QDialog):
         self.setDatabase(database)
 
         # Groups
-        self.buttonGroup = QtWidgets.QWidget(self)
+        # self.buttonGroup = QtWidgets.QWidget(self)
 
         # Layouts
         self.mainLayout = QtWidgets.QVBoxLayout(self)
@@ -601,12 +601,9 @@ class CustomEditNotesDialog(QtWidgets.QDialog):
         self._database = None
         self.setDatabase(database)
 
-        # Groups
-        self.buttonGroup = QtWidgets.QWidget(self)
-
         # Layouts
         self.mainLayout = QtWidgets.QVBoxLayout(self)
-        self.buttonLayout = QtWidgets.QHBoxLayout(self)
+        self.buttonLayout = QtWidgets.QHBoxLayout()
 
         # Members
         self.editor = CustomRoutineEditor(
@@ -642,10 +639,16 @@ class CustomEditNotesDialog(QtWidgets.QDialog):
         self.acceptButton.clicked.connect(self.onAcceptButtonClicked)
         self.rejectButton.clicked.connect(self.reject)
         self.editor.wheelTurned.connect(self.onWheelTurned)
+        self.editor.activated.connect(self.onActivated)
+        self.editor.doubleClicked.connect(self.onActivated)
 
         # Window Geometry
-        width = self.editor.horizontalHeader().length()
-        self.setGeometry(200,100,width,500)
+        size = self.editor.horizontalHeader().sectionSize(0)
+        self.editor.horizontalHeader().setMinimumSectionSize(size)
+        for i in range(self.editor.horizontalHeader().count()):
+            self.editor.horizontalHeader().setSectionResizeMode(i, QtWidgets.QHeaderView.Fixed)
+        self.editor.horizontalHeader().setStretchLastSection(True)
+        self.setGeometry(200,100,800,500)
 
         # populate editor model
         self.populateEditorModel()
@@ -659,14 +662,6 @@ class CustomEditNotesDialog(QtWidgets.QDialog):
     def onAcceptButtonClicked(self):
         rows = self.editor.model().rowCount()
         cols = self.editor.model().columnCount()
-
-        for n in range(rows):
-            for m in range(cols):
-                item = self.editor.model().item(n, m)
-                index = self.editor.model().indexFromItem(item)
-                if (m == 3 or m == 13):
-                    combo = self.editor.indexWidget(index)
-                    item.setData(combo.currentText(), QtCore.Qt.DisplayRole)
 
         data = list()
         for n in range(rows):
@@ -690,6 +685,18 @@ class CustomEditNotesDialog(QtWidgets.QDialog):
 
         self.setToCommit(data)
 
+    def onActivated(self, modelIndex):
+        text = modelIndex.data(QtCore.Qt.DisplayRole)
+        dialog = CustomEnterTextDialog(text, parent = self.editor)
+        item = modelIndex.model().itemFromIndex(modelIndex)
+
+        if dialog.result():
+            item.setText(dialog.toCommit())
+        else:
+            item.setText(text)
+
+        self.editor.close()
+
     def onWheelTurned(self, obj, event):
         angle = event.angleDelta().y()
         model = self.editor.model()
@@ -702,7 +709,11 @@ class CustomEditNotesDialog(QtWidgets.QDialog):
             items[0].setText("None")
             items[1].setText(type(self).lowercaseLetters[oldRowCount])
             items[2].setText("note {}".format(newRowCount))
-            items[3].setText("None")
+
+            for i in range(oldRowCount, newRowCount+1, 1):
+                index = model.index(i, 4)
+                noteEdit = QtWidgets.QTextEdit(self.editor)
+                self.editor.setIndexWidget(index, noteEdit)
 
         if angle < 0:
             oldValue = model.rowCount()
@@ -732,6 +743,57 @@ class CustomEditNotesDialog(QtWidgets.QDialog):
 
 class CustomEditRoutineDialog(QtWidgets.QDialog):
     pass
+
+class CustomEnterTextDialog(QtWidgets.QDialog):
+
+    def __init__(self, text, *args, parent = None):
+        super().__init__(parent, *args)
+        self.setWindowTitle("Edit Trainingnotes")
+        self.setGeometry(100,200, 500, 300)
+        self._editorText = None
+        self._toCommit = None
+
+        self.setEditorText(text)
+
+        # layouts
+        self.mainLayout = QtWidgets.QVBoxLayout(self)
+        self.buttonLayout = QtWidgets.QHBoxLayout()
+
+        # members
+        self.editor = QtWidgets.QTextEdit(self.editorText(), self)
+        self.acceptButton = QtWidgets.QPushButton("OK", self)
+        self.acceptButton.setDefault(True)
+        self.rejectButton = QtWidgets.QPushButton("Cancel", self)
+
+        # layout settings
+        self.mainLayout.addWidget(self.editor)
+        self.mainLayout.addLayout(self.buttonLayout)
+        self.buttonLayout.addStretch()
+        self.buttonLayout.addWidget(self.acceptButton)
+        self.buttonLayout.addWidget(self.rejectButton)
+
+        # connections
+        self.acceptButton.clicked.connect(self.accept)
+        self.acceptButton.clicked.connect(self.onAcceptButtonClicked)
+        self.rejectButton.clicked.connect(self.reject)
+
+        # show dialog
+        self.exec()
+
+    def editorText(self):
+        return self._editorText
+
+    def onAcceptButtonClicked(self):
+        self.setToCommit(self.editor.toPlainText())
+
+    def setEditorText(self, text):
+        self._editorText = text
+
+    def setToCommit(self, data):
+        self._toCommit = data
+
+    def toCommit(self):
+        return self._toCommit
 
 class CustomEventFilter(QtCore.QObject):
 
