@@ -5,8 +5,8 @@ Created on Thu Apr 30 18:11:28 2020
 @author: Julian
 """
 import sys
-import MainModules.Database as db
-import GuiModules.CustomGuiComponents as cc
+from MainModules import Database
+from GuiModules.CustomGuiComponents import CustomEditNotesDialog
 from PyQt5 import QtWidgets
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -19,11 +19,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle("Dialog Test")
         self.show()
 
-        database = db.database("C:/Users/Julian/Documents/Python/Projekte/Aphrodite/files/test_files/test_database_2.db")
+        database = Database.database("C:/Users/Julian/Documents/Python/Projekte/Aphrodite/files/test_files/test_database_2.db")
 
-        self.dialog = cc.CustomEditAlternativesDialog(database, parent = self)
+        self.dialog = CustomEditNotesDialog(database, parent = self)
         if self.dialog.result():
-            sys.exit()
+            pass
         else:
             sys.exit()
 

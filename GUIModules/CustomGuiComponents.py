@@ -7,7 +7,7 @@ Created on Tue Mar 17 23:57:11 2020
 import sqlite3
 import string
 import sys
-
+# from UtilityModules.CustomModel import CustomSqlModel
 from UtilityModules.GraphicUtilityModules import CreateCanvas, CreateQPixmap
 from MainModules.Database import database
 
@@ -347,12 +347,16 @@ class CustomComboBox(QtWidgets.QComboBox):
                 "exercises_gym":[
                         "Bankdrücken KH",
                         "Bankdrücken LH",
-                        "Klimmzüge",
-                        "Kniebeugen",
+                        "Bankdrücken M",
+                        "Klimmzüge F",
+                        "Klimmzüge M",
+                        "Kniebeugen F",
+                        "Kniebeugen M",
                         "Seitenheben KH",
                         "Seitenheben M",
                         "Trizeps Dips F",
                         "Trizeps Dips M",
+                        "Trizeps Seilzug"
                     ],
                 "exercises_running":[
                         "2K Interval",
@@ -408,9 +412,8 @@ class CustomEditAlternativesDialog(QtWidgets.QDialog):
     def __init__(self, database, *args, parent = None):
         super().__init__(parent, *args)
         self.setWindowTitle("Edit Trainingalternatives")
-        self.toCommit = {}
+        self._toCommit = None
         self._database = None
-
         self.setDatabase(database)
 
         # Groups
@@ -424,7 +427,8 @@ class CustomEditAlternativesDialog(QtWidgets.QDialog):
         self.editor = CustomRoutineEditor(
                 parent = self,
                 modelRows = 0,
-                modelColumns = 14
+                modelColumns = 14,
+                rowsMovable = True,
             )
         labels = [
                 "Exercise ID",
@@ -446,6 +450,7 @@ class CustomEditAlternativesDialog(QtWidgets.QDialog):
         self.editor.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.editor.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
 
+
         self.acceptButton = QtWidgets.QPushButton("OK", self)
         self.acceptButton.setDefault(True)
         self.rejectButton = QtWidgets.QPushButton("Cancel", self)
@@ -459,11 +464,13 @@ class CustomEditAlternativesDialog(QtWidgets.QDialog):
 
         # connections
         self.acceptButton.clicked.connect(self.accept)
+        self.acceptButton.clicked.connect(self.onAcceptButtonClicked)
         self.rejectButton.clicked.connect(self.reject)
+        self.editor.wheelTurned.connect(self.onWheelTurned)
 
         # Window Geometry
         width = self.editor.horizontalHeader().length()
-        self.setGeometry(200,100,width,300)
+        self.setGeometry(200,100,width,500)
 
         # populate editor model
         self.populateEditorModel()
@@ -474,11 +481,83 @@ class CustomEditAlternativesDialog(QtWidgets.QDialog):
     def database(self):
         return self._database
 
+    def onAcceptButtonClicked(self):
+        rows = self.editor.model().rowCount()
+        cols = self.editor.model().columnCount()
+
+        for n in range(rows):
+            for m in range(cols):
+                item = self.editor.model().item(n, m)
+                index = self.editor.model().indexFromItem(item)
+                if (m == 3 or m == 13):
+                    combo = self.editor.indexWidget(index)
+                    item.setData(combo.currentText(), QtCore.Qt.DisplayRole)
+
+        data = list()
+        for n in range(rows):
+            line = list()
+            for m in range(cols):
+                item = self.editor.model().item(n, m)
+                val = item.data(QtCore.Qt.DisplayRole)
+                if m == 0:
+                    try:
+                        line.append(eval(val))
+                    except:
+                        print("couldn´t evaluate <{input_name}> for 'exerciseID' in line '{line_num}'. input has to be {type_name}. set value to 'None'".format(
+                                input_name = str(val),
+                                line_num = str(n),
+                                type_name = int
+                            ))
+                        line.append(None)
+                else:
+                    line.append(val)
+            data.append(line)
+
+        self.setToCommit(data)
+
+    def onWheelTurned(self, obj, event):
+        angle = event.angleDelta().y()
+        model = self.editor.model()
+        if angle > 0:
+            oldRowCount = model.rowCount()
+            items = [QtGui.QStandardItem(None) for item in range(model.columnCount())]
+            model.appendRow(items)
+            newRowCount = model.rowCount()
+
+            items[0].setText("None")
+            items[1].setText(str(newRowCount))
+            items[2].setText("alternative {}".format(newRowCount))
+
+            for i in range(4, 13, 1):
+                items[i].setText("None")
+
+            for i in range(oldRowCount, newRowCount+1, 1):
+                index = model.index(i, 13)
+                modeCombo = CustomComboBox(self.editor)
+                modeCombo.insertItems(0, [], mode = "modes")
+                self.editor.setIndexWidget(index, modeCombo)
+
+                index = model.index(i, 3)
+                exerciseCombo = CustomComboBox(self.editor)
+                exerciseCombo.insertItems(0, [], mode = "gym")
+                self.editor.setIndexWidget(index, exerciseCombo)
+
+                modeCombo.currentTextChanged.connect(
+                        exerciseCombo.onTextChanged
+                    )
+
+        if angle < 0:
+            oldValue = model.rowCount()
+            newValue = oldValue-1
+            for i in range(oldValue, newValue-1, -1):
+                model.removeRow(i)
+                self.editor.rowCountChanged(oldValue, newValue)
+
     def populateEditorModel(self):
         data = self.database().data("training_alternatives")
         modelData = list()
         for row in data:
-            line = [CustomModelItem(str(row[i])) for i in range(len(row))]
+            line = [QtGui.QStandardItem(str(row[i])) for i in range(len(row))]
             modelData.append(line)
 
         for row in modelData:
@@ -505,7 +584,154 @@ class CustomEditAlternativesDialog(QtWidgets.QDialog):
     def setDatabase(self, database):
         self._database = database
 
+    def setToCommit(self, data):
+        self._toCommit = data
 
+    def toCommit(self):
+        return self._toCommit
+
+class CustomEditNotesDialog(QtWidgets.QDialog):
+
+    lowercaseLetters = string.ascii_lowercase
+
+    def __init__(self, database, *args, parent = None):
+        super().__init__(parent, *args)
+        self.setWindowTitle("Edit Trainingnotes")
+        self._toCommit = None
+        self._database = None
+        self.setDatabase(database)
+
+        # Groups
+        self.buttonGroup = QtWidgets.QWidget(self)
+
+        # Layouts
+        self.mainLayout = QtWidgets.QVBoxLayout(self)
+        self.buttonLayout = QtWidgets.QHBoxLayout(self)
+
+        # Members
+        self.editor = CustomRoutineEditor(
+                parent = self,
+                modelRows = 0,
+                modelColumns = 4,
+                rowsMovable = True,
+            )
+        labels = [
+                "Exercise ID",
+                "Label",
+                "Short",
+                "Note"
+            ]
+        self.editor.model().setHorizontalHeaderLabels(labels)
+        self.editor.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.editor.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+
+
+        self.acceptButton = QtWidgets.QPushButton("OK", self)
+        self.acceptButton.setDefault(True)
+        self.rejectButton = QtWidgets.QPushButton("Cancel", self)
+
+        # Layout Setting
+        self.mainLayout.addWidget(self.editor)
+        self.buttonLayout.addStretch()
+        self.buttonLayout.addWidget(self.acceptButton)
+        self.buttonLayout.addWidget(self.rejectButton)
+        self.mainLayout.addLayout(self.buttonLayout)
+
+        # connections
+        self.acceptButton.clicked.connect(self.accept)
+        self.acceptButton.clicked.connect(self.onAcceptButtonClicked)
+        self.rejectButton.clicked.connect(self.reject)
+        self.editor.wheelTurned.connect(self.onWheelTurned)
+
+        # Window Geometry
+        width = self.editor.horizontalHeader().length()
+        self.setGeometry(200,100,width,500)
+
+        # populate editor model
+        self.populateEditorModel()
+
+        # Show Dialog
+        self.exec()
+
+    def database(self):
+        return self._database
+
+    def onAcceptButtonClicked(self):
+        rows = self.editor.model().rowCount()
+        cols = self.editor.model().columnCount()
+
+        for n in range(rows):
+            for m in range(cols):
+                item = self.editor.model().item(n, m)
+                index = self.editor.model().indexFromItem(item)
+                if (m == 3 or m == 13):
+                    combo = self.editor.indexWidget(index)
+                    item.setData(combo.currentText(), QtCore.Qt.DisplayRole)
+
+        data = list()
+        for n in range(rows):
+            line = list()
+            for m in range(cols):
+                item = self.editor.model().item(n, m)
+                val = item.data(QtCore.Qt.DisplayRole)
+                if m == 0:
+                    try:
+                        line.append(eval(val))
+                    except:
+                        print("couldn´t evaluate <{input_name}> for 'exerciseID' in line '{line_num}'. input has to be {type_name}. set value to 'None'".format(
+                                input_name = str(val),
+                                line_num = str(n),
+                                type_name = int
+                            ))
+                        line.append(None)
+                else:
+                    line.append(val)
+            data.append(line)
+
+        self.setToCommit(data)
+
+    def onWheelTurned(self, obj, event):
+        angle = event.angleDelta().y()
+        model = self.editor.model()
+        if angle > 0:
+            oldRowCount = model.rowCount()
+            items = [QtGui.QStandardItem(None) for item in range(model.columnCount())]
+            model.appendRow(items)
+            newRowCount = model.rowCount()
+
+            items[0].setText("None")
+            items[1].setText(type(self).lowercaseLetters[oldRowCount])
+            items[2].setText("note {}".format(newRowCount))
+            items[3].setText("None")
+
+        if angle < 0:
+            oldValue = model.rowCount()
+            newValue = oldValue-1
+            for i in range(oldValue, newValue-1, -1):
+                model.removeRow(i)
+                self.editor.rowCountChanged(oldValue, newValue)
+
+    def populateEditorModel(self):
+        data = self.database().data("training_notes")
+        modelData = list()
+        for row in data:
+            line = [QtGui.QStandardItem(str(row[i])) for i in range(len(row))]
+            modelData.append(line)
+
+        for row in modelData:
+            self.editor.model().appendRow(row)
+
+    def setDatabase(self, database):
+        self._database = database
+
+    def setToCommit(self, data):
+        self._toCommit = data
+
+    def toCommit(self):
+        return self._toCommit
+
+class CustomEditRoutineDialog(QtWidgets.QDialog):
+    pass
 
 class CustomEventFilter(QtCore.QObject):
 
@@ -1056,20 +1282,25 @@ class CustomRoutineEditor(QtWidgets.QTableView):
 
     ObjectType = "CustomRoutineEditor"
 
+    wheelTurned = QtCore.pyqtSignal(QtCore.QObject, QtGui.QWheelEvent)
+
     def __init__(self, parent = None, modelRows = 0, modelColumns = 10,
-                 headerLabels = None):
+                 headerLabels = None, database = None, rowsMovable = False):
 
         super().__init__(parent)
         self._modelRows = None
         self._modelColumns = None
         self._headerLabels = None
+        self._database = None
 
         self.setModelRows(modelRows)
         self.setModelColumns(modelColumns)
         self.setHeaderLabels(headerLabels)
+        self.setDatabase(database)
 
         self.__model = QtGui.QStandardItemModel(modelRows, modelColumns, self)
         self.__setHorizontalHeaderLabels()
+        self.verticalHeader().setSectionsMovable(rowsMovable)
         self.setModel(self.model())
         self.setColumnResizeMode()
 
@@ -1102,6 +1333,15 @@ class CustomRoutineEditor(QtWidgets.QTableView):
             else:
                 self.horizontalHeader().setSectionResizeMode(i, QtWidgets.QHeaderView.Stretch)
 
+    def database(self):
+        return self._database
+
+    def eventFilter(self, obj, event):
+        if isinstance(event, QtGui.QWheelEvent):
+            self.wheelTurned.emit(self, event)
+            return True
+        return super().eventFilter(obj, event)
+
     def headerLabels(self):
         return self._headerLabels
 
@@ -1113,6 +1353,9 @@ class CustomRoutineEditor(QtWidgets.QTableView):
 
     def modelRows(self):
         return self._modelRows
+
+    def setDatabase(self, database):
+        self._database = database
 
     def setHeaderLabels(self, labels):
         self._headerLabels = labels
@@ -1194,6 +1437,24 @@ class CustomWidget(QtWidgets.QWidget):
         }
 
         """)
+
+class ExceptionHandler():
+
+    def displayException(self, exceptionType, value, traceBack):
+        string = "Traceback: {traceback} \n Exception Type: {etype} \n Value: {value}".format(
+                traceback = traceBack,
+                etype = exceptionType,
+                value = str(value)
+            )
+        print(string)
+
+    def handleException(self, debugging = False):
+        if not debugging:
+            return False
+
+        etype, value, traceBack = sys.exc_info()
+        self.displayException(etype, value, traceBack)
+
 
 if __name__ == "__main__":
 
