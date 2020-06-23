@@ -700,7 +700,8 @@ class Exporter():
                 )
         self._trainingMode = trainingMode
 
-    def setTrainingPeriode(self, startYear, startMonth, startDay):
+    def setTrainingPeriode(self, startYear, startMonth, startDay,
+                           endYear = None, endMonth = None, endDay = None):
         """
         setter method for the 'trainingPeriode'-property. the setter provides
         only the possibility to set the start date. the end date will be
@@ -751,7 +752,11 @@ class Exporter():
                         )
                 )
         startDate = datetime.date(startYear, startMonth, startDay)
-        endDate = startDate + datetime.timedelta(days = 42)
+
+        if endYear and endMonth and endDay:
+            endDate = datetime.date(endYear, endMonth, endDay)
+        else:
+            endDate = startDate + datetime.timedelta(days = 42)
         startDateString = startDate.strftime("%d.%m.%Y")
         endDateString = endDate.strftime("%d.%m.%Y")
         self._trainingPeriode = [startDateString, endDateString]

@@ -381,12 +381,15 @@ class database():
         # establish connection
         con = self.establishConnection(self.databaseName())
         with con:
-            c = con.cursor()
-            values = '?, ' * len(insert[0])
-            values = values[:-2]
-            sql_command = "INSERT INTO {name} VALUES({values})".format(
-                name = tableName, values = values)
-            c.executemany(sql_command, insert)
+            try:
+                c = con.cursor()
+                values = '?, ' * len(insert[0])
+                values = values[:-2]
+                sql_command = "INSERT INTO {name} VALUES({values})".format(
+                    name = tableName, values = values)
+                c.executemany(sql_command, insert)
+            except IndexError:
+                pass
 
         # close connection
         self.closeConnection(con)

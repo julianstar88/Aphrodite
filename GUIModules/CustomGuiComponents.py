@@ -7,7 +7,8 @@ Created on Tue Mar 17 23:57:11 2020
 import sqlite3
 import string
 import sys
-# from UtilityModules.CustomModel import CustomSqlModel
+import datetime
+import re
 from UtilityModules.GraphicUtilityModules import CreateCanvas, CreateQPixmap
 from MainModules.Database import database
 
@@ -348,6 +349,10 @@ class CustomComboBox(QtWidgets.QComboBox):
                         "Bankdrücken KH",
                         "Bankdrücken LH",
                         "Bankdrücken M",
+                        "Bizeps KH",
+                        "Bizeps SZ",
+                        "Bizeps LH",
+                        "Bizeps Scott Curles",
                         "Klimmzüge F",
                         "Klimmzüge M",
                         "Kniebeugen F",
@@ -392,6 +397,16 @@ class CustomComboBox(QtWidgets.QComboBox):
         self.clear()
         self.insertItems(0, [], mode = text)
 
+class CustomCalendarWidget(QtWidgets.QCalendarWidget):
+
+    resetSelection = QtCore.pyqtSignal()
+
+    def __init__(self, *args):
+        super().__init__(*args)
+
+    def contextMenuEvent(self, event):
+        self.resetSelection.emit()
+        super().contextMenuEvent(event)
 
 class CustomDeleteAlternativeDialog(QtWidgets.QDialog):
 
@@ -416,12 +431,9 @@ class CustomEditAlternativesDialog(QtWidgets.QDialog):
         self._database = None
         self.setDatabase(database)
 
-        # Groups
-        # self.buttonGroup = QtWidgets.QWidget(self)
-
         # Layouts
         self.mainLayout = QtWidgets.QVBoxLayout(self)
-        self.buttonLayout = QtWidgets.QHBoxLayout(self)
+        self.buttonLayout = QtWidgets.QHBoxLayout()
 
         # Members
         self.editor = CustomRoutineEditor(
@@ -447,8 +459,9 @@ class CustomEditAlternativesDialog(QtWidgets.QDialog):
                 "Mode"
             ]
         self.editor.model().setHorizontalHeaderLabels(labels)
-        self.editor.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.editor.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.editor.horizontalHeader().setSectionResizeMode(3, QtWidgets.QHeaderView.Fixed)
+        self.editor.setTabKeyNavigation(False)
 
 
         self.acceptButton = QtWidgets.QPushButton("OK", self)
@@ -471,6 +484,7 @@ class CustomEditAlternativesDialog(QtWidgets.QDialog):
         # Window Geometry
         width = self.editor.horizontalHeader().length()
         self.setGeometry(200,100,width,500)
+        self.editor.resizeColumnToContent(3)
 
         # populate editor model
         self.populateEditorModel()
@@ -527,9 +541,6 @@ class CustomEditAlternativesDialog(QtWidgets.QDialog):
             items[0].setText("None")
             items[1].setText(str(newRowCount))
             items[2].setText("alternative {}".format(newRowCount))
-
-            for i in range(4, 13, 1):
-                items[i].setText("None")
 
             for i in range(oldRowCount, newRowCount+1, 1):
                 index = model.index(i, 13)
@@ -619,9 +630,8 @@ class CustomEditNotesDialog(QtWidgets.QDialog):
                 "Note"
             ]
         self.editor.model().setHorizontalHeaderLabels(labels)
-        self.editor.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.editor.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-
+        self.editor.setTabKeyNavigation(False)
 
         self.acceptButton = QtWidgets.QPushButton("OK", self)
         self.acceptButton.setDefault(True)
@@ -640,7 +650,7 @@ class CustomEditNotesDialog(QtWidgets.QDialog):
         self.rejectButton.clicked.connect(self.reject)
         self.editor.wheelTurned.connect(self.onWheelTurned)
         self.editor.activated.connect(self.onActivated)
-        self.editor.doubleClicked.connect(self.onActivated)
+        # self.editor.doubleClicked.connect(self.onActivated)
 
         # Window Geometry
         size = self.editor.horizontalHeader().sectionSize(0)
@@ -655,6 +665,14 @@ class CustomEditNotesDialog(QtWidgets.QDialog):
 
         # Show Dialog
         self.exec()
+
+    def keyPressEvent(self, event):
+
+        # ignore Return or Enter Key to prevent unwanted dialog closing
+        if (event.key() == QtCore.Qt.Key_Enter) or (event.key() == QtCore.Qt.Key_Return):
+            return event.ignore()
+
+        return super().keyPressEvent(event)
 
     def database(self):
         return self._database
@@ -687,15 +705,22 @@ class CustomEditNotesDialog(QtWidgets.QDialog):
 
     def onActivated(self, modelIndex):
         text = modelIndex.data(QtCore.Qt.DisplayRole)
-        dialog = CustomEnterTextDialog(text, parent = self.editor)
+        headerLabels = list()
+        for i in range(self.editor.horizontalHeader().count()):
+            headerLabels.append(self.editor.model().horizontalHeaderItem(i).text())
+
+        title = "Edit {}...".format(headerLabels[modelIndex.column()])
+        dialog = CustomEnterTextDialog(
+                text,
+                parent = self.editor,
+                dialogTitle = title
+            )
         item = modelIndex.model().itemFromIndex(modelIndex)
 
         if dialog.result():
             item.setText(dialog.toCommit())
         else:
             item.setText(text)
-
-        self.editor.close()
 
     def onWheelTurned(self, obj, event):
         angle = event.angleDelta().y()
@@ -709,11 +734,7 @@ class CustomEditNotesDialog(QtWidgets.QDialog):
             items[0].setText("None")
             items[1].setText(type(self).lowercaseLetters[oldRowCount])
             items[2].setText("note {}".format(newRowCount))
-
-            for i in range(oldRowCount, newRowCount+1, 1):
-                index = model.index(i, 4)
-                noteEdit = QtWidgets.QTextEdit(self.editor)
-                self.editor.setIndexWidget(index, noteEdit)
+            items[3].setEditable(False)
 
         if angle < 0:
             oldValue = model.rowCount()
@@ -732,6 +753,12 @@ class CustomEditNotesDialog(QtWidgets.QDialog):
         for row in modelData:
             self.editor.model().appendRow(row)
 
+        for n in range(self.editor.model().rowCount()):
+            for m in range(self.editor.model().columnCount()):
+                if m == 3:
+                    item = self.editor.model().item(n, m)
+                    item.setEditable(False)
+
     def setDatabase(self, database):
         self._database = database
 
@@ -742,13 +769,293 @@ class CustomEditNotesDialog(QtWidgets.QDialog):
         return self._toCommit
 
 class CustomEditRoutineDialog(QtWidgets.QDialog):
-    pass
+
+    def __init__(self, database, *args, parent = None):
+        super().__init__(parent, *args)
+        self._database = None
+        self._toCommit = dict()
+
+        self.setDatabase(database)
+
+        # Groups
+        self.GeneralInformationGroup = QtWidgets.QGroupBox("General Information", self)
+
+        # Layouts
+        self.mainLayout = QtWidgets.QVBoxLayout(self)
+        self.GeneralInformationLayout = QtWidgets.QGridLayout(self.GeneralInformationGroup)
+        self.userInformationLayout = QtWidgets.QFormLayout()
+        self.dialogButtonLayout = QtWidgets.QHBoxLayout()
+
+        # Members
+        self.editAlternativesButton = QtWidgets.QPushButton("Edit Alternatives...", self)
+        self.editNotesButton = QtWidgets.QPushButton("Edit Notes...", self)
+        self.acceptButton = QtWidgets.QPushButton("OK", self)
+        self.acceptButton.setDefault(True)
+        self.rejectButton = QtWidgets.QPushButton("Cancel", self)
+        self.usernameEdit = QtWidgets.QLineEdit(self)
+        self.usernameEdit.setPlaceholderText("Enter Name...")
+        self.trainingmodeEdit = QtWidgets.QLineEdit(self)
+        self.trainingmodeEdit.setPlaceholderText("Enter Trainingmode...")
+
+        self.editor = CustomRoutineEditor(
+                parent = self,
+                modelRows = 0,
+                modelColumns = 10,
+                rowsMovable = True,
+            )
+
+        self.trainingPeriodeSelector = CustomCalendarWidget(self)
+        self.trainingPeriodeSelector.setSelectionMode(QtWidgets.QCalendarWidget.NoSelection)
+        self.trainingPeriodeSelector.resetSelection.connect(self.onSelectionReset)
+        self.trainingPeriodeSelector.selectionChanged.connect(self.onSelectedDateChanged)
+
+        self.startDateSelector = QtWidgets.QDateEdit(self)
+        self.startDateSelector.dateChanged.connect(self.onStartDateChanged)
+        self.endDateView = QtWidgets.QDateEdit(self)
+        self.endDateView.setReadOnly(True)
+        self.endDateView.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
+
+        # Layout Settings
+        self.mainLayout.addWidget(self.GeneralInformationGroup)
+        self.mainLayout.addWidget(self.editor)
+        self.mainLayout.addLayout(self.dialogButtonLayout)
+
+        self.GeneralInformationLayout.addLayout(self.userInformationLayout, 0, 0, 1, 1)
+        self.GeneralInformationLayout.addWidget(self.trainingPeriodeSelector, 0, 1, 1, 1)
+        self.GeneralInformationLayout.setColumnStretch(0, 1)
+        self.GeneralInformationLayout.setColumnStretch(1, 3)
+        self.userInformationLayout.addRow("Name:", self.usernameEdit)
+        self.userInformationLayout.addRow("Trainingmode:", self.trainingmodeEdit)
+        self.userInformationLayout.addRow("Start:", self.startDateSelector)
+        self.userInformationLayout.addRow("End:", self.endDateView)
+
+        self.dialogButtonLayout.addStretch()
+        self.dialogButtonLayout.addWidget(self.editAlternativesButton)
+        self.dialogButtonLayout.addWidget(self.editNotesButton)
+        self.dialogButtonLayout.addWidget(self.acceptButton)
+        self.dialogButtonLayout.addWidget(self.rejectButton)
+
+        # dialog settings
+        self.populateDialogMembers()
+
+        # Connections
+        self.acceptButton.clicked.connect(self.accept)
+        self.acceptButton.clicked.connect(self.onAcceptButtonClicked)
+        self.rejectButton.clicked.connect(self.reject)
+        self.editor.wheelTurned.connect(self.onWheelTurned)
+        self.editAlternativesButton.clicked.connect(self.onEditAlternatives)
+        self.editNotesButton.clicked.connect(self.onEditNotes)
+
+        # Window Geometry
+        width = self.editor.horizontalHeader().length()
+        self.setGeometry(200,100,width,500)
+        self.editor.resizeColumnToContent(0)
+
+        # Show Dialog
+        self.exec()
+
+    def calculateTrainingPeriode(self, startDateStr):
+        if isinstance(startDateStr, QtCore.QDate):
+            startDate = startDateStr
+            endDate = startDate.addDays(42)
+        elif isinstance(startDateStr, str):
+            match = re.search("(?P<day>\d+).(?P<month>\d+).(?P<year>\d+)", startDateStr)
+            startDate = QtCore.QDate(
+                    int(match.group("year")),
+                    int(match.group("month")),
+                    int(match.group("day"))
+                )
+            endDate = startDate.addDays(42)
+        else:
+            date = datetime.date.today()
+            startDate = QtCore.QDate(date.year, date.month, date.day)
+            endDate = startDate.addDays(42)
+        return [startDate, endDate]
+
+
+    def database(self):
+        return self._database
+
+    def onAcceptButtonClicked(self):
+        rows = self.editor.model().rowCount()
+        cols = self.editor.model().columnCount()
+
+        for n in range(rows):
+            for m in range(cols):
+                item = self.editor.model().item(n, m)
+                index = self.editor.model().indexFromItem(item)
+                if (m == 0 or m == 10):
+                    combo = self.editor.indexWidget(index)
+                    item.setData(combo.currentText(), QtCore.Qt.DisplayRole)
+
+        data = list()
+        for n in range(rows):
+            line = list()
+            for m in range(cols):
+                item = self.editor.model().item(n, m)
+                val = item.data(QtCore.Qt.DisplayRole)
+                line.append(val)
+            data.append(line)
+        self.setToCommit("training_routine", data)
+
+        data = list()
+        name = self.usernameEdit.text()
+        date = self.startDateSelector.date()
+        dateObj = datetime.date(date.year(), date.month(), date.day())
+        startDate = dateObj.strftime("%d.%m.%Y")
+        mode = self.trainingmodeEdit.text()
+
+        # name, startDate and mode have to be in a nested list, to use
+        # Database.database.addManyEntries uniformly to the other tables
+        self.setToCommit("general_information", [[name, startDate, mode]])
+
+    def onEditAlternatives(self):
+        dialog = CustomEditAlternativesDialog(
+                self.database(),
+                parent = self
+            )
+        if dialog.result():
+            self.database().deleteAllEntries("training_alternatives")
+            self.database().addManyEntries("training_alternatives", dialog.toCommit())
+
+    def onEditNotes(self):
+        dialog = CustomEditNotesDialog(
+                self.database(),
+                parent = None
+            )
+        if dialog.result():
+            self.database().deleteAllEntries("training_notes")
+            self.database().addManyEntries("training_notes", dialog.toCommit())
+
+    def onSelectedDateChanged(self):
+        date = self.trainingPeriodeSelector.selectedDate()
+        self.onStartDateChanged(date)
+
+    def onSelectionReset(self):
+        currentYear = QtCore.QDate.currentDate().year()
+        minDate = QtCore.QDate(currentYear, 1, 1)
+        maxDate = QtCore.QDate(currentYear + 1, 12, 31)
+        self.trainingPeriodeSelector.setDateRange(minDate, maxDate)
+        self.trainingPeriodeSelector.setSelectionMode(QtWidgets.QCalendarWidget.SingleSelection)
+
+    def onStartDateChanged(self, date):
+        trainingPeriode = self.calculateTrainingPeriode(date)
+        self.startDateSelector.setDate(trainingPeriode[0])
+        self.endDateView.setDate(trainingPeriode[1])
+        self.trainingPeriodeSelector.setDateRange(trainingPeriode[0], trainingPeriode[1])
+        self.trainingPeriodeSelector.setSelectionMode(QtWidgets.QCalendarWidget.NoSelection)
+
+    def onWheelTurned(self, obj, event):
+        angle = event.angleDelta().y()
+        model = self.editor.model()
+        if angle > 0:
+            oldRowCount = model.rowCount()
+            items = [QtGui.QStandardItem(None) for item in range(model.columnCount())]
+            model.appendRow(items)
+            newRowCount = model.rowCount()
+
+            # items[0].setText("None")
+            # items[1].setText(str(newRowCount))
+            # items[2].setText("alternative {}".format(newRowCount))
+
+            for i in range(oldRowCount, newRowCount+1, 1):
+                index = model.index(i, 10)
+                modeCombo = CustomComboBox(self.editor)
+                modeCombo.insertItems(0, [], mode = "modes")
+                self.editor.setIndexWidget(index, modeCombo)
+
+                index = model.index(i, 0)
+                exerciseCombo = CustomComboBox(self.editor)
+                exerciseCombo.insertItems(0, [], mode = "gym")
+                self.editor.setIndexWidget(index, exerciseCombo)
+
+                modeCombo.currentTextChanged.connect(
+                        exerciseCombo.onTextChanged
+                    )
+
+        if angle < 0:
+            oldValue = model.rowCount()
+            newValue = oldValue-1
+            for i in range(oldValue, newValue-1, -1):
+                model.removeRow(i)
+                self.editor.rowCountChanged(oldValue, newValue)
+
+    def populateDialogMembers(self):
+        routineData = self.database().data("training_routine")
+        generalData = self.database().data("general_information")
+
+        labels = [
+                "Exercise",
+                "Sets",
+                "Reps",
+                "Warm Up",
+                "Week 1",
+                "Week 2",
+                "Week 3",
+                "Week 4",
+                "Week 5",
+                "Week 6",
+                "Mode"
+            ]
+        self.editor.model().setHorizontalHeaderLabels(labels)
+        self.editor.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.editor.setTabKeyNavigation(False)
+        for row in routineData:
+            line = [QtGui.QStandardItem(row[i]) for i in range(len(row))]
+            self.editor.model().appendRow(line)
+
+        for i in range(len(routineData)):
+            exerciseCombo = CustomComboBox()
+            exerciseCombo.insertItems(0, [], mode = "gym")
+            text = routineData[i][0]
+            index = exerciseCombo.findText(text)
+            exerciseCombo.setCurrentIndex(index)
+
+            modeCombo = CustomComboBox()
+            modeCombo.insertItems(0, [], mode = "modes")
+            text = routineData[i][-1]
+            index = modeCombo.findText(text)
+            modeCombo.setCurrentIndex(index)
+
+            modelIndexCombo = self.editor.model().index(i, 0)
+            modelIndexMode = self.editor.model().index(i, 10)
+            self.editor.setIndexWidget(modelIndexCombo, exerciseCombo)
+            self.editor.setIndexWidget(modelIndexMode, modeCombo)
+
+        try:
+            self.usernameEdit.setText(generalData[0][0])
+        except IndexError:
+            pass
+
+        try:
+            self.trainingmodeEdit.setText(generalData[0][2])
+        except IndexError:
+            pass
+
+        try:
+            startDateStr = generalData[0][1]
+        except IndexError:
+            startDateStr = None
+
+        trainingPeriode = self.calculateTrainingPeriode(startDateStr)
+        self.startDateSelector.setDate(trainingPeriode[0])
+        self.endDateView.setDate(trainingPeriode[1])
+        self.trainingPeriodeSelector.setDateRange(trainingPeriode[0], trainingPeriode[1])
+
+    def setDatabase(self, database):
+        self._database = database
+
+    def setToCommit(self, tableName, data):
+        self._toCommit[tableName] = data
+
+    def toCommit(self):
+        return self._toCommit
 
 class CustomEnterTextDialog(QtWidgets.QDialog):
 
-    def __init__(self, text, *args, parent = None):
+    def __init__(self, text, *args, parent = None, dialogTitle = "Edit..."):
         super().__init__(parent, *args)
-        self.setWindowTitle("Edit Trainingnotes")
+        self.setWindowTitle(dialogTitle)
         self.setGeometry(100,200, 500, 300)
         self._editorText = None
         self._toCommit = None
@@ -760,7 +1067,12 @@ class CustomEnterTextDialog(QtWidgets.QDialog):
         self.buttonLayout = QtWidgets.QHBoxLayout()
 
         # members
-        self.editor = QtWidgets.QTextEdit(self.editorText(), self)
+        self.editor = QtWidgets.QTextEdit(self)
+        self.editor.insertHtml(self.editorText())
+        self.editor.setLineWrapMode(QtWidgets.QTextEdit.WidgetWidth)
+        self.editor.setTabChangesFocus(True)
+        self.editor.selectAll()
+
         self.acceptButton = QtWidgets.QPushButton("OK", self)
         self.acceptButton.setDefault(True)
         self.rejectButton = QtWidgets.QPushButton("Cancel", self)
@@ -1415,6 +1727,12 @@ class CustomRoutineEditor(QtWidgets.QTableView):
 
     def modelRows(self):
         return self._modelRows
+
+    def resizeColumnToContent(self, column):
+        header = self.horizontalHeader()
+        columnWidths = [header.sectionSize(i) for i in range(header.count())]
+        maxWidth = max(columnWidths)
+        self.setColumnWidth(column, maxWidth*2)
 
     def setDatabase(self, database):
         self._database = database
