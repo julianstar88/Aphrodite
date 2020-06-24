@@ -429,6 +429,7 @@ class CustomEditAlternativesDialog(QtWidgets.QDialog):
         self.setWindowTitle("Edit Trainingalternatives")
         self._toCommit = None
         self._database = None
+        self._movedRows = list()
         self.setDatabase(database)
 
         # Layouts
@@ -480,6 +481,7 @@ class CustomEditAlternativesDialog(QtWidgets.QDialog):
         self.acceptButton.clicked.connect(self.onAcceptButtonClicked)
         self.rejectButton.clicked.connect(self.reject)
         self.editor.wheelTurned.connect(self.onWheelTurned)
+        self.editor.rowHasBeenMoved.connect(self.onRowMoved)
 
         # Window Geometry
         width = self.editor.horizontalHeader().length()
@@ -495,6 +497,9 @@ class CustomEditAlternativesDialog(QtWidgets.QDialog):
     def database(self):
         return self._database
 
+    def movedRows(self):
+        return self._movedRows
+
     def onAcceptButtonClicked(self):
         rows = self.editor.model().rowCount()
         cols = self.editor.model().columnCount()
@@ -506,6 +511,10 @@ class CustomEditAlternativesDialog(QtWidgets.QDialog):
                 if (m == 3 or m == 13):
                     combo = self.editor.indexWidget(index)
                     item.setData(combo.currentText(), QtCore.Qt.DisplayRole)
+
+        for moved in self.movedRows():
+            row = self.editor.model().takeRow(moved[0])
+            self.editor.model().insertRow(moved[1], row)
 
         data = list()
         for n in range(rows):
@@ -528,6 +537,11 @@ class CustomEditAlternativesDialog(QtWidgets.QDialog):
             data.append(line)
 
         self.setToCommit(data)
+
+    def onRowMoved(self, fromRow, toRow):
+        movedRows = self.movedRows()
+        movedRows.append([fromRow, toRow])
+        self.setMovedRows(movedRows)
 
     def onWheelTurned(self, obj, event):
         angle = event.angleDelta().y()
@@ -595,6 +609,9 @@ class CustomEditAlternativesDialog(QtWidgets.QDialog):
     def setDatabase(self, database):
         self._database = database
 
+    def setMovedRows(self, moved):
+        self._movedRows = moved
+
     def setToCommit(self, data):
         self._toCommit = data
 
@@ -610,6 +627,7 @@ class CustomEditNotesDialog(QtWidgets.QDialog):
         self.setWindowTitle("Edit Trainingnotes")
         self._toCommit = None
         self._database = None
+        self._movedRows = list()
         self.setDatabase(database)
 
         # Layouts
@@ -650,6 +668,7 @@ class CustomEditNotesDialog(QtWidgets.QDialog):
         self.rejectButton.clicked.connect(self.reject)
         self.editor.wheelTurned.connect(self.onWheelTurned)
         self.editor.activated.connect(self.onActivated)
+        self.editor.rowHasBeenMoved.connect(self.onRowMoved)
         # self.editor.doubleClicked.connect(self.onActivated)
 
         # Window Geometry
@@ -677,9 +696,16 @@ class CustomEditNotesDialog(QtWidgets.QDialog):
     def database(self):
         return self._database
 
+    def movedRows(self):
+        return self._movedRows
+
     def onAcceptButtonClicked(self):
         rows = self.editor.model().rowCount()
         cols = self.editor.model().columnCount()
+
+        for moved in self.movedRows():
+            row = self.editor.model().takeRow(moved[0])
+            self.editor.model().insertRow(moved[1], row)
 
         data = list()
         for n in range(rows):
@@ -722,6 +748,11 @@ class CustomEditNotesDialog(QtWidgets.QDialog):
         else:
             item.setText(text)
 
+    def onRowMoved(self, fromRow, toRow):
+        movedRows = self.movedRows()
+        movedRows.append([fromRow, toRow])
+        self.setMovedRows(movedRows)
+
     def onWheelTurned(self, obj, event):
         angle = event.angleDelta().y()
         model = self.editor.model()
@@ -762,6 +793,9 @@ class CustomEditNotesDialog(QtWidgets.QDialog):
     def setDatabase(self, database):
         self._database = database
 
+    def setMovedRows(self, moved):
+        self._movedRows = moved
+
     def setToCommit(self, data):
         self._toCommit = data
 
@@ -774,6 +808,7 @@ class CustomEditRoutineDialog(QtWidgets.QDialog):
         super().__init__(parent, *args)
         self._database = None
         self._toCommit = dict()
+        self._movedRows = list()
 
         self.setDatabase(database)
 
@@ -803,6 +838,8 @@ class CustomEditRoutineDialog(QtWidgets.QDialog):
                 modelColumns = 10,
                 rowsMovable = True,
             )
+        self.editor.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.editor.setTabKeyNavigation(False)
 
         self.trainingPeriodeSelector = CustomCalendarWidget(self)
         self.trainingPeriodeSelector.setSelectionMode(QtWidgets.QCalendarWidget.NoSelection)
@@ -843,6 +880,7 @@ class CustomEditRoutineDialog(QtWidgets.QDialog):
         self.acceptButton.clicked.connect(self.onAcceptButtonClicked)
         self.rejectButton.clicked.connect(self.reject)
         self.editor.wheelTurned.connect(self.onWheelTurned)
+        self.editor.rowHasBeenMoved.connect(self.onRowMoved)
         self.editAlternativesButton.clicked.connect(self.onEditAlternatives)
         self.editNotesButton.clicked.connect(self.onEditNotes)
 
@@ -876,6 +914,9 @@ class CustomEditRoutineDialog(QtWidgets.QDialog):
     def database(self):
         return self._database
 
+    def movedRows(self):
+        return self._movedRows
+
     def onAcceptButtonClicked(self):
         rows = self.editor.model().rowCount()
         cols = self.editor.model().columnCount()
@@ -888,6 +929,10 @@ class CustomEditRoutineDialog(QtWidgets.QDialog):
                     combo = self.editor.indexWidget(index)
                     item.setData(combo.currentText(), QtCore.Qt.DisplayRole)
 
+        for moved in self.movedRows():
+            row = self.editor.model().takeRow(moved[0])
+            self.editor.model().insertRow(moved[1], row)
+
         data = list()
         for n in range(rows):
             line = list()
@@ -896,6 +941,7 @@ class CustomEditRoutineDialog(QtWidgets.QDialog):
                 val = item.data(QtCore.Qt.DisplayRole)
                 line.append(val)
             data.append(line)
+
         self.setToCommit("training_routine", data)
 
         data = list()
@@ -926,6 +972,11 @@ class CustomEditRoutineDialog(QtWidgets.QDialog):
         if dialog.result():
             self.database().deleteAllEntries("training_notes")
             self.database().addManyEntries("training_notes", dialog.toCommit())
+
+    def onRowMoved(self, fromRow, toRow):
+        movedRows = self.movedRows()
+        movedRows.append([fromRow, toRow])
+        self.setMovedRows(movedRows)
 
     def onSelectedDateChanged(self):
         date = self.trainingPeriodeSelector.selectedDate()
@@ -998,8 +1049,6 @@ class CustomEditRoutineDialog(QtWidgets.QDialog):
                 "Mode"
             ]
         self.editor.model().setHorizontalHeaderLabels(labels)
-        self.editor.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-        self.editor.setTabKeyNavigation(False)
         for row in routineData:
             line = [QtGui.QStandardItem(row[i]) for i in range(len(row))]
             self.editor.model().appendRow(line)
@@ -1044,6 +1093,9 @@ class CustomEditRoutineDialog(QtWidgets.QDialog):
 
     def setDatabase(self, database):
         self._database = database
+
+    def setMovedRows(self, moved):
+        self._movedRows = moved
 
     def setToCommit(self, tableName, data):
         self._toCommit[tableName] = data
@@ -1657,6 +1709,7 @@ class CustomRoutineEditor(QtWidgets.QTableView):
     ObjectType = "CustomRoutineEditor"
 
     wheelTurned = QtCore.pyqtSignal(QtCore.QObject, QtGui.QWheelEvent)
+    rowHasBeenMoved = QtCore.pyqtSignal(int, int)
 
     def __init__(self, parent = None, modelRows = 0, modelColumns = 10,
                  headerLabels = None, database = None, rowsMovable = False):
@@ -1675,6 +1728,7 @@ class CustomRoutineEditor(QtWidgets.QTableView):
         self.__model = QtGui.QStandardItemModel(modelRows, modelColumns, self)
         self.__setHorizontalHeaderLabels()
         self.verticalHeader().setSectionsMovable(rowsMovable)
+        self.verticalHeader().sectionMoved.connect(self.onSectionMoved)
         self.setModel(self.model())
         self.setColumnResizeMode()
 
@@ -1727,6 +1781,9 @@ class CustomRoutineEditor(QtWidgets.QTableView):
 
     def modelRows(self):
         return self._modelRows
+
+    def onSectionMoved(self, sectionIndex, fromIndex, toIndex):
+        self.rowHasBeenMoved.emit(fromIndex, toIndex)
 
     def resizeColumnToContent(self, column):
         header = self.horizontalHeader()

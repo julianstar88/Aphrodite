@@ -69,8 +69,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.show()
 
     def __connectButtons(self):
-        self.addNoteButton.clicked.connect(self.addNote)
-        self.deleteNoteButton.clicked.connect(self.deleteNote)
+        self.editAlternativesButton.clicked.connect(self.onEditAlternativesButtonClicked)
+        self.editNotesButton.clicked.connect(self.onEditNotesButtonClicked)
+        self.editRoutineButton.clicked.connect(self.onEditRoutineButtonClicked)
 
     def __calculateEndData(self, startDate):
         pattern = "(?P<day>\d\d).(?P<month>\d\d).(?P<year>\d\d\d\d)"
@@ -108,17 +109,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.aboutAphroditeAction = self.helpMenu.addAction(infoIcon, "&About Aphrodite...")
 
-
-
-    def addNote(self, event):
-        labels = self.panel2.labels()
-        values = self.panel2.values()
-        labels.append("None")
-        values.append("0123456789----- "*10)
-        self.panel2.setLabels(labels)
-        self.panel2.setValues(values)
-        self.panel2.updatePanel()
-
     def alternativeModel(self):
         return self._alternativeModel
 
@@ -151,18 +141,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def database(self):
         return self._database
 
-    def deleteNote(self, event):
-        labels = self.panel2.labels()
-        values = self.panel2.values()
-        if len(labels) == 0 or len(values) == 0:
-            return
-        else:
-            labels.pop()
-            values.pop()
-            self.panel2.setLabels(labels)
-            self.panel2.setValues(values)
-            self.panel2.updatePanel()
-
     def evaluator(self):
         return self._evaluator
 
@@ -171,6 +149,38 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def initiateMainObjects(self):
         self.configParser().readConfigFile()
+
+    def onEditAlternativesButtonClicked(self):
+        dialog = cc.CustomEditAlternativesDialog(
+                self.database(),
+                parent = self
+            )
+        if dialog.result():
+            self.database().deleteAllEntries("training_alternatives")
+            self.database().addManyEntries("training_alternatives", dialog.toCommit())
+            self.updateWindow()
+
+
+    def onEditNotesButtonClicked(self):
+        dialog = cc.CustomEditNotesDialog(
+                self.database(),
+                parent = None
+            )
+        if dialog.result():
+            self.database().deleteAllEntries("training_notes")
+            self.database().addManyEntries("training_notes", dialog.toCommit())
+            self.updateWindow()
+
+    def onEditRoutineButtonClicked(self):
+        dialog = cc.CustomEditRoutineDialog(
+                self.database(),
+                parent = self,
+            )
+        if dialog.result():
+            for key in dialog.toCommit().keys():
+                self.database().deleteAllEntries(key)
+                self.database().addManyEntries(key, dialog.toCommit()[key])
+            self.updateWindow()
 
     def openRoutine(self):
         generalLabels = ["Name:", "Start:", "End:", "Trainingmode:"]
@@ -211,23 +221,31 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabWidget.addTab(self.evaluatorTab2, "Evaluation: Trainingalternatives")
 
         self.buttonLayout = QtWidgets.QHBoxLayout()
-        self.addNoteButton = QtWidgets.QPushButton("+")
-        self.deleteNoteButton = QtWidgets.QPushButton("-")
-        self.buttonLayout.addWidget(self.addNoteButton)
-        self.buttonLayout.addWidget(self.deleteNoteButton)
+        self.editAlternativesButton = QtWidgets.QPushButton("Edit Alternatives...")
+        self.editNotesButton = QtWidgets.QPushButton("Edit Notes...")
+        self.editRoutineButton = QtWidgets.QPushButton("Edit Routine...")
+        self.buttonLayout.addWidget(self.editAlternativesButton)
+        self.buttonLayout.addWidget(self.editNotesButton)
+        self.buttonLayout.addWidget(self.editRoutineButton)
 
-        self.routineEditButtonLayout = QtWidgets.QHBoxLayout()
-        self.editTableButton = QtWidgets.QPushButton("Edit Trainingroutine...")
-        self.routineEditButtonLayout.addStretch(2)
-        self.routineEditButtonLayout.addWidget(self.editTableButton)
+        # self.buttonLayout = QtWidgets.QHBoxLayout()
+        # self.addNoteButton = QtWidgets.QPushButton("+")
+        # self.deleteNoteButton = QtWidgets.QPushButton("-")
+        # self.buttonLayout.addWidget(self.addNoteButton)
+        # self.buttonLayout.addWidget(self.deleteNoteButton)
+
+        # self.routineEditButtonLayout = QtWidgets.QHBoxLayout()
+        # self.editTableButton = QtWidgets.QPushButton("Edit Trainingroutine...")
+        # self.routineEditButtonLayout.addStretch(2)
+        # self.routineEditButtonLayout.addWidget(self.editTableButton)
 
         self.__connectButtons()
 
         self.mainLayout.addWidget(self.panel1, 0, 0)
         self.mainLayout.addWidget(self.panel2, 1, 0)
-        self.mainLayout.addLayout(self.buttonLayout, 3, 0)
+        self.mainLayout.addLayout(self.buttonLayout, 2, 0)
         self.mainLayout.addWidget(self.tabWidget, 0, 1, 3, 1)
-        self.mainLayout.addLayout(self.routineEditButtonLayout, 3, 1)
+        # self.mainLayout.addLayout(self.routineEditButtonLayout, 3, 1)
         self.mainLayout.setRowStretch(1, 2)
         self.mainLayout.setColumnStretch(0, 1)
         self.mainLayout.setColumnStretch(1, 2)
@@ -1138,7 +1156,7 @@ class EvaluatorTab(cc.CustomWidget):
 
     def updatePanel(self):
         if self.evaluator() and self.model():
-            for i in range(self.evaluator().mainWidget().count()):
+            for i in range(self.evaluator().mainWidget().count()-1, -1, -1):
                 self.evaluator().mainWidget().removeTab(i)
             self.evaluator().createTabs(self.evaluator().dataFromModel())
             self.evaluator().plotData(self.evaluator().dataFromModel())

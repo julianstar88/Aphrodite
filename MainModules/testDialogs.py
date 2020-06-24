@@ -28,10 +28,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 parent = self,
             )
         if self.dialog.result():
-            print(self.dialog.toCommit()["training_routine"])
             for key in self.dialog.toCommit().keys():
                 self.dialog.database().deleteAllEntries(key)
                 self.dialog.database().addManyEntries(key, self.dialog.toCommit()[key])
+            sys.exit()
         else:
             sys.exit()
 
