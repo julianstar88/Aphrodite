@@ -4,7 +4,6 @@ Created on Tue Mar 17 23:47:14 2020
 
 @author: Julian
 """
-
 import sqlite3
 import pathlib2
 from GuiModules.CustomGuiComponents import CustomModelItem
