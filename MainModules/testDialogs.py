@@ -6,7 +6,7 @@ Created on Thu Apr 30 18:11:28 2020
 """
 import sys
 from MainModules import Database
-from GuiModules.CustomGuiComponents import CustomEditRoutineDialog
+from GuiModules.CustomGuiComponents import CustomCreateNewRoutineDialog
 from PyQt5 import QtWidgets
 import sqlite3
 
@@ -20,17 +20,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle("Dialog Test")
         self.show()
 
-        # database = Database.database("C:/Users/Julian/Documents/Python/Projekte/Aphrodite/files/test_files/test_database_2.db")
-        database = Database.database("C:/Users/Julian/Documents/Python/Projekte/Aphrodite/files/test_files/empty_database.db")
+        database = Database.database("C:/Users/Julian/Documents/Python/Projekte/Aphrodite/files/test_files/test_database_2.db")
 
-        self.dialog = CustomEditRoutineDialog(
+        self.dialog = CustomCreateNewRoutineDialog(
                 database,
-                parent = self,
+                parent = self
             )
         if self.dialog.result():
-            for key in self.dialog.toCommit().keys():
-                self.dialog.database().deleteAllEntries(key)
-                self.dialog.database().addManyEntries(key, self.dialog.toCommit()[key])
             sys.exit()
         else:
             sys.exit()

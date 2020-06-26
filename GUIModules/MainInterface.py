@@ -165,7 +165,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.configParser().readConfigFile()
 
     def onCreateNewRoutine(self, *args):
-        pass
+        dialog = cc.CustomCreateNewRoutineDialog(
+                self.database(),
+                parent = self
+            )
 
     def onEditAlternatives(self, *args):
         dialog = cc.CustomEditAlternativesDialog(

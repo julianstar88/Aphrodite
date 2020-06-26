@@ -206,6 +206,17 @@ class CustomBoxLayout(QtWidgets.QBoxLayout):
         super().__init__(*args, **kwargs)
         self.setSizeConstraint(QtWidgets.QBoxLayout.SetMinAndMaxSize)
 
+class CustomCalendarWidget(QtWidgets.QCalendarWidget):
+
+    resetSelection = QtCore.pyqtSignal()
+
+    def __init__(self, *args):
+        super().__init__(*args)
+
+    def contextMenuEvent(self, event):
+        self.resetSelection.emit()
+        super().contextMenuEvent(event)
+
 class CustomComboBox(QtWidgets.QComboBox):
 
     ObjectType = "CustomComboBox"
@@ -265,16 +276,98 @@ class CustomComboBox(QtWidgets.QComboBox):
         self.clear()
         self.insertItems(0, [], mode = text)
 
-class CustomCalendarWidget(QtWidgets.QCalendarWidget):
+class CustomCreateNewRoutineDialog(QtWidgets.QDialog):
 
-    resetSelection = QtCore.pyqtSignal()
+    def __init__(self, database, *args, parent = None):
+        super().__init__(parent, *args)
+        self.setWindowTitle("Create new Trainingroutine")
+        self._toCommit = None
+        self._databse = None
+        self.setDatabase(database)
 
-    def __init__(self, *args):
-        super().__init__(*args)
+        # Layouts
+        self.mainLayout = QtWidgets.QVBoxLayout(self)
+        self.informationLayout = QtWidgets.QFormLayout()
+        self.buttonLayout = QtWidgets.QHBoxLayout()
 
-    def contextMenuEvent(self, event):
-        self.resetSelection.emit()
-        super().contextMenuEvent(event)
+        # Members
+        self.trainingRoutineEdit = QtWidgets.QLineEdit(self)
+        self.trainingRoutineEdit.setPlaceholderText("Enter Trainingroutines Name...")
+        self.nameEdit = QtWidgets.QLineEdit(self)
+        self.nameEdit.setPlaceholderText("Enter Username...")
+
+        self.startDateEdit = QtWidgets.QDateEdit(self)
+        self.startDateEdit.setDate(QtCore.QDate().currentDate())
+        self.startDateEdit.setCalendarPopup(True)
+
+        self.endDateView = QtWidgets.QDateEdit(self)
+        self.endDateView.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
+        self.setEndDate()
+        self.endDateView.setReadOnly(True)
+
+        self.trainingModeEdit = QtWidgets.QLineEdit(self)
+        self.trainingModeEdit.setPlaceholderText("Enter Trainingmode...")
+        self.pathEdit = QtWidgets.QLineEdit(self)
+        self.pathEdit.setPlaceholderText("Enter Save Path...")
+
+        self.dirButton = QtWidgets.QPushButton("Choose Directory...")
+        self.acceptButton = QtWidgets.QPushButton("OK")
+        self.acceptButton.setDefault(True)
+        self.rejectButton = QtWidgets.QPushButton("Cancel")
+
+
+        # Layout Settings
+        self.mainLayout.addLayout(self.informationLayout)
+        self.mainLayout.addLayout(self.buttonLayout)
+
+        self.informationLayout.addRow("Trainingroutine:", self.trainingRoutineEdit)
+        self.informationLayout.addRow("Name:", self.nameEdit)
+        self.informationLayout.addRow("Start:", self.startDateEdit)
+        self.informationLayout.addRow("End:", self.endDateView)
+        self.informationLayout.addRow("Trainingmode:", self.trainingModeEdit)
+        self.informationLayout.addRow("Save Path:", self.pathEdit)
+
+        self.buttonLayout.addStretch()
+        self.buttonLayout.addWidget(self.dirButton)
+        self.buttonLayout.addWidget(self.acceptButton)
+        self.buttonLayout.addWidget(self.rejectButton)
+
+        # Connections
+        self.acceptButton.clicked.connect(self.accept)
+        self.rejectButton.clicked.connect(self.reject)
+
+        self.startDateEdit.dateChanged.connect(self.setEndDate)
+
+        # Show Dialog
+        self.exec()
+
+    def calculateTrainingPeriode(self, startDateStr):
+        if isinstance(startDateStr, QtCore.QDate):
+            startDate = startDateStr
+            endDate = startDate.addDays(42)
+        elif isinstance(startDateStr, str):
+            match = re.search("(?P<day>\d+).(?P<month>\d+).(?P<year>\d+)", startDateStr)
+            startDate = QtCore.QDate(
+                    int(match.group("year")),
+                    int(match.group("month")),
+                    int(match.group("day"))
+                )
+            endDate = startDate.addDays(42)
+        else:
+            date = datetime.date.today()
+            startDate = QtCore.QDate(date.year, date.month, date.day)
+            endDate = startDate.addDays(42)
+        return [startDate, endDate]
+
+    def database(self):
+        return self._database
+
+    def setDatabase(self, database):
+        self._database = database
+
+    def setEndDate(self, *args):
+        periode = self.calculateTrainingPeriode(self.startDateEdit.date())
+        self.endDateView.setDate(periode[1])
 
 class CustomEditAlternativesDialog(QtWidgets.QDialog):
 
