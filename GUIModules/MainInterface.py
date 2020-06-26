@@ -65,13 +65,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.openRoutine()
 
         """show the app"""
-        # self.showMaximized()
-        self.show()
+        self.showMaximized()
+        # self.show()
 
     def __connectButtons(self):
-        self.editAlternativesButton.clicked.connect(self.onEditAlternativesButtonClicked)
-        self.editNotesButton.clicked.connect(self.onEditNotesButtonClicked)
-        self.editRoutineButton.clicked.connect(self.onEditRoutineButtonClicked)
+        self.editAlternativesButton.clicked.connect(self.onEditAlternatives)
+        self.editNotesButton.clicked.connect(self.onEditNotes)
+        self.editRoutineButton.clicked.connect(self.onEditRoutine)
 
     def __calculateEndData(self, startDate):
         pattern = "(?P<day>\d\d).(?P<month>\d\d).(?P<year>\d\d\d\d)"
@@ -97,17 +97,31 @@ class MainWindow(QtWidgets.QMainWindow):
         pencilIcon = QtGui.QIcon("files/icons/pencil.svg")
         infoIcon = QtGui.QIcon("files/icons/info.svg")
         quitIcon = QtGui.QIcon("files/icons/quit.svg")
+        saveIcon = QtGui.QIcon("files/icons/save.png")
+        exportIcon = QtGui.QIcon("files/icons/export.png")
+
         self.newRoutineAction = self.fileMenu.addAction(folderIcon, "&New Trainingroutine...")
         self.fileMenu.addSeparator()
         self.openRoutineAction = self.fileMenu.addAction(sheetIcon, "&Open Trainingroutine...")
         self.openLastClosedAction = self.fileMenu.addAction("O&pen last closed")
         self.fileMenu.addSeparator()
+        self.exportAction = self.fileMenu.addAction(exportIcon, "&Export Trainingroutine...")
+        self.fileMenu.addSeparator()
         self.quitAction = self.fileMenu.addAction(quitIcon, "&Quit")
 
         self.editRoutineAction = self.editMenu.addAction(pencilIcon, "&Edit Trainingroutine...")
+        self.editAlternativesAction = self.editMenu.addAction("Edit Training&alternatives...")
+        self.editNotesAction = self.editMenu.addAction("Edit Training&notes...")
         self.editMenu.addSeparator()
 
         self.aboutAphroditeAction = self.helpMenu.addAction(infoIcon, "&About Aphrodite...")
+
+        # connections
+        self.newRoutineAction.triggered.connect(self.onCreateNewRoutine)
+
+        self.editAlternativesAction.triggered.connect(self.onEditAlternatives)
+        self.editNotesAction.triggered.connect(self.onEditNotes)
+        self.editRoutineAction.triggered.connect(self.onEditRoutine)
 
     def alternativeModel(self):
         return self._alternativeModel
@@ -150,7 +164,10 @@ class MainWindow(QtWidgets.QMainWindow):
     def initiateMainObjects(self):
         self.configParser().readConfigFile()
 
-    def onEditAlternativesButtonClicked(self):
+    def onCreateNewRoutine(self, *args):
+        pass
+
+    def onEditAlternatives(self, *args):
         dialog = cc.CustomEditAlternativesDialog(
                 self.database(),
                 parent = self
@@ -161,7 +178,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.updateWindow()
 
 
-    def onEditNotesButtonClicked(self):
+    def onEditNotes(self, *args):
         dialog = cc.CustomEditNotesDialog(
                 self.database(),
                 parent = None
@@ -171,7 +188,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.database().addManyEntries("training_notes", dialog.toCommit())
             self.updateWindow()
 
-    def onEditRoutineButtonClicked(self):
+    def onEditRoutine(self, *args):
         dialog = cc.CustomEditRoutineDialog(
                 self.database(),
                 parent = self,
@@ -182,7 +199,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.database().addManyEntries(key, dialog.toCommit()[key])
             self.updateWindow()
 
-    def openRoutine(self):
+    def openRoutine(self, *args):
         generalLabels = ["Name:", "Start:", "End:", "Trainingmode:"]
         generalValues = ["None", "None", "None", "None"]
         noteLabels = []
@@ -855,10 +872,12 @@ class RoutineTab(cc.CustomWidget):
         self._database = None
         self._routineModel = None
         self._alternativeModel = None
+        self._alternativeScrollArea = None
         self._routineHeaderLabels = None
         self._alternativeHeaderLabels = None
         self._layout = None
         self._routineView = None
+        self._routineScrollArea = None
         self._alternativeView = None
 
         self.setDatabase(database)
@@ -925,12 +944,16 @@ class RoutineTab(cc.CustomWidget):
     def alternativeModel(self):
         return self._alternativeModel
 
+    def alternativeScrollArea(self):
+        return self._alternativeScrollArea
+
     def alternativeView(self):
         return self._alternativeView
 
     def createContent(self):
         if self.routineModel() and self.alternativeModel():
             self.setLayout(cc.CustomBoxLayout(QtWidgets.QBoxLayout.TopToBottom, self))
+
             self.setRoutineView(
                     CustomTableView.CustomModelView(
                             self.routineModel(),
@@ -944,7 +967,7 @@ class RoutineTab(cc.CustomWidget):
                             labelMargin = 2,
                             labelMode = "main",
                             exerciseNameColumn = 0,
-                            viewParent = self
+                            viewParent = self.routineScrollArea()
                         )
                 )
             self.setAlternativeView(
@@ -960,12 +983,20 @@ class RoutineTab(cc.CustomWidget):
                             labelMargin = 2,
                             labelMode = "alternative",
                             exerciseNameColumn = 0,
-                            viewParent = self
+                            viewParent = self.alternativeScrollArea()
                         )
                 )
             self.__harmonizeColumnWidths(self.alternativeView(), self.routineView())
-            self.layout().addWidget(self.routineView())
-            self.layout().addWidget(self.alternativeView())
+
+            self.setRoutineScrollArea(cc.CustomScrollArea(self.routineView()))
+            self.setAlternativeScrollArea(cc.CustomScrollArea(self.alternativeView()))
+
+            self.routineScrollArea().setFrameShape(QtWidgets.QFrame.NoFrame)
+            self.alternativeScrollArea().setFrameShape(QtWidgets.QFrame.NoFrame)
+
+            self.layout().addWidget(self.routineScrollArea())
+            self.layout().addWidget(self.alternativeScrollArea())
+
 
     def database(self):
         return self._database
@@ -978,6 +1009,9 @@ class RoutineTab(cc.CustomWidget):
 
     def routineModel(self):
         return self._model
+
+    def routineScrollArea(self):
+        return self._routineScrollArea
 
     def routineView(self):
         return self._routineView
@@ -1010,6 +1044,16 @@ class RoutineTab(cc.CustomWidget):
                         )
                 )
         self._alternativeModel = model
+
+    def setAlternativeScrollArea(self, scrollArea):
+        if not isinstance(scrollArea, QtWidgets.QScrollArea):
+            raise TypeError(
+                    "input <{input_name}> does not match {type_name}".format(
+                            input_name = str(scrollArea),
+                            type_name = QtWidgets.QScrollArea
+                        )
+                )
+        self._alternativeScrollArea = scrollArea
 
     def setAlternativeView(self, view):
         if not isinstance(view, CustomTableView.CustomModelView):
@@ -1070,6 +1114,16 @@ class RoutineTab(cc.CustomWidget):
                         )
                 )
         self._model = model
+
+    def setRoutineScrollArea(self, scrollArea):
+        if not isinstance(scrollArea, QtWidgets.QScrollArea):
+            raise TypeError(
+                    "input <{input_name}> does not match {type_name}".format(
+                            input_name = str(scrollArea),
+                            type_name = QtWidgets.QScrollArea
+                        )
+                )
+        self._routineScrollArea = scrollArea
 
     def setRoutineView(self, view):
         if not isinstance(view, CustomTableView.CustomModelView):
