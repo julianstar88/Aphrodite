@@ -600,7 +600,6 @@ class EvaluatorTab(QtWidgets.QWidget):
         self.ax.grid(which = "major")
 
     def __readData(self, data):
-
         validator = ModelInputValidation()
         return [validator.readValue(val)[0] for val in data]
 

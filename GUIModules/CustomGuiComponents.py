@@ -198,138 +198,6 @@ class CustomAddAlternativeDialog(QtWidgets.QDialog):
         else:
             self.acceptButton.setEnabled(True)
 
-class CustomAddNoteDialog(QtWidgets.QDialog):
-
-    ObjectType = "CustomAddNoteDialog"
-
-    def __init__(self, *args):
-        super().__init__(*args)
-
-        # 1: Groups
-        self.noteGroup = QtWidgets.QWidget(self)
-        self.buttonGroup = QtWidgets.QWidget(self)
-
-        # 2: Layouts
-        self.mainLayout = QtWidgets.QVBoxLayout(self)
-        self.noteLayout = QtWidgets.QFormLayout(self.noteGroup)
-        self.noteLayout.setContentsMargins(0,0,0,0)
-        self.buttonLayout = QtWidgets.QHBoxLayout(self.buttonGroup)
-        self.buttonLayout.setContentsMargins(0,0,0,0)
-
-        # 3: Members
-        self.exerciseIdEdit = QtWidgets.QLineEdit(self.noteGroup)
-        self.exerciseIdEdit.setPlaceholderText("New Exercise ID...")
-        self.shortNameEdit = QtWidgets.QLineEdit(self.noteGroup)
-        self.shortNameEdit.setPlaceholderText("New Shrot Name...")
-        self.descriptionEdit = QtWidgets.QTextEdit(self.noteGroup)
-        self.descriptionEdit.setPlaceholderText("Enter Description of Trainingnote here...")
-        self.acceptButton = QtWidgets.QPushButton("OK", self.buttonGroup)
-        self.rejectButton = QtWidgets.QPushButton("Cancel", self.buttonGroup)
-
-        # 4: Layout Settings
-        self.mainLayout.addWidget(self.noteGroup)
-        self.mainLayout.addWidget(self.buttonGroup)
-
-        self.noteLayout.addRow("Exercise ID:", self.exerciseIdEdit)
-        self.noteLayout.addRow("Short Name:", self.shortNameEdit)
-        self.noteLayout.addRow("Description:", self.descriptionEdit)
-
-        self.buttonLayout.addStretch()
-        self.buttonLayout.addWidget(self.acceptButton)
-        self.buttonLayout.addWidget(self.rejectButton)
-
-        # 5: Connections
-        self.acceptButton.clicked.connect(self.accept)
-        self.rejectButton.clicked.connect(self.reject)
-
-        # 6: Help
-        self.__setHelp()
-
-        # 7: Show Dialog
-        self.exec()
-
-    def __setHelp(self):
-        # Exercise ID
-        whatsThis = """
-        <head>
-        <style>
-            p {text-align:left}
-        </style>
-        </head>
-
-        <p>
-            <b>Enter the Exercise ID for the new Trainingnote.</b>
-        </p>
-
-        <p>
-        The Exercise ID is a unique Number specifying to which Exercise this
-        Note belongs. The new Note (as well as a generated subscript)
-        will be added to the Trainingroutine. The Value entered must be a <i>integer</i>!
-        </p>
-        """
-
-        toolTip = """
-        <p style='text-align:left;'>
-        Enter the Exercise ID for the new Trainingnote
-        </p>
-        """
-        self.exerciseIdEdit.setWhatsThis(whatsThis)
-        self.exerciseIdEdit.setToolTip(toolTip)
-
-        # Short Name
-        whatsThis = """
-        <head>
-        <style>
-            p {text-align:left}
-        </stlye>
-        </head>
-
-        <p>
-            <b>Enter the Short Name for the new Trainingnote.</b>
-        </p>
-
-        <p>
-        The purpose of the Short Name is to be displayed, whenever a summary of
-        all Notes is neccessary (e.g. if if a note should be deleted via the
-        <i>Delete Trainingnote...</i> Dialog). The entered Value can be a
-        <i>character vector</i> or a <i>string scalar</i>.
-        </p>
-        """
-        toolTip = """
-        <p style='text-align:left;'>
-        Enter the Short Name for the new Trainingnote.
-        </p>
-        """
-        self.shortNameEdit.setWhatsThis(whatsThis)
-        self.shortNameEdit.setToolTip(toolTip)
-
-        # Description
-        whatsThis = """
-        <head>
-        <style>
-            p {text-align:left}
-        </style>
-        </head>
-
-        <p>
-            <b>Enter the Description for the new Trainingnote.</b>
-        </p>
-
-        <p>
-        The Description shows in detail, whats meant with the new Trainingnote.
-        It gets displayed on the left pane if a Trainingroutine has been opened
-        and is linked to the corresponding Exercise via an unique Label.The entered Value
-        can be a <i>character vector</i> or a <i>string scalar</i>.
-        </p>
-        """
-        toolTip = """
-        <p style='text-align:left'>
-        Enter the Description for the new Trainingnote.
-        </p>
-        """
-        self.descriptionEdit.setWhatsThis(whatsThis)
-        self.descriptionEdit.setToolTip(toolTip)
-
 class CustomBoxLayout(QtWidgets.QBoxLayout):
 
     ObjectType = "CustomBoxLayout"
@@ -408,20 +276,6 @@ class CustomCalendarWidget(QtWidgets.QCalendarWidget):
         self.resetSelection.emit()
         super().contextMenuEvent(event)
 
-class CustomDeleteAlternativeDialog(QtWidgets.QDialog):
-
-    # TODO: Implement the Delete Functionality
-
-    def __init__(self, *args):
-        super().__init__(*args)
-
-class CustomDeleteNoteDialog(QtWidgets.QDialog):
-
-    # TODO: Implement the Delete Functionality
-
-    def __init__(self, *args):
-        super().__init__(*args)
-
 class CustomEditAlternativesDialog(QtWidgets.QDialog):
 
     def __init__(self, database, *args, parent = None):
@@ -494,13 +348,21 @@ class CustomEditAlternativesDialog(QtWidgets.QDialog):
         # Show Dialog
         self.exec()
 
+    def __displayException(self, exceptionType, value, traceBack):
+        string = "Traceback: {traceback} \n Exception Type: {etype} \n Value: {value}".format(
+                traceback = traceBack,
+                etype = exceptionType,
+                value = str(value)
+            )
+        print(string)
+
     def database(self):
         return self._database
 
     def movedRows(self):
         return self._movedRows
 
-    def onAcceptButtonClicked(self):
+    def onAcceptButtonClicked(self, debugging = False):
         rows = self.editor.model().rowCount()
         cols = self.editor.model().columnCount()
 
@@ -526,11 +388,14 @@ class CustomEditAlternativesDialog(QtWidgets.QDialog):
                     try:
                         line.append(eval(val))
                     except:
-                        print("couldn´t evaluate <{input_name}> for 'exerciseID' in line '{line_num}'. input has to be {type_name}. set value to 'None'".format(
-                                input_name = str(val),
-                                line_num = str(n),
-                                type_name = int
-                            ))
+                        if debugging:
+                            print("CustomEditAlternativesDialog: couldn´t evaluate <{input_name}> for 'exerciseID' in line '{line_num}'. input has to be {type_name}. set value to 'None'".format(
+                                    input_name = str(val),
+                                    line_num = str(n),
+                                    type_name = int
+                                ))
+                            etype, value, traceBack = sys.exc_info()
+                            self.__displayException(etype, value, traceBack)
                         line.append(None)
                 else:
                     line.append(val)
@@ -552,7 +417,6 @@ class CustomEditAlternativesDialog(QtWidgets.QDialog):
             model.appendRow(items)
             newRowCount = model.rowCount()
 
-            items[0].setText("None")
             items[1].setText(str(newRowCount))
             items[2].setText("alternative {}".format(newRowCount))
 
@@ -583,6 +447,10 @@ class CustomEditAlternativesDialog(QtWidgets.QDialog):
         modelData = list()
         for row in data:
             line = [QtGui.QStandardItem(str(row[i])) for i in range(len(row))]
+
+            if row[0] is None:
+                line[0] = QtGui.QStandardItem(None)
+
             modelData.append(line)
 
         for row in modelData:
@@ -685,6 +553,14 @@ class CustomEditNotesDialog(QtWidgets.QDialog):
         # Show Dialog
         self.exec()
 
+    def __displayException(self, exceptionType, value, traceBack):
+        string = "Traceback: {traceback} \n Exception Type: {etype} \n Value: {value}".format(
+                traceback = traceBack,
+                etype = exceptionType,
+                value = str(value)
+            )
+        print(string)
+
     def keyPressEvent(self, event):
 
         # ignore Return or Enter Key to prevent unwanted dialog closing
@@ -699,7 +575,7 @@ class CustomEditNotesDialog(QtWidgets.QDialog):
     def movedRows(self):
         return self._movedRows
 
-    def onAcceptButtonClicked(self):
+    def onAcceptButtonClicked(self, debugging = False):
         rows = self.editor.model().rowCount()
         cols = self.editor.model().columnCount()
 
@@ -717,11 +593,14 @@ class CustomEditNotesDialog(QtWidgets.QDialog):
                     try:
                         line.append(eval(val))
                     except:
-                        print("couldn´t evaluate <{input_name}> for 'exerciseID' in line '{line_num}'. input has to be {type_name}. set value to 'None'".format(
-                                input_name = str(val),
-                                line_num = str(n),
-                                type_name = int
-                            ))
+                        if debugging:
+                            print("CustomEditNotesDialog: couldn´t evaluate <{input_name}> for 'exerciseID' in line '{line_num}'. input has to be {type_name}. set value to 'None'".format(
+                                    input_name = str(val),
+                                    line_num = str(n),
+                                    type_name = int
+                                ))
+                            etype, value, traceBack = sys.exc_info()
+                            self.__displayException(etype, value, traceBack)
                         line.append(None)
                 else:
                     line.append(val)
@@ -762,7 +641,7 @@ class CustomEditNotesDialog(QtWidgets.QDialog):
             model.appendRow(items)
             newRowCount = model.rowCount()
 
-            items[0].setText("None")
+            items[0].setText("")
             items[1].setText(type(self).lowercaseLetters[oldRowCount])
             items[2].setText("note {}".format(newRowCount))
             items[3].setEditable(False)
@@ -779,6 +658,10 @@ class CustomEditNotesDialog(QtWidgets.QDialog):
         modelData = list()
         for row in data:
             line = [QtGui.QStandardItem(str(row[i])) for i in range(len(row))]
+
+            if row[0] is None:
+                line[0] = QtGui.QStandardItem(None)
+
             modelData.append(line)
 
         for row in modelData:
@@ -891,6 +774,14 @@ class CustomEditRoutineDialog(QtWidgets.QDialog):
 
         # Show Dialog
         self.exec()
+
+    def __displayException(self, exceptionType, value, traceBack):
+        string = "Traceback: {traceback} \n Exception Type: {etype} \n Value: {value}".format(
+                traceback = traceBack,
+                etype = exceptionType,
+                value = str(value)
+            )
+        print(string)
 
     def calculateTrainingPeriode(self, startDateStr):
         if isinstance(startDateStr, QtCore.QDate):
@@ -1331,9 +1222,13 @@ class CustomModelItem(QtGui.QStandardItem):
             data = c.fetchall()
         con.close()
         data = [list(item) for item in data]
-        for l in data:
-            if l not in CustomModelItem.trainingAlternatives:
-                CustomModelItem.trainingAlternatives.append(l)
+
+        CustomModelItem.trainingAlternatives = data
+
+        # old approach for fetch data from training_alternatives
+        # for l in data:
+        #     if l not in CustomModelItem.trainingAlternatives:
+        #         CustomModelItem.trainingAlternatives.append(l)
         return True
 
     @staticmethod
@@ -1349,9 +1244,14 @@ class CustomModelItem(QtGui.QStandardItem):
             data = c.fetchall()
         con.close()
         data = [list(item) for item in data]
-        for l in data:
-            if l not in CustomModelItem.trainingNotes:
-                CustomModelItem.trainingNotes.append(l)
+
+        CustomModelItem.trainingNotes = data
+
+        # old approach for fetch notes from training_notes
+        # for l in data:
+        #     if l not in CustomModelItem.trainingNotes:
+        #         CustomModelItem.trainingNotes.append(l)
+        return True
 
     def setData(self, value, role, defaultPurpose = True):
         if role == QtCore.Qt.DisplayRole:

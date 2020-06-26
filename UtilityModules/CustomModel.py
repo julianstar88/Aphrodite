@@ -86,6 +86,7 @@ class CustomSqlModel(QtGui.QStandardItemModel):
         CustomModelItem.fetchAlternativesFromDatabase(self.database())
         CustomModelItem.fetchNotesFromDatabase(self.database())
 
+        self.setTableData([])
         for row in data:
             l = [CustomModelItem(item) for item in row[self.tableStartIndex():]]
             self.tableData().append(l)

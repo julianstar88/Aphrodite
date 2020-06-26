@@ -228,24 +228,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.buttonLayout.addWidget(self.editNotesButton)
         self.buttonLayout.addWidget(self.editRoutineButton)
 
-        # self.buttonLayout = QtWidgets.QHBoxLayout()
-        # self.addNoteButton = QtWidgets.QPushButton("+")
-        # self.deleteNoteButton = QtWidgets.QPushButton("-")
-        # self.buttonLayout.addWidget(self.addNoteButton)
-        # self.buttonLayout.addWidget(self.deleteNoteButton)
-
-        # self.routineEditButtonLayout = QtWidgets.QHBoxLayout()
-        # self.editTableButton = QtWidgets.QPushButton("Edit Trainingroutine...")
-        # self.routineEditButtonLayout.addStretch(2)
-        # self.routineEditButtonLayout.addWidget(self.editTableButton)
-
         self.__connectButtons()
 
         self.mainLayout.addWidget(self.panel1, 0, 0)
         self.mainLayout.addWidget(self.panel2, 1, 0)
         self.mainLayout.addLayout(self.buttonLayout, 2, 0)
         self.mainLayout.addWidget(self.tabWidget, 0, 1, 3, 1)
-        # self.mainLayout.addLayout(self.routineEditButtonLayout, 3, 1)
         self.mainLayout.setRowStretch(1, 2)
         self.mainLayout.setColumnStretch(0, 1)
         self.mainLayout.setColumnStretch(1, 2)
@@ -323,11 +311,29 @@ class MainWindow(QtWidgets.QMainWindow):
         self._routineModel = routineModel
 
     def updateWindow(self):
+        if self.database():
+            data = self.database().data("general_information")[0]
+            generalValues = [data[0], data[1], self.__calculateEndData(data[1]), data[2]]
+
+            data = self.database().data("training_notes")
+            noteLabels = list()
+            noteValues = list()
+            for note in data:
+                if note[0] is not None:
+                    noteLabels.append(note[1])
+                else:
+                    noteLabels.append("")
+                noteValues.append(note[3])
+
+        self.panel1.setValues(generalValues)
         self.panel1.updatePanel()
+        self.panel2.setLabels(noteLabels)
+        self.panel2.setValues(noteValues)
         self.panel2.updatePanel()
         self.routineTab.updatePanel()
         self.evaluatorTab1.updatePanel()
         self.evaluatorTab2.updatePanel()
+        self.tabWidget.repaint()
 
 class GridPanel(cc.CustomWidget):
 
@@ -525,6 +531,7 @@ class GridPanel(cc.CustomWidget):
             valueFont.setPointSize(self.fontSize())
             valueWidget = QtWidgets.QLabel(valueString)
             valueWidget.setTextFormat(QtCore.Qt.RichText)
+            valueWidget.setFont(valueFont)
 
             self.layout().addWidget(
                     labelWidget, i, 0, QtCore.Qt.AlignLeft
@@ -624,7 +631,10 @@ class DynamicLinePanel(cc.CustomWidget):
             label = self.labels()[i]
             value = self.values()[i]
 
-            labelString = label + ")"
+            if len(label) != 0:
+                labelString = label + ")"
+            else:
+                labelString = ""
             labelFont = QtGui.QFont()
             labelFont.setBold(True)
             labelFont.setPointSize(self.fontSize())
@@ -1073,13 +1083,20 @@ class RoutineTab(cc.CustomWidget):
         self._routineView = view
 
     def updatePanel(self):
-        if self.routineView() and self.alternativeView():
-            self.routineView().updateView()
-            self.alternativeView().updateView()
-            self.__harmonizeColumnWidths(self.alternativeView(), self.routineView())
-            return True
-        else:
-            return False
+        routineModel = self.routineView().model()
+        alternativeModel = self.alternativeView().model()
+
+        for n in range(routineModel.rowCount(), -1, -1):
+            routineModel.removeRow(n)
+        routineModel.populateModel()
+        self.routineView().updateView()
+
+        for n in range(alternativeModel.rowCount(), -1, -1):
+            alternativeModel.removeRow(n)
+        alternativeModel.populateModel()
+        self.alternativeView().updateView()
+
+        self.__harmonizeColumnWidths(self.alternativeView(), self.routineView())
 
     """slots"""
     def updateAlternativeTable(self, tableView, *args):
@@ -1157,6 +1174,8 @@ class EvaluatorTab(cc.CustomWidget):
     def updatePanel(self):
         if self.evaluator() and self.model():
             for i in range(self.evaluator().mainWidget().count()-1, -1, -1):
+                evaluatorTab = self.evaluator().mainWidget().widget(i)
+                evaluatorTab.clearTab()
                 self.evaluator().mainWidget().removeTab(i)
             self.evaluator().createTabs(self.evaluator().dataFromModel())
             self.evaluator().plotData(self.evaluator().dataFromModel())

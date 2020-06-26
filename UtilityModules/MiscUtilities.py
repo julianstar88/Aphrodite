@@ -36,6 +36,8 @@ class ModelInputValidation():
                 valid = eval(value)
                 output.append(valid)
             return output
+        else:
+            return [None]
 
 if __name__ == "__main__":
     testValues = ["5", "5/5/5", "sdfs", "sfdsdf/sdf/xdf", ""]

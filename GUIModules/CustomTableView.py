@@ -32,6 +32,7 @@ class CustomModelView(QtWidgets.QTableView):
                  labelMode = "main"):
 
         super().__init__(*args)
+        self._database = None
         self._labelFontSize = None
         self._labelMargin = None
         self._labelFontWeight = None
@@ -60,6 +61,7 @@ class CustomModelView(QtWidgets.QTableView):
         self.setExerciseNameColumn(exerciseNameColumn)
         self.setViewParent(viewParent)
 
+        # self.setDatabase(database)
         self.setModel(model)
         self.model().setParent(self)
         self.setHorizontalHeader(CustomHeaderView.CustomHeader(self))
@@ -198,8 +200,12 @@ class CustomModelView(QtWidgets.QTableView):
 
         elif self.labelMode() == "alternative":
             alternative = item.trainingAlternatives[row]
-            labelText = "{label}) {itemText}".format(
-                    label = alternative[1],
+            if alternative[0]:
+                label = alternative[1] + ")"
+            else:
+                label = ""
+            labelText = "{label} {itemText}".format(
+                    label = label,
                     itemText = alternative[3],
                 )
             return labelText
