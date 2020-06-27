@@ -6,26 +6,25 @@ Created on Tue May 26 22:02:27 2020
 """
 import pathlib2
 import re
+import copy
 
 class ConfigParser():
 
     knownConfigKeys = (
-        "username",
-        "current_routine",
         "new_routine_directory",
         "last_opened_routine",
         "export_routine_directory"
     )
 
-    def __init__(self, configFile = None, configDir = None):
-        self._configFile = None
+    def __init__(self, configDir = None, configFileName = None):
+        self._configFileName = None
         self._configDir = None
-
-        if configFile is not None:
-            self.setConfigFile(configFile)
 
         if configDir is not None:
             self.setConfigDir(configDir)
+
+        if configDir is not None:
+            self.setConfigFileName(configFileName)
 
     def addAttributes(self, attributes, values):
         if not isinstance(attributes, list) and not isinstance(attributes, tuple):
@@ -50,21 +49,27 @@ class ConfigParser():
     def configDir(self):
         return self._configDir
 
-    def configFile(self):
-        return self._configFile
+    def configFileName(self):
+        return self._configFileName
 
     def readAttributes(self):
-        return self.__dict__
+        attr = copy.deepcopy(self.__dict__)
+        keys = list(attr.keys())
+        for key in keys:
+            match = re.search("^_\w+", key)
+            if match:
+                del attr[key]
+        return attr
 
 
     def readConfigFile(self, file = None):
         if file is not None:
-            self.setConfigFile(file)
+            self.setConfigDir(file)
 
-        if not self.configFile():
+        path = self.configDir() / self.configFileName()
+        if not path.is_file():
             return False
-
-        with open(self.configFile(), "r") as fh:
+        with open(path, "r") as fh:
             rawData = fh.readlines()
 
         data = list()
@@ -89,36 +94,65 @@ class ConfigParser():
                         )
                 )
         path = pathlib2.Path(wdir)
-        if not path.is_dir():
+        if (not path.is_dir()) and (not path.is_file()):
             raise ValueError(
-                    "input <{input_name}> does not point to an existing directory".format(
+                    "input <{input_name}> does not point to an existing directory or file".format(
                             input_name = str(path)
                         )
                 )
-        self._configDir = path
+        if path.is_dir():
+            self._configDir = path
+        if path.is_file():
+            self._configDir = path.parent
+            self.setConfigFileName(path.name)
 
-    def setConfigFile(self, file):
-        if not isinstance(file, pathlib2.Path) and not isinstance(file, str):
+    def setConfigFileName(self, fileName):
+        # if not isinstance(file, pathlib2.Path) and not isinstance(file, str):
+        #     raise TypeError(
+        #             "input <{input_name}> for 'setConfigFile' does not match {type_name_1} or {type_name_2}".format(
+        #                     input_name = str(file),
+        #                     type_name_1 = pathlib2.Path,
+        #                     type_name_2 = str
+        #                 )
+        #         )
+        # path = pathlib2.Path(file)
+        # if not path.is_file():
+        #     raise ValueError(
+        #             "input <{input_name}> does not point to an existing file".format(
+        #                     input_name = str(path)
+        #                 )
+        #         )
+        # self.setConfigDir(path.parent)
+        # self._configFile = path.name
+        if not isinstance(fileName, str):
             raise TypeError(
-                    "input <{input_name}> for 'setConfigFile' does not match {type_name_1} or {type_name_2}".format(
-                            input_name = str(file),
-                            type_name_1 = pathlib2.Path,
-                            type_name_2 = str
+                    "input <{input_name} does not match {type_name}>".format(
+                            input_name = str(fileName),
+                            type_name = str
                         )
                 )
-        path = pathlib2.Path(file)
-        if not path.is_file():
-            raise ValueError(
-                    "input <{input_name}> does not point to an existing file".format(
-                            input_name = str(path)
-                        )
-                )
-        self.setConfigDir(path.parent)
-        self._configFile = path
+        self._configFileName = fileName
 
-    def writeConfigFile(self, wdir = None, mode = "w"):
+    def writeConfigFile(self, fileName = None, wdir = None, mode = "w"):
+        if fileName is not None:
+            self.setConfigFileName(fileName)
+
         if wdir is not None:
             self.setConfigDir(wdir)
+
+        if (not isinstance(self.configFileName(), str)):
+            raise TypeError(
+                    "the value <{value_name}> for 'configFileName' is not valid".format(
+                            value_name = str(self.configFileName())
+                        )
+                )
+
+        if (not isinstance(self.configDir(), pathlib2.Path)):
+            raise TypeError(
+                    "the value <{value_name}> for 'configDir' is not valid".format(
+                            value_name = str(self.configDir())
+                        )
+                )
 
         if not isinstance(mode, str):
             raise TypeError(
@@ -132,9 +166,13 @@ class ConfigParser():
                             input_name = str(mode)
                         )
                 )
-        name = "config.txt"
-        with open(self.configDir() / name, mode) as fh:
-            keys = self.readAttributes().keys()
+        with open(self.configDir() / self.configFileName(), mode) as fh:
+            keys = list(self.readAttributes().keys())
+            if not keys:
+                configKeys = type(self).knownConfigKeys
+                configValues = [""]*len(configKeys)
+                self.addAttributes(configKeys, configValues)
+            keys = list(self.readAttributes().keys())
             for key in keys:
                 line = "{key}:{val}\n".format(
                         key = key,

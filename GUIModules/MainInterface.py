@@ -17,13 +17,7 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 
 class MainWindow(QtWidgets.QMainWindow):
 
-    def __init__(self, *args,
-                 configParser = None,
-                 database = None,
-                 evaluator = None,
-                 exporter = None,
-                 alternativeModel = None,
-                 routineModel = None):
+    def __init__(self, configParser, *args):
 
         super().__init__(*args)
 
@@ -48,11 +42,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         """process input parameter"""
         self.setConfigParser(configParser)
-        self.setDatabase(database)
-        self.setEvaluator(evaluator)
-        self.setExporter(exporter)
-        self.setAlternativeModel(alternativeModel)
-        self.setRoutineModel(routineModel)
+        self.populateMainObjects()
+        # self.setDatabase(database)
+        # self.setEvaluator(evaluator)
+        # self.setExporter(exporter)
+        # self.setAlternativeModel(alternativeModel)
+        # self.setRoutineModel(routineModel)
 
         """general settings for app"""
         self.setWindowTitle("Aphrodite")
@@ -176,9 +171,15 @@ class MainWindow(QtWidgets.QMainWindow):
                 parent = self
             )
         if dialog.result():
+            if not self.database().isValid():
+                return False
+
             self.database().deleteAllEntries("training_alternatives")
             self.database().addManyEntries("training_alternatives", dialog.toCommit())
             self.updateWindow()
+            return True
+        else:
+            return False
 
 
     def onEditNotes(self, *args):
@@ -187,9 +188,14 @@ class MainWindow(QtWidgets.QMainWindow):
                 parent = None
             )
         if dialog.result():
+            if not self.database().isValid():
+                return False
             self.database().deleteAllEntries("training_notes")
             self.database().addManyEntries("training_notes", dialog.toCommit())
             self.updateWindow()
+            return True
+        else:
+            return False
 
     def onEditRoutine(self, *args):
         dialog = cc.CustomEditRoutineDialog(
@@ -197,10 +203,16 @@ class MainWindow(QtWidgets.QMainWindow):
                 parent = self,
             )
         if dialog.result():
+            if not self.database().isValid():
+                return False
+
             for key in dialog.toCommit().keys():
                 self.database().deleteAllEntries(key)
                 self.database().addManyEntries(key, dialog.toCommit()[key])
             self.updateWindow()
+            return True
+        else:
+            return False
 
     def openRoutine(self, *args):
         generalLabels = ["Name:", "Start:", "End:", "Trainingmode:"]
@@ -208,7 +220,7 @@ class MainWindow(QtWidgets.QMainWindow):
         noteLabels = []
         noteValues = []
 
-        if self.database():
+        if self.database().isValid():
 
             data = self.database().data("general_information")[0]
             generalValues = [data[0], data[1], self.__calculateEndData(data[1]), data[2]]
@@ -260,6 +272,40 @@ class MainWindow(QtWidgets.QMainWindow):
         self.mainLayout.setSpacing(5)
 
         self.__createMenuBar()
+
+    def populateMainObjects(self):
+        path = pathlib2.Path(self.configParser().readAttributes()["last_opened_routine"])
+        database = Database.database(path)
+        self.setDatabase(database)
+        if self.database().isValid():
+
+            trainingModel = CustomModel.CustomSqlModel(
+                    database = str(databaseFile),
+                    table = "training_routine",
+                    tableStartIndex = 0,
+                    valueStartIndex = 1
+                )
+            trainingModel.populateModel()
+            self.setRoutineModel(trainingModel)
+
+            alternativeModel = CustomModel.CustomSqlModel(
+                    database = str(databaseFile),
+                    table = "training_alternatives",
+                    tableStartIndex = 3,
+                    valueStartIndex = 1
+                )
+            alternativeModel.populateModel()
+            self.setAlternativeModel(alternativeModel)
+
+            exporterData = databaseObject.data("general_information")
+            exporter = Exporter.Exporter()
+            exporter.setDatabase(databaseFile)
+            exporter.setModel(trainingModel)
+            exporter.setName(exporterData[0][0])
+            self.setExporter(exporter)
+
+            evaluator = GraphicalEvaluator.GraphicalEvaluator()
+            self.setEvaluator(evaluator)
 
     def routineModel(self):
         return self._routineModel
@@ -1070,7 +1116,7 @@ class RoutineTab(cc.CustomWidget):
         self._alternativeView = view
 
     def setDatabase(self, database):
-        if not isinstance(database, Database.database):
+        if not isinstance(database, Database.database) and database is not None:
             raise TypeError(
                     "input {input_name} for 'setDatabase' does not match {input_type}".format(
                             input_name = str(type(database)),

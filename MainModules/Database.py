@@ -157,6 +157,10 @@ class database():
         set the general information in a trainingroutine to 'username',
         'startDate' (endDate will be calulated automatically) and 'trainingMode'
 
+    - isValid : None
+
+        test if 'databaseName' points to a valid database-file
+
     Protected Methods
     -----------------
     __init__ : path = None, extension = ".db"
@@ -1015,6 +1019,30 @@ class database():
 
         """
         return self.__extension
+
+    def isValid(self):
+        """
+        test if 'databaseName' points to a valid database-file (.db-file)
+
+        Returns
+        -------
+        bool
+            TRUE:
+                self.path() / (self.databaseName() + self.extenstion()).is_file() returns True
+
+            FALSE:
+                self.path() / (self.databaseName() + self.extenstion()).is_file() returns False
+
+        """
+        try:
+            file = self.path() / (self.databaseName() + self.extension())
+        except TypeError: # if path(), databaseName() or extension() are None
+            return False
+
+        if file.is_file():
+            return True
+        else:
+            return False
 
     def path(self):
         """

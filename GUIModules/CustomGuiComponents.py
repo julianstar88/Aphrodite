@@ -9,6 +9,7 @@ import string
 import sys
 import datetime
 import re
+import pathlib2
 from UtilityModules.GraphicUtilityModules import CreateCanvas, CreateQPixmap
 from MainModules.Database import database
 
@@ -278,12 +279,16 @@ class CustomComboBox(QtWidgets.QComboBox):
 
 class CustomCreateNewRoutineDialog(QtWidgets.QDialog):
 
-    def __init__(self, database, *args, parent = None):
+    def __init__(self, database, configParser, *args, parent = None):
         super().__init__(parent, *args)
         self.setWindowTitle("Create new Trainingroutine")
         self._toCommit = None
         self._databse = None
+        self._configParser = None
         self.setDatabase(database)
+        self.setConfigParser(configParser)
+
+        self.configParser().readConfigFile()
 
         # Layouts
         self.mainLayout = QtWidgets.QVBoxLayout(self)
@@ -313,7 +318,11 @@ class CustomCreateNewRoutineDialog(QtWidgets.QDialog):
         self.dirButton = QtWidgets.QPushButton("Choose Directory...")
         self.acceptButton = QtWidgets.QPushButton("OK")
         self.acceptButton.setDefault(True)
+        self.acceptButton.setEnabled(False)
         self.rejectButton = QtWidgets.QPushButton("Cancel")
+
+        self.dirDialog = QtWidgets.QFileDialog()
+        self.dirDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
 
 
         # Layout Settings
@@ -335,8 +344,13 @@ class CustomCreateNewRoutineDialog(QtWidgets.QDialog):
         # Connections
         self.acceptButton.clicked.connect(self.accept)
         self.rejectButton.clicked.connect(self.reject)
-
         self.startDateEdit.dateChanged.connect(self.setEndDate)
+        self.startDateEdit.dateChanged.connect(self.setTrainingRoutine)
+        self.pathEdit.textChanged.connect(self.onPathChanged)
+        self.dirButton.clicked.connect(self.onChooseDirectory)
+
+        # Populate Dialog
+        self.populateDialogMembers()
 
         # Show Dialog
         self.exec()
@@ -359,8 +373,42 @@ class CustomCreateNewRoutineDialog(QtWidgets.QDialog):
             endDate = startDate.addDays(42)
         return [startDate, endDate]
 
+    def configParser(self):
+        return self._configParser
+
     def database(self):
         return self._database
+
+    def defaultDirectory(self, *args):
+        path = self.configParser().readAttributes()["new_routine_directory"]
+        if path:
+            pathObj = pathlib2.Path(path)
+        else:
+            pathObj = pathlib2.Path(__file__).cwd().parent / "training_routines"
+        return pathObj
+
+    def onChooseDirectory(self, *args):
+        default = QtCore.QDir(str(self.defaultDirectory()))
+        self.dirDialog.setDirectory(default)
+        directory = self.dirDialog.getExistingDirectory(self.dirDialog, "Choose Directory")
+
+        if not directory:
+            return False
+
+        print(self.database().databaseName())
+
+    def onPathChanged(self, *args):
+        if self.pathEdit.text():
+            self.acceptButton.setEnabled(True)
+        else:
+            self.acceptButton.setEnabled(False)
+
+    def populateDialogMembers(self, *args):
+        self.setTrainingRoutine()
+        self.pathEdit.setText(str(self.defaultDirectory()))
+
+    def setConfigParser(self, configParser):
+        self._configParser = configParser
 
     def setDatabase(self, database):
         self._database = database
@@ -368,6 +416,12 @@ class CustomCreateNewRoutineDialog(QtWidgets.QDialog):
     def setEndDate(self, *args):
         periode = self.calculateTrainingPeriode(self.startDateEdit.date())
         self.endDateView.setDate(periode[1])
+
+    def setTrainingRoutine(self, *args):
+        date = self.startDateEdit.date()
+        dateStr = date.toString("yyMMdd")
+        trainingRoutine = "Training-" + dateStr
+        self.trainingRoutineEdit.setText(trainingRoutine)
 
 class CustomEditAlternativesDialog(QtWidgets.QDialog):
 
@@ -536,6 +590,9 @@ class CustomEditAlternativesDialog(QtWidgets.QDialog):
                 self.editor.rowCountChanged(oldValue, newValue)
 
     def populateEditorModel(self):
+        if not self.database().isValid():
+            return False
+
         data = self.database().data("training_alternatives")
         modelData = list()
         for row in data:
@@ -566,6 +623,8 @@ class CustomEditAlternativesDialog(QtWidgets.QDialog):
             modelIndexMode = self.editor.model().index(i, 13)
             self.editor.setIndexWidget(modelIndexCombo, exerciseCombo)
             self.editor.setIndexWidget(modelIndexMode, modeCombo)
+
+        return True
 
     def setDatabase(self, database):
         self._database = database
@@ -747,6 +806,9 @@ class CustomEditNotesDialog(QtWidgets.QDialog):
                 self.editor.rowCountChanged(oldValue, newValue)
 
     def populateEditorModel(self):
+        if not self.database().isValid():
+            return False
+
         data = self.database().data("training_notes")
         modelData = list()
         for row in data:
@@ -765,6 +827,8 @@ class CustomEditNotesDialog(QtWidgets.QDialog):
                 if m == 3:
                     item = self.editor.model().item(n, m)
                     item.setEditable(False)
+
+        return True
 
     def setDatabase(self, database):
         self._database = database
@@ -1016,6 +1080,9 @@ class CustomEditRoutineDialog(QtWidgets.QDialog):
                 self.editor.rowCountChanged(oldValue, newValue)
 
     def populateDialogMembers(self):
+        if not self.database().isValid():
+            return False
+
         routineData = self.database().data("training_routine")
         generalData = self.database().data("general_information")
 
@@ -1074,6 +1141,7 @@ class CustomEditRoutineDialog(QtWidgets.QDialog):
         self.startDateSelector.setDate(trainingPeriode[0])
         self.endDateView.setDate(trainingPeriode[1])
         self.trainingPeriodeSelector.setDateRange(trainingPeriode[0], trainingPeriode[1])
+        return True
 
     def setDatabase(self, database):
         self._database = database
