@@ -33,25 +33,6 @@ class CustomSqlModel(QtGui.QStandardItemModel):
 
         self.itemChanged.connect(self.onItemChanged)
 
-    # def commitTableToDatabase(self):
-    #     con = sqlite3.connect(self.database)
-    #     with con:
-    #         c = con.cursor()
-
-    #         sqlCommand = "DROP FROM {name}".format(
-    #                 name = self.table
-    #             )
-    #         c.execute(sqlCommand)
-
-    #         sqlCommand = "SELECT * FROM {name} WHERE id = 1".format(
-    #                 name = self.table
-    #             )
-    #         c.execute(sqlCommand)
-    #         data = c.fetchall()
-    #         print(data)
-
-    #     # TODO: insert new <table> into databse
-
     def data(self, index, role):
 
         item = self.itemFromIndex(index)
@@ -72,16 +53,20 @@ class CustomSqlModel(QtGui.QStandardItemModel):
         pass
 
     def populateModel(self):
-        path = pathlib2.Path(self.database())
-        if not path.is_file():
-            return
-        con = sqlite3.connect(path)
-        with con:
-            c = con.cursor()
-            sqlCommand = "SELECT * FROM {tableName}".format(tableName = self.table())
-            c.execute(sqlCommand)
-            data = c.fetchall()
-        con.close()
+        # path = pathlib2.Path(self.database())
+        # if not path.is_file():
+        #     return
+        # con = sqlite3.connect(path)
+        # with con:
+        #     c = con.cursor()
+        #     sqlCommand = "SELECT * FROM {tableName}".format(tableName = self.table())
+        #     c.execute(sqlCommand)
+        #     data = c.fetchall()
+        # con.close()
+        if not self.database().isValid():
+            return False
+
+        data = self.database().data(self.table())
 
         CustomModelItem.fetchAlternativesFromDatabase(self.database())
         CustomModelItem.fetchNotesFromDatabase(self.database())

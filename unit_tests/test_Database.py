@@ -395,6 +395,18 @@ class ConvenientMethods(unittest.TestCase):
             )
         self.assertTrue(result)
 
+    def test_isValid(self):
+        fails = ["", "fail", "fail.db"]
+
+        result = self.database.isValid()
+        self.assertTrue(result)
+
+        for val in fails:
+            self.database.setDatabaseName(val)
+            with self.subTest(val = val):
+                result = self.database.isValid()
+                self.assertFalse(result)
+
     def tearDown(self):
         try:
             self.file.unlink()

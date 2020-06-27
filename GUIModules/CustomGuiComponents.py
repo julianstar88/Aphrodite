@@ -9,6 +9,7 @@ import string
 import sys
 import datetime
 import re
+import pathlib2
 from UtilityModules.GraphicUtilityModules import CreateCanvas, CreateQPixmap
 from MainModules.Database import database
 
@@ -206,6 +207,17 @@ class CustomBoxLayout(QtWidgets.QBoxLayout):
         super().__init__(*args, **kwargs)
         self.setSizeConstraint(QtWidgets.QBoxLayout.SetMinAndMaxSize)
 
+class CustomCalendarWidget(QtWidgets.QCalendarWidget):
+
+    resetSelection = QtCore.pyqtSignal()
+
+    def __init__(self, *args):
+        super().__init__(*args)
+
+    def contextMenuEvent(self, event):
+        self.resetSelection.emit()
+        super().contextMenuEvent(event)
+
 class CustomComboBox(QtWidgets.QComboBox):
 
     ObjectType = "CustomComboBox"
@@ -265,16 +277,170 @@ class CustomComboBox(QtWidgets.QComboBox):
         self.clear()
         self.insertItems(0, [], mode = text)
 
-class CustomCalendarWidget(QtWidgets.QCalendarWidget):
+class CustomCreateNewRoutineDialog(QtWidgets.QDialog):
 
-    resetSelection = QtCore.pyqtSignal()
+    def __init__(self, configParser, *args, parent = None):
+        super().__init__(parent, *args)
+        self.setWindowTitle("Create new Trainingroutine")
+        self._toCommit = dict()
+        self._configParser = None
+        self.setConfigParser(configParser)
 
-    def __init__(self, *args):
-        super().__init__(*args)
+        self.configParser().readConfigFile()
 
-    def contextMenuEvent(self, event):
-        self.resetSelection.emit()
-        super().contextMenuEvent(event)
+        # Layouts
+        self.mainLayout = QtWidgets.QVBoxLayout(self)
+        self.informationLayout = QtWidgets.QFormLayout()
+        self.buttonLayout = QtWidgets.QHBoxLayout()
+
+        # Members
+        self.trainingRoutineEdit = QtWidgets.QLineEdit(self)
+        self.trainingRoutineEdit.setPlaceholderText("Enter Trainingroutines Name...")
+
+        self.nameEdit = QtWidgets.QLineEdit(self)
+        self.nameEdit.setPlaceholderText("Enter Username...")
+
+        self.startDateEdit = QtWidgets.QDateEdit(self)
+        self.startDateEdit.setDate(QtCore.QDate().currentDate())
+        self.startDateEdit.setCalendarPopup(True)
+
+        self.endDateView = QtWidgets.QDateEdit(self)
+        self.endDateView.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
+        self.setEndDate()
+        self.endDateView.setReadOnly(True)
+
+        self.trainingModeEdit = QtWidgets.QLineEdit(self)
+        self.trainingModeEdit.setPlaceholderText("Enter Trainingmode...")
+        self.pathEdit = QtWidgets.QLineEdit(self)
+        self.pathEdit.setPlaceholderText("Enter Save Path...")
+
+        self.dirButton = QtWidgets.QPushButton("Choose Directory...")
+        self.acceptButton = QtWidgets.QPushButton("OK")
+        self.acceptButton.setDefault(True)
+        self.acceptButton.setEnabled(False)
+        self.rejectButton = QtWidgets.QPushButton("Cancel")
+
+        self.dirDialog = QtWidgets.QFileDialog()
+        self.dirDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+
+
+        # Layout Settings
+        self.mainLayout.addLayout(self.informationLayout)
+        self.mainLayout.addLayout(self.buttonLayout)
+
+        self.informationLayout.addRow("Trainingroutine:", self.trainingRoutineEdit)
+        self.informationLayout.addRow("Name:", self.nameEdit)
+        self.informationLayout.addRow("Start:", self.startDateEdit)
+        self.informationLayout.addRow("End:", self.endDateView)
+        self.informationLayout.addRow("Trainingmode:", self.trainingModeEdit)
+        self.informationLayout.addRow("Save Path:", self.pathEdit)
+
+        self.buttonLayout.addStretch()
+        self.buttonLayout.addWidget(self.dirButton)
+        self.buttonLayout.addWidget(self.acceptButton)
+        self.buttonLayout.addWidget(self.rejectButton)
+
+        # Connections
+        self.acceptButton.clicked.connect(self.accept)
+        self.acceptButton.clicked.connect(self.onAccepted)
+        self.rejectButton.clicked.connect(self.reject)
+        self.startDateEdit.dateChanged.connect(self.setEndDate)
+        self.startDateEdit.dateChanged.connect(self.setTrainingRoutine)
+        self.pathEdit.textChanged.connect(self.onPathChanged)
+        self.dirButton.clicked.connect(self.onChooseDirectory)
+
+        # Populate Dialog
+        self.populateDialogMembers()
+
+        # Show Dialog
+        self.exec()
+
+    def calculateTrainingPeriode(self, startDateStr):
+        if isinstance(startDateStr, QtCore.QDate):
+            startDate = startDateStr
+            endDate = startDate.addDays(42)
+        elif isinstance(startDateStr, str):
+            match = re.search("(?P<day>\d+).(?P<month>\d+).(?P<year>\d+)", startDateStr)
+            startDate = QtCore.QDate(
+                    int(match.group("year")),
+                    int(match.group("month")),
+                    int(match.group("day"))
+                )
+            endDate = startDate.addDays(42)
+        else:
+            date = datetime.date.today()
+            startDate = QtCore.QDate(date.year, date.month, date.day)
+            endDate = startDate.addDays(42)
+        return [startDate, endDate]
+
+    def configParser(self):
+        return self._configParser
+
+    def defaultDirectory(self, *args):
+        path = self.configParser().readAttributes()["new_routine_directory"]
+        if path:
+            pathObj = pathlib2.Path(path)
+        else:
+            pathObj = pathlib2.Path(__file__).cwd() / "training_routines"
+        return pathObj
+
+    def onAccepted(self):
+        generalData = list()
+
+        databaseName = self.trainingRoutineEdit.text()
+        self.setToCommit("databaseName", databaseName)
+
+        username = self.nameEdit.text()
+        generalData.append(username)
+        startDate = self.startDateEdit.date()
+        strDate = startDate.toString("dd.MM.yyyy")
+        generalData.append(strDate)
+        trainingMode = self.trainingModeEdit.text()
+        generalData.append(trainingMode)
+        self.setToCommit("general_information", generalData)
+
+        savePath = pathlib2.Path(self.pathEdit.text())
+        self.setToCommit("new_routine_directory", str(savePath))
+
+    def onChooseDirectory(self, *args):
+        default = QtCore.QDir(str(self.defaultDirectory()))
+        self.dirDialog.setDirectory(default)
+        directory = self.dirDialog.getExistingDirectory(self.dirDialog, "Choose Directory")
+
+        if not directory:
+            return False
+
+        self.pathEdit.setText(directory)
+
+    def onPathChanged(self, *args):
+        if self.pathEdit.text():
+            self.acceptButton.setEnabled(True)
+        else:
+            self.acceptButton.setEnabled(False)
+
+    def populateDialogMembers(self, *args):
+        self.setTrainingRoutine()
+        self.pathEdit.setText(str(self.defaultDirectory()))
+        self.pathEdit.setCursorPosition(len(self.pathEdit.text()))
+
+    def setConfigParser(self, configParser):
+        self._configParser = configParser
+
+    def setEndDate(self, *args):
+        periode = self.calculateTrainingPeriode(self.startDateEdit.date())
+        self.endDateView.setDate(periode[1])
+
+    def setToCommit(self, key, value):
+        self._toCommit[key] = value
+
+    def setTrainingRoutine(self, *args):
+        date = self.startDateEdit.date()
+        dateStr = date.toString("yyMMdd")
+        trainingRoutine = "Training-" + dateStr
+        self.trainingRoutineEdit.setText(trainingRoutine)
+
+    def toCommit(self):
+        return self._toCommit
 
 class CustomEditAlternativesDialog(QtWidgets.QDialog):
 
@@ -443,6 +609,9 @@ class CustomEditAlternativesDialog(QtWidgets.QDialog):
                 self.editor.rowCountChanged(oldValue, newValue)
 
     def populateEditorModel(self):
+        if not self.database().isValid():
+            return False
+
         data = self.database().data("training_alternatives")
         modelData = list()
         for row in data:
@@ -473,6 +642,8 @@ class CustomEditAlternativesDialog(QtWidgets.QDialog):
             modelIndexMode = self.editor.model().index(i, 13)
             self.editor.setIndexWidget(modelIndexCombo, exerciseCombo)
             self.editor.setIndexWidget(modelIndexMode, modeCombo)
+
+        return True
 
     def setDatabase(self, database):
         self._database = database
@@ -654,6 +825,9 @@ class CustomEditNotesDialog(QtWidgets.QDialog):
                 self.editor.rowCountChanged(oldValue, newValue)
 
     def populateEditorModel(self):
+        if not self.database().isValid():
+            return False
+
         data = self.database().data("training_notes")
         modelData = list()
         for row in data:
@@ -672,6 +846,8 @@ class CustomEditNotesDialog(QtWidgets.QDialog):
                 if m == 3:
                     item = self.editor.model().item(n, m)
                     item.setEditable(False)
+
+        return True
 
     def setDatabase(self, database):
         self._database = database
@@ -923,6 +1099,9 @@ class CustomEditRoutineDialog(QtWidgets.QDialog):
                 self.editor.rowCountChanged(oldValue, newValue)
 
     def populateDialogMembers(self):
+        if not self.database().isValid():
+            return False
+
         routineData = self.database().data("training_routine")
         generalData = self.database().data("general_information")
 
@@ -981,6 +1160,7 @@ class CustomEditRoutineDialog(QtWidgets.QDialog):
         self.startDateSelector.setDate(trainingPeriode[0])
         self.endDateView.setDate(trainingPeriode[1])
         self.trainingPeriodeSelector.setDateRange(trainingPeriode[0], trainingPeriode[1])
+        return True
 
     def setDatabase(self, database):
         self._database = database
@@ -1211,17 +1391,20 @@ class CustomModelItem(QtGui.QStandardItem):
 
     @staticmethod
     def fetchAlternativesFromDatabase(database):
-        con = sqlite3.connect(database)
-        with con:
-            c = con.cursor()
-            sqlCommand = "SELECT * FROM training_alternatives"
-            try:
-                c.execute(sqlCommand)
-            except sqlite3.OperationalError:
-                return False
-            data = c.fetchall()
-        con.close()
-        data = [list(item) for item in data]
+        try:
+            data = database.data("training_alternatives")
+        except:
+            con = sqlite3.connect(database)
+            with con:
+                c = con.cursor()
+                sqlCommand = "SELECT * FROM training_alternatives"
+                try:
+                    c.execute(sqlCommand)
+                except sqlite3.OperationalError:
+                    return False
+                data = c.fetchall()
+            con.close()
+            data = [list(item) for item in data]
 
         CustomModelItem.trainingAlternatives = data
 
@@ -1233,17 +1416,20 @@ class CustomModelItem(QtGui.QStandardItem):
 
     @staticmethod
     def fetchNotesFromDatabase(database):
-        con = sqlite3.connect(database)
-        with con:
-            c = con.cursor()
-            sqlCommand = "SELECT * FROM training_notes"
-            try:
-                c.execute(sqlCommand)
-            except sqlite3.OperationalError:
-                return False
-            data = c.fetchall()
-        con.close()
-        data = [list(item) for item in data]
+        try:
+            data = database.data("training_notes")
+        except:
+            con = sqlite3.connect(database)
+            with con:
+                c = con.cursor()
+                sqlCommand = "SELECT * FROM training_notes"
+                try:
+                    c.execute(sqlCommand)
+                except sqlite3.OperationalError:
+                    return False
+                data = c.fetchall()
+            con.close()
+            data = [list(item) for item in data]
 
         CustomModelItem.trainingNotes = data
 
