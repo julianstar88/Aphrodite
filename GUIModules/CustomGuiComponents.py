@@ -279,13 +279,11 @@ class CustomComboBox(QtWidgets.QComboBox):
 
 class CustomCreateNewRoutineDialog(QtWidgets.QDialog):
 
-    def __init__(self, database, configParser, *args, parent = None):
+    def __init__(self, configParser, *args, parent = None):
         super().__init__(parent, *args)
         self.setWindowTitle("Create new Trainingroutine")
-        self._toCommit = None
-        self._databse = None
+        self._toCommit = dict()
         self._configParser = None
-        self.setDatabase(database)
         self.setConfigParser(configParser)
 
         self.configParser().readConfigFile()
@@ -298,6 +296,7 @@ class CustomCreateNewRoutineDialog(QtWidgets.QDialog):
         # Members
         self.trainingRoutineEdit = QtWidgets.QLineEdit(self)
         self.trainingRoutineEdit.setPlaceholderText("Enter Trainingroutines Name...")
+
         self.nameEdit = QtWidgets.QLineEdit(self)
         self.nameEdit.setPlaceholderText("Enter Username...")
 
@@ -343,6 +342,7 @@ class CustomCreateNewRoutineDialog(QtWidgets.QDialog):
 
         # Connections
         self.acceptButton.clicked.connect(self.accept)
+        self.acceptButton.clicked.connect(self.onAccepted)
         self.rejectButton.clicked.connect(self.reject)
         self.startDateEdit.dateChanged.connect(self.setEndDate)
         self.startDateEdit.dateChanged.connect(self.setTrainingRoutine)
@@ -376,16 +376,31 @@ class CustomCreateNewRoutineDialog(QtWidgets.QDialog):
     def configParser(self):
         return self._configParser
 
-    def database(self):
-        return self._database
-
     def defaultDirectory(self, *args):
         path = self.configParser().readAttributes()["new_routine_directory"]
         if path:
             pathObj = pathlib2.Path(path)
         else:
-            pathObj = pathlib2.Path(__file__).cwd().parent / "training_routines"
+            pathObj = pathlib2.Path(__file__).cwd() / "training_routines"
         return pathObj
+
+    def onAccepted(self):
+        generalData = list()
+
+        databaseName = self.trainingRoutineEdit.text()
+        self.setToCommit("databaseName", databaseName)
+
+        username = self.nameEdit.text()
+        generalData.append(username)
+        startDate = self.startDateEdit.date()
+        strDate = startDate.toString("dd.MM.yyyy")
+        generalData.append(strDate)
+        trainingMode = self.trainingModeEdit.text()
+        generalData.append(trainingMode)
+        self.setToCommit("general_information", generalData)
+
+        savePath = pathlib2.Path(self.pathEdit.text())
+        self.setToCommit("new_routine_directory", str(savePath))
 
     def onChooseDirectory(self, *args):
         default = QtCore.QDir(str(self.defaultDirectory()))
@@ -395,7 +410,7 @@ class CustomCreateNewRoutineDialog(QtWidgets.QDialog):
         if not directory:
             return False
 
-        print(self.database().databaseName())
+        self.pathEdit.setText(directory)
 
     def onPathChanged(self, *args):
         if self.pathEdit.text():
@@ -406,22 +421,26 @@ class CustomCreateNewRoutineDialog(QtWidgets.QDialog):
     def populateDialogMembers(self, *args):
         self.setTrainingRoutine()
         self.pathEdit.setText(str(self.defaultDirectory()))
+        self.pathEdit.setCursorPosition(len(self.pathEdit.text()))
 
     def setConfigParser(self, configParser):
         self._configParser = configParser
 
-    def setDatabase(self, database):
-        self._database = database
-
     def setEndDate(self, *args):
         periode = self.calculateTrainingPeriode(self.startDateEdit.date())
         self.endDateView.setDate(periode[1])
+
+    def setToCommit(self, key, value):
+        self._toCommit[key] = value
 
     def setTrainingRoutine(self, *args):
         date = self.startDateEdit.date()
         dateStr = date.toString("yyMMdd")
         trainingRoutine = "Training-" + dateStr
         self.trainingRoutineEdit.setText(trainingRoutine)
+
+    def toCommit(self):
+        return self._toCommit
 
 class CustomEditAlternativesDialog(QtWidgets.QDialog):
 
@@ -1372,17 +1391,20 @@ class CustomModelItem(QtGui.QStandardItem):
 
     @staticmethod
     def fetchAlternativesFromDatabase(database):
-        con = sqlite3.connect(database)
-        with con:
-            c = con.cursor()
-            sqlCommand = "SELECT * FROM training_alternatives"
-            try:
-                c.execute(sqlCommand)
-            except sqlite3.OperationalError:
-                return False
-            data = c.fetchall()
-        con.close()
-        data = [list(item) for item in data]
+        try:
+            data = database.data("training_alternatives")
+        except:
+            con = sqlite3.connect(database)
+            with con:
+                c = con.cursor()
+                sqlCommand = "SELECT * FROM training_alternatives"
+                try:
+                    c.execute(sqlCommand)
+                except sqlite3.OperationalError:
+                    return False
+                data = c.fetchall()
+            con.close()
+            data = [list(item) for item in data]
 
         CustomModelItem.trainingAlternatives = data
 
@@ -1394,17 +1416,20 @@ class CustomModelItem(QtGui.QStandardItem):
 
     @staticmethod
     def fetchNotesFromDatabase(database):
-        con = sqlite3.connect(database)
-        with con:
-            c = con.cursor()
-            sqlCommand = "SELECT * FROM training_notes"
-            try:
-                c.execute(sqlCommand)
-            except sqlite3.OperationalError:
-                return False
-            data = c.fetchall()
-        con.close()
-        data = [list(item) for item in data]
+        try:
+            data = database.data("training_notes")
+        except:
+            con = sqlite3.connect(database)
+            with con:
+                c = con.cursor()
+                sqlCommand = "SELECT * FROM training_notes"
+                try:
+                    c.execute(sqlCommand)
+                except sqlite3.OperationalError:
+                    return False
+                data = c.fetchall()
+            con.close()
+            data = [list(item) for item in data]
 
         CustomModelItem.trainingNotes = data
 

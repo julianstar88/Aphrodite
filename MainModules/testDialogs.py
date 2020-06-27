@@ -36,13 +36,6 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.dialog.result():
             pass
 
-        file = parser.configDir() / parser.configFileName()
-        try:
-            file.unlink()
-        except:
-            print("couldn´t delete {}".format(file))
-
-
 qapp = QtWidgets.QApplication(sys.argv)
 
 app = MainWindow()

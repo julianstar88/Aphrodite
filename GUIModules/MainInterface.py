@@ -43,11 +43,6 @@ class MainWindow(QtWidgets.QMainWindow):
         """process input parameter"""
         self.setConfigParser(configParser)
         self.populateMainObjects()
-        # self.setDatabase(database)
-        # self.setEvaluator(evaluator)
-        # self.setExporter(exporter)
-        # self.setAlternativeModel(alternativeModel)
-        # self.setRoutineModel(routineModel)
 
         """general settings for app"""
         self.setWindowTitle("Aphrodite")
@@ -61,7 +56,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         """show the app"""
         self.showMaximized()
-        # self.show()
 
     def __connectButtons(self):
         self.editAlternativesButton.clicked.connect(self.onEditAlternatives)
@@ -79,6 +73,11 @@ class MainWindow(QtWidgets.QMainWindow):
         return endDate.strftime("%d.%m.%Y")
 
     def __createMenuBar(self):
+
+        try:
+            self.menu.clear()
+        except:
+            pass
 
         """top level menus"""
         self.menu = self.menuBar()
@@ -118,11 +117,27 @@ class MainWindow(QtWidgets.QMainWindow):
         self.editNotesAction.triggered.connect(self.onEditNotes)
         self.editRoutineAction.triggered.connect(self.onEditRoutine)
 
+        if self.database().isValid():
+            self.quitAction.setEnabled(True)
+            self.editRoutineAction.setEnabled(True)
+            self.editAlternativesAction.setEnabled(True)
+            self.editNotesAction.setEnabled(True)
+            self.exportAction.setEnabled(True)
+            self.quitAction.setEnabled(True)
+        else:
+            self.quitAction.setEnabled(False)
+            self.editRoutineAction.setEnabled(False)
+            self.editAlternativesAction.setEnabled(False)
+            self.editNotesAction.setEnabled(False)
+            self.exportAction.setEnabled(False)
+            self.quitAction.setEnabled(False)
+
     def alternativeModel(self):
         return self._alternativeModel
 
     def closeRoutine(self):
 
+        self.setWindowTitle("Aphrodite")
         def deleteTabWidget(widget):
             for i in range(widget.count()):
                 children = widget.widget(i).children()
@@ -161,9 +176,35 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def onCreateNewRoutine(self, *args):
         dialog = cc.CustomCreateNewRoutineDialog(
-                self.database(),
+                self.configParser(),
                 parent = self
             )
+        if dialog.result():
+            databaseName = dialog.toCommit()["databaseName"]
+            general_information = dialog.toCommit()["general_information"]
+            new_routine_directory = dialog.toCommit()["new_routine_directory"]
+            self.database().setPath(new_routine_directory)
+            self.database().setDatabaseName(databaseName)
+            self.database().createDatabase()
+            self.database().createRoutineTables()
+
+            self.database().setGeneralInformation(
+                    general_information[0],
+                    general_information[1],
+                    general_information[2]
+                )
+
+            file = self.database().path() / (self.database().databaseName() + self.database().extension())
+            self.configParser().new_routine_directory = new_routine_directory
+            self.configParser().last_opened_routine = str(file)
+            self.configParser().writeConfigFile()
+
+            self.populateMainObjects()
+            self.closeRoutine()
+            self.openRoutine()
+            return True
+        else:
+            return False
 
     def onEditAlternatives(self, *args):
         dialog = cc.CustomEditAlternativesDialog(
@@ -220,8 +261,9 @@ class MainWindow(QtWidgets.QMainWindow):
         noteLabels = []
         noteValues = []
 
-        if self.database().isValid():
+        self.__createMenuBar()
 
+        if self.database().isValid():
             data = self.database().data("general_information")[0]
             generalValues = [data[0], data[1], self.__calculateEndData(data[1]), data[2]]
 
@@ -232,55 +274,63 @@ class MainWindow(QtWidgets.QMainWindow):
                 noteLabels.append(note[1])
                 noteValues.append(note[3])
 
-        self.panel1 = GridPanel(generalLabels, generalValues, fontSize = 10, split = [1,5])
-        self.panel2 = DynamicLinePanel(
-                noteLabels, noteValues,
-                fontSize = 10,
-                split = [1,5],
-                lineMinHeight = 55,
-                lineMaxHeight = 55
-            )
+            self.setWindowTitle("Aphrodite: " + self.database().databaseName())
+            self.panel1 = GridPanel(generalLabels, generalValues, fontSize = 10, split = [1,5])
+            self.panel2 = DynamicLinePanel(
+                    noteLabels, noteValues,
+                    fontSize = 10,
+                    split = [1,5],
+                    lineMinHeight = 55,
+                    lineMaxHeight = 55
+                )
 
-        self.routineTab = RoutineTab(self.routineModel(), self.alternativeModel(), self.database())
+            self.routineTab = RoutineTab(self.routineModel(), self.alternativeModel(), self.database())
 
-        self.evaluatorTab1 = EvaluatorTab(self.routineModel(), GraphicalEvaluator.GraphicalEvaluator())
-        self.evaluatorTab2 = EvaluatorTab(self.alternativeModel(), GraphicalEvaluator.GraphicalEvaluator())
+            self.evaluatorTab1 = EvaluatorTab(self.routineModel(), GraphicalEvaluator.GraphicalEvaluator())
+            self.evaluatorTab2 = EvaluatorTab(self.alternativeModel(), GraphicalEvaluator.GraphicalEvaluator())
 
-        self.tabWidget = QtWidgets.QTabWidget()
-        self.tabWidget.setTabPosition(QtWidgets.QTabWidget.North)
-        self.tabWidget.addTab(self.routineTab, "Trainingroutine")
-        self.tabWidget.addTab(self.evaluatorTab1, "Evaluation: Trainingroutine")
-        self.tabWidget.addTab(self.evaluatorTab2, "Evaluation: Trainingalternatives")
+            self.tabWidget = QtWidgets.QTabWidget()
+            self.tabWidget.setTabPosition(QtWidgets.QTabWidget.North)
+            self.tabWidget.addTab(self.routineTab, "Trainingroutine")
+            self.tabWidget.addTab(self.evaluatorTab1, "Evaluation: Trainingroutine")
+            self.tabWidget.addTab(self.evaluatorTab2, "Evaluation: Trainingalternatives")
 
-        self.buttonLayout = QtWidgets.QHBoxLayout()
-        self.editAlternativesButton = QtWidgets.QPushButton("Edit Alternatives...")
-        self.editNotesButton = QtWidgets.QPushButton("Edit Notes...")
-        self.editRoutineButton = QtWidgets.QPushButton("Edit Routine...")
-        self.buttonLayout.addWidget(self.editAlternativesButton)
-        self.buttonLayout.addWidget(self.editNotesButton)
-        self.buttonLayout.addWidget(self.editRoutineButton)
+            self.buttonLayout = QtWidgets.QHBoxLayout()
+            self.editAlternativesButton = QtWidgets.QPushButton("Edit Alternatives...")
+            self.editNotesButton = QtWidgets.QPushButton("Edit Notes...")
+            self.editRoutineButton = QtWidgets.QPushButton("Edit Routine...")
+            self.buttonLayout.addWidget(self.editAlternativesButton)
+            self.buttonLayout.addWidget(self.editNotesButton)
+            self.buttonLayout.addWidget(self.editRoutineButton)
 
-        self.__connectButtons()
+            self.__connectButtons()
 
-        self.mainLayout.addWidget(self.panel1, 0, 0)
-        self.mainLayout.addWidget(self.panel2, 1, 0)
-        self.mainLayout.addLayout(self.buttonLayout, 2, 0)
-        self.mainLayout.addWidget(self.tabWidget, 0, 1, 3, 1)
-        self.mainLayout.setRowStretch(1, 2)
-        self.mainLayout.setColumnStretch(0, 1)
-        self.mainLayout.setColumnStretch(1, 2)
-        self.mainLayout.setSpacing(5)
+            self.mainLayout.addWidget(self.panel1, 0, 0)
+            self.mainLayout.addWidget(self.panel2, 1, 0)
+            self.mainLayout.addLayout(self.buttonLayout, 2, 0)
+            self.mainLayout.addWidget(self.tabWidget, 0, 1, 3, 1)
+            self.mainLayout.setRowStretch(1, 2)
+            self.mainLayout.setColumnStretch(0, 1)
+            self.mainLayout.setColumnStretch(1, 2)
+            self.mainLayout.setSpacing(5)
 
-        self.__createMenuBar()
+            self.__createMenuBar()
+
+        else:
+            self.setWindowTitle("Aphrodite")
 
     def populateMainObjects(self):
         path = pathlib2.Path(self.configParser().readAttributes()["last_opened_routine"])
-        database = Database.database(path)
-        self.setDatabase(database)
-        if self.database().isValid():
 
+        if self.database() is None:
+            database = Database.database(path)
+            self.setDatabase(database)
+        else:
+            self.database().setPath(path)
+
+        if self.database().isValid():
             trainingModel = CustomModel.CustomSqlModel(
-                    database = str(databaseFile),
+                    database = self.database(),
                     table = "training_routine",
                     tableStartIndex = 0,
                     valueStartIndex = 1
@@ -289,7 +339,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.setRoutineModel(trainingModel)
 
             alternativeModel = CustomModel.CustomSqlModel(
-                    database = str(databaseFile),
+                    database = self.database(),
                     table = "training_alternatives",
                     tableStartIndex = 3,
                     valueStartIndex = 1
@@ -297,15 +347,17 @@ class MainWindow(QtWidgets.QMainWindow):
             alternativeModel.populateModel()
             self.setAlternativeModel(alternativeModel)
 
-            exporterData = databaseObject.data("general_information")
+            file = self.database().path() / (self.database().databaseName() + self.database().extension())
+            exporterData = self.database().data("general_information")
             exporter = Exporter.Exporter()
-            exporter.setDatabase(databaseFile)
-            exporter.setModel(trainingModel)
-            exporter.setName(exporterData[0][0])
+            exporter.setDatabase(file)
             self.setExporter(exporter)
 
             evaluator = GraphicalEvaluator.GraphicalEvaluator()
             self.setEvaluator(evaluator)
+            return True
+        else:
+            return False
 
     def routineModel(self):
         return self._routineModel

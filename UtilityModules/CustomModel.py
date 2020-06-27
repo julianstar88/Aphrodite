@@ -53,16 +53,20 @@ class CustomSqlModel(QtGui.QStandardItemModel):
         pass
 
     def populateModel(self):
-        path = pathlib2.Path(self.database())
-        if not path.is_file():
-            return
-        con = sqlite3.connect(path)
-        with con:
-            c = con.cursor()
-            sqlCommand = "SELECT * FROM {tableName}".format(tableName = self.table())
-            c.execute(sqlCommand)
-            data = c.fetchall()
-        con.close()
+        # path = pathlib2.Path(self.database())
+        # if not path.is_file():
+        #     return
+        # con = sqlite3.connect(path)
+        # with con:
+        #     c = con.cursor()
+        #     sqlCommand = "SELECT * FROM {tableName}".format(tableName = self.table())
+        #     c.execute(sqlCommand)
+        #     data = c.fetchall()
+        # con.close()
+        if not self.database().isValid():
+            return False
+
+        data = self.database().data(self.table())
 
         CustomModelItem.fetchAlternativesFromDatabase(self.database())
         CustomModelItem.fetchNotesFromDatabase(self.database())

@@ -343,7 +343,6 @@ class CustomModelView(QtWidgets.QTableView):
         self.resizeColumnToContents(0)
 
     def resizeTable(self):
-
         horizontalHeader = self.horizontalHeader()
         verticalHeader = self.verticalHeader()
         headerHeight = horizontalHeader.qpixmaps[0].size().height()
@@ -390,6 +389,8 @@ class CustomModelView(QtWidgets.QTableView):
         self._viewParent = parent
 
     def updateView(self):
+        self.setColumnHidden(self.model().columnCount()-1, True)
+        self.__setResizeMode()
         self.renderItemToHtml()
         self.resizeTable()
 
