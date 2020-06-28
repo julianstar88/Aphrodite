@@ -273,7 +273,7 @@ class TrainingRoutineLayout(unittest.TestCase):
         self.db = db.database(self.database)
 
         self.model = CustomSqlModel(
-                database = self.database,
+                database = self.db,
                 table = self.tableName,
                 valueStartIndex = 0,
                 tableStartIndex = 0

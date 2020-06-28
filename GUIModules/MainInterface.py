@@ -112,6 +112,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # connections
         self.newRoutineAction.triggered.connect(self.onCreateNewRoutine)
+        self.quitAction.triggered.connect(self.onDestroyed)
 
         self.editAlternativesAction.triggered.connect(self.onEditAlternatives)
         self.editNotesAction.triggered.connect(self.onEditNotes)
@@ -134,6 +135,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def alternativeModel(self):
         return self._alternativeModel
+
+    def closeEvent(self, event):
+        self.onDestroyed()
 
     def closeRoutine(self):
 
@@ -205,6 +209,10 @@ class MainWindow(QtWidgets.QMainWindow):
             return True
         else:
             return False
+
+    def onDestroyed(self, *args):
+        self.closeRoutine()
+        self.deleteLater()
 
     def onEditAlternatives(self, *args):
         dialog = cc.CustomEditAlternativesDialog(

@@ -11,19 +11,23 @@ from MainModules import ConfigInterface, Database, Exporter, GraphicalEvaluator
 from UtilityModules import CustomModel
 from PyQt5 import QtWidgets
 
-"""settings"""
-configFileName = "config.txt"
-configDir = pathlib2.Path("files/config")
-currentDir = pathlib2.Path(__file__).cwd()
-configPath = currentDir / configDir
+def execute():
+    """settings"""
+    configFileName = "config.txt"
+    configDir = pathlib2.Path("files/config")
+    currentDir = pathlib2.Path(__file__).cwd()
+    configPath = currentDir / configDir
 
-configParser = ConfigInterface.ConfigParser(configPath, configFileName)
-configFile = configParser.configDir() / configParser.configFileName()
-if not configFile.is_file():
-    configParser.writeConfigFile()
-configParser.readConfigFile()
+    configParser = ConfigInterface.ConfigParser(configPath, configFileName)
+    configFile = configParser.configDir() / configParser.configFileName()
+    if not configFile.is_file():
+        configParser.writeConfigFile()
+    configParser.readConfigFile()
 
-"""start app"""
-qapp = QtWidgets.QApplication(sys.argv)
-app = mi.MainWindow(configParser)
-sys.exit(qapp.exec_())
+    """start app"""
+    qapp = QtWidgets.QApplication(sys.argv)
+    app = mi.MainWindow(configParser)
+    sys.exit(qapp.exec_())
+
+if __name__ == "__main__":
+    execute()

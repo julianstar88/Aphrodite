@@ -8,7 +8,7 @@ import unittest
 import pathlib2
 import os
 import sys
-import MainModules.Database as db
+import Aphrodite.MainModules.Database as db
 from PyQt5 import QtWidgets
 from MainModules.GraphicalEvaluator import GraphicalEvaluator
 from UtilityModules.CustomModel import CustomSqlModel
