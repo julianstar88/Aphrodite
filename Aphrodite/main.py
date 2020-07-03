@@ -4,15 +4,21 @@ Created on Wed May 27 16:59:00 2020
 
 @author: Julian
 """
+# third party imports
 import sys
 import pathlib2
 import os
+import matplotlib
+from PyQt5 import QtWidgets
+
+# imports from Aphrodite
 import GuiModules.MainInterface as mi
 from MainModules import ConfigInterface
-from PyQt5 import QtWidgets
+
 
 def main():
     """settings"""
+    matplotlib.use("agg")
     configFileName = "config.txt"
     configPath = pathlib2.Path(
             "C:/Users/Julian/Documents/Python/Projekte/Aphrodite/Aphrodite/files/config"

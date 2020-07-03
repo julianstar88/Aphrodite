@@ -10,7 +10,7 @@ import sys
 sys.setrecursionlimit(5000)
 PyInstaller.__main__.run([
         "--name=%s" % "Aphrodite",
-        "--onefile",
+        "--onedir",
         "--windowed",
         "Aphrodite.py"
     ])
