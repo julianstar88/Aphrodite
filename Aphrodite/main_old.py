@@ -6,22 +6,17 @@ Created on Wed May 27 16:59:00 2020
 """
 import sys
 import pathlib2
-import os
 import GuiModules.MainInterface as mi
-from MainModules import ConfigInterface
+from MainModules import ConfigInterface, Database, Exporter, GraphicalEvaluator
+from UtilityModules import CustomModel
 from PyQt5 import QtWidgets
 
-def main():
+def execute():
     """settings"""
     configFileName = "config.txt"
-    configPath = pathlib2.Path(
-            "C:/Users/Julian/Documents/Python/Projekte/Aphrodite_test/Aphrodite/files/config"
-        )
-    currentPath = pathlib2.Path(__file__).cwd()
-    defaultPath = pathlib2.Path(
-            "C:/Users/Julian/Documents/Python/Projekte/Aphrodite_test/Aphrodite"
-        )
-    os.chdir(str(defaultPath))
+    configDir = pathlib2.Path("files/config")
+    currentDir = pathlib2.Path(__file__).cwd()
+    configPath = currentDir / configDir
 
     configParser = ConfigInterface.ConfigParser(configPath, configFileName)
     configFile = configParser.configDir() / configParser.configFileName()
@@ -32,10 +27,7 @@ def main():
     """start app"""
     qapp = QtWidgets.QApplication(sys.argv)
     app = mi.MainWindow(configParser)
-    try:
-        sys.exit(qapp.exec_())
-    except SystemExit:
-        os.chdir(str(currentPath))
+    sys.exit(qapp.exec_())
 
 if __name__ == "__main__":
-    main()
+    execute()
