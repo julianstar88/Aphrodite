@@ -16,7 +16,7 @@ import GuiModules.MainInterface as mi
 from MainModules import ConfigInterface
 
 
-def main():
+def run():
     """settings"""
     matplotlib.use("agg")
     configFileName = "config.txt"
