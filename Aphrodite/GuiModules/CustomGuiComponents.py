@@ -381,7 +381,7 @@ class CustomCreateNewRoutineDialog(QtWidgets.QDialog):
         if path:
             pathObj = pathlib2.Path(path)
         else:
-            pathObj = pathlib2.Path(__file__).cwd() / "training_routines"
+            pathObj = pathlib2.Path().cwd() / "training_routines"
         return pathObj
 
     def onAccepted(self):

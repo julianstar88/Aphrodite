@@ -1,0 +1,3 @@
+new_routine_directory:C:\Users\Julian\Documents\Python\Projekte\Aphrodite\Aphrodite\training_routines
+last_opened_routine:C:\Users\Julian\Documents\Python\Projekte\Aphrodite\Aphrodite\training_routines\Training-200703.db
+export_routine_directory:
