@@ -86,12 +86,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.helpMenu = self.menu.addMenu("&Help")
 
         """1. level menus"""
-        folderIcon = QtGui.QIcon("files/icons/black_folder.svg")
-        sheetIcon = QtGui.QIcon("files/icons/sheet.svg")
-        pencilIcon = QtGui.QIcon("files/icons/pencil.svg")
-        infoIcon = QtGui.QIcon("files/icons/info.svg")
-        quitIcon = QtGui.QIcon("files/icons/quit.svg")
-        saveIcon = QtGui.QIcon("files/icons/save.png")
+        folderIcon = QtGui.QIcon("files/icons/black_folder.png")
+        sheetIcon = QtGui.QIcon("files/icons/sheet.png")
+        pencilIcon = QtGui.QIcon("files/icons/pencil.png")
+        infoIcon = QtGui.QIcon("files/icons/info.png")
+        quitIcon = QtGui.QIcon("files/icons/quit.png")
         exportIcon = QtGui.QIcon("files/icons/export.png")
 
         self.newRoutineAction = self.fileMenu.addAction(folderIcon, "&New Trainingroutine...")
@@ -356,7 +355,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.setAlternativeModel(alternativeModel)
 
             file = self.database().path() / (self.database().databaseName() + self.database().extension())
-            exporterData = self.database().data("general_information")
             exporter = Exporter.Exporter()
             exporter.setDatabase(file)
             self.setExporter(exporter)
