@@ -112,6 +112,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # connections
         self.newRoutineAction.triggered.connect(self.onCreateNewRoutine)
         self.openRoutineAction.triggered.connect(self.onOpenTrainingroutine)
+        self.openLastClosedAction.triggered.connect(self.onOpenLastClosed)
         self.quitAction.triggered.connect(self.onDestroyed)
 
         self.editAlternativesAction.triggered.connect(self.onEditAlternatives)
