@@ -9,7 +9,6 @@ from MainModules import Database
 from GuiModules.CustomGuiComponents import CustomCreateNewRoutineDialog
 from MainModules.ConfigInterface import ConfigParser
 from PyQt5 import QtWidgets
-import sqlite3
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, *args):
