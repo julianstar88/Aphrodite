@@ -1273,7 +1273,9 @@ class RoutineTab(cc.CustomWidget):
                             type_name = CustomTableView.CustomModelView
                         )
                 )
-        view.keyPressed.connect(self.updateRoutineTable)
+        view.keyReleased.connect(self.updateRoutineTable)
+        view.leftClicked.connect(self.updateRoutineTable)
+        view.leftDoubleClicked.connect(self.updateRoutineTable)
         self._routineView = view
 
     def updatePanel(self):
@@ -1313,7 +1315,6 @@ class RoutineTab(cc.CustomWidget):
         for i in range(tableView.model().rowCount()):
             rowData = [tableView.model().item(i, col).userData() for col in range(tableView.model().columnCount())]
             modelData.append(rowData)
-
         self.database().deleteAllEntries("training_routine")
         self.database().addManyEntries("training_routine", modelData)
 

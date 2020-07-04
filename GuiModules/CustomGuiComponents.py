@@ -1441,9 +1441,11 @@ class CustomModelItem(QtGui.QStandardItem):
         return True
 
     def setData(self, value, role, defaultPurpose = True):
-        if role == QtCore.Qt.DisplayRole:
+        if (role == QtCore.Qt.DisplayRole):
             if len(value) != 0:
                 self.setUserData(value)
+        if (role == QtCore.Qt.EditRole):
+            self.setUserData(value)
         super().setData(value, role)
         self.model().itemChanged.emit(self, defaultPurpose)
 
