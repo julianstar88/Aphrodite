@@ -281,8 +281,9 @@ class MainWindow(QtWidgets.QMainWindow):
         dialog.setDirectory(str(lastOpenedDir))
         if (dialog.exec()):
             file = pathlib2.Path(dialog.selectedFiles()[0])
-            if (file.is_file()) and (lastOpenedFile != file):
+            if (file.is_file()):
                 self.configParser().last_opened_routine = str(file)
+                self.configParser().writeConfigFile()
                 
                 # provide database name to database and open the new trainingroutine
                 self.database().setPath(file)
