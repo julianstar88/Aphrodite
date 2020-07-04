@@ -11,12 +11,14 @@ from GuiModules import CustomHeaderView, CustomGuiComponents
 class CustomModelView(QtWidgets.QTableView):
 
     ObjectType = "CustomModelView"
-    leftDoubleClicked = QtCore.pyqtSignal("QModelIndex")
-    leftClicked = QtCore.pyqtSignal("QModelIndex")
-    rightClicked = QtCore.pyqtSignal("QModelIndex")
+    leftDoubleClicked = QtCore.pyqtSignal("QWidget", "QModelIndex")
+    leftClicked = QtCore.pyqtSignal("QWidget", "QModelIndex")
+    rightClicked = QtCore.pyqtSignal("QWidget", "QModelIndex")
     focusLost = QtCore.pyqtSignal("QWidget", "QFocusEvent")
     keyPressed = QtCore.pyqtSignal("QWidget", "QKeyEvent")
+    keyReleased = QtCore.pyqtSignal("QWidget", "QKeyEvent")
     mousePressed = QtCore.pyqtSignal("QWidget", "QMouseEvent")
+    mouseReleased = QtCore.pyqtSignal("QWidget", "QMouseEvent")
 
     def __init__(self, model, *args,
                  viewParent = None,
@@ -75,7 +77,8 @@ class CustomModelView(QtWidgets.QTableView):
         self.timer.setInterval(200)
         self.clickMode = str()
 
-        self.setItemDelegate(CustomDelegate.CustomItemDelegate(self))
+        # CustomItemDelegate doesn´t work properly yet
+        # self.setItemDelegate(CustomDelegate.CustomItemDelegate(self))
 
         if self.viewParent():
             self.setParent(self.viewParent())
@@ -94,10 +97,10 @@ class CustomModelView(QtWidgets.QTableView):
         def __onTimeOut():
 
             if self.clickMode == "single":
-                self.leftClicked.emit(index)
+                self.leftClicked.emit(self, index)
 
             elif self.clickMode == "double":
-                self.leftDoubleClicked.emit(index)
+                self.leftDoubleClicked.emit(self, index)
 
             else:
                 pass
@@ -243,6 +246,11 @@ class CustomModelView(QtWidgets.QTableView):
                 self.horizontalHeader().setSectionResizeMode(i, QtWidgets.QHeaderView.Fixed)
             else:
                 self.horizontalHeader().setSectionResizeMode(i, QtWidgets.QHeaderView.Stretch)
+                
+    def event(self, event):
+        if event.type() == QtCore.QEvent.KeyRelease:
+            self.keyReleased.emit(self, event)
+        return super().event(event)
 
     def exerciseNameColumn(self):
         return self._exerciseNameColumn
@@ -290,7 +298,7 @@ class CustomModelView(QtWidgets.QTableView):
             self.__clickModeEvaluation(index)
 
         elif event.button() == 2: # right click
-            self.rightClicked.emit(index)
+            self.rightClicked.emit(self, index)
 
         super().mouseReleaseEvent(event)
 

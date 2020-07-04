@@ -299,6 +299,9 @@ class CustomCreateNewRoutineDialog(QtWidgets.QDialog):
 
         self.nameEdit = QtWidgets.QLineEdit(self)
         self.nameEdit.setPlaceholderText("Enter Username...")
+        
+        self.trainingModeEdit = QtWidgets.QLineEdit(self)
+        self.trainingModeEdit.setPlaceholderText("Enter Trainingmode...")
 
         self.startDateEdit = QtWidgets.QDateEdit(self)
         self.startDateEdit.setDate(QtCore.QDate().currentDate())
@@ -308,19 +311,17 @@ class CustomCreateNewRoutineDialog(QtWidgets.QDialog):
         self.endDateView.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
         self.setEndDate()
         self.endDateView.setReadOnly(True)
-
-        self.trainingModeEdit = QtWidgets.QLineEdit(self)
-        self.trainingModeEdit.setPlaceholderText("Enter Trainingmode...")
+        
         self.pathEdit = QtWidgets.QLineEdit(self)
         self.pathEdit.setPlaceholderText("Enter Save Path...")
 
-        self.dirButton = QtWidgets.QPushButton("Choose Directory...")
+        self.dirButton = QtWidgets.QPushButton("Choose Directory...", self)
         self.acceptButton = QtWidgets.QPushButton("OK")
         self.acceptButton.setDefault(True)
         self.acceptButton.setEnabled(False)
         self.rejectButton = QtWidgets.QPushButton("Cancel")
 
-        self.dirDialog = QtWidgets.QFileDialog()
+        self.dirDialog = QtWidgets.QFileDialog(self)
         self.dirDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
 
 
@@ -330,9 +331,9 @@ class CustomCreateNewRoutineDialog(QtWidgets.QDialog):
 
         self.informationLayout.addRow("Trainingroutine:", self.trainingRoutineEdit)
         self.informationLayout.addRow("Name:", self.nameEdit)
+        self.informationLayout.addRow("Trainingmode:", self.trainingModeEdit)
         self.informationLayout.addRow("Start:", self.startDateEdit)
         self.informationLayout.addRow("End:", self.endDateView)
-        self.informationLayout.addRow("Trainingmode:", self.trainingModeEdit)
         self.informationLayout.addRow("Save Path:", self.pathEdit)
 
         self.buttonLayout.addStretch()
@@ -1440,9 +1441,11 @@ class CustomModelItem(QtGui.QStandardItem):
         return True
 
     def setData(self, value, role, defaultPurpose = True):
-        if role == QtCore.Qt.DisplayRole:
+        if (role == QtCore.Qt.DisplayRole):
             if len(value) != 0:
                 self.setUserData(value)
+        if (role == QtCore.Qt.EditRole):
+            self.setUserData(value)
         super().setData(value, role)
         self.model().itemChanged.emit(self, defaultPurpose)
 
@@ -1789,7 +1792,7 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
             self.acceptButton.setEnabled(False)
         else:
             self.acceptButton.setEnabled(True)
-
+            
 class CustomRoutineEditor(QtWidgets.QTableView):
 
     ObjectType = "CustomRoutineEditor"

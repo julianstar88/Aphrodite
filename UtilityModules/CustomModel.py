@@ -46,7 +46,7 @@ class CustomSqlModel(QtGui.QStandardItemModel):
 
     def database(self):
         return self._database
-
+    
     def onItemChanged(self, item, defaultPurpose):
         if defaultPurpose:
             return

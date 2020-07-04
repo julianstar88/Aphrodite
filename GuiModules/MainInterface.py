@@ -111,6 +111,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # connections
         self.newRoutineAction.triggered.connect(self.onCreateNewRoutine)
+        self.openRoutineAction.triggered.connect(self.onOpenTrainingroutine)
         self.quitAction.triggered.connect(self.onDestroyed)
 
         self.editAlternativesAction.triggered.connect(self.onEditAlternatives)
@@ -261,6 +262,35 @@ class MainWindow(QtWidgets.QMainWindow):
             return True
         else:
             return False
+        
+    def onOpenTrainingroutine(self, *args):
+        # collect database name
+        dialog = QtWidgets.QFileDialog()
+        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
+        dialog.setNameFilter("database (*db)")
+        dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
+        
+        lastOpenedFileStr = self.configParser().last_opened_routine
+        if lastOpenedFileStr:
+            lastOpenedFile = pathlib2.Path(lastOpenedFileStr)
+            lastOpenedDir = lastOpenedFile.parent
+            dialog.selectFile(lastOpenedFile.name)
+        else:
+            lastOpenedDir = pathlib2.Path(__file__).cwd() / pathlib2.Path("training_routines")
+        
+        dialog.setDirectory(str(lastOpenedDir))
+        if (dialog.exec()):
+            file = pathlib2.Path(dialog.selectedFiles()[0])
+            if (file.is_file()):
+                self.configParser().last_opened_routine = str(file)
+                self.configParser().writeConfigFile()
+                
+                # provide database name to database and open the new trainingroutine
+                self.database().setPath(file)
+                self.closeRoutine()
+                self.populateMainObjects()
+                self.openRoutine()
+                self.updateWindow()
 
     def openRoutine(self, *args):
         generalLabels = ["Name:", "Start:", "End:", "Trainingmode:"]
@@ -457,7 +487,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.routineTab.updatePanel()
         self.evaluatorTab1.updatePanel()
         self.evaluatorTab2.updatePanel()
-        self.tabWidget.repaint()
+        self.repaint()
+        self.menu.repaint()
+        # self.tabWidget.repaint()
 
 class GridPanel(cc.CustomWidget):
 
@@ -1064,6 +1096,7 @@ class RoutineTab(cc.CustomWidget):
             self.setRoutineView(
                     CustomTableView.CustomModelView(
                             self.routineModel(),
+                            self,
                             headerLabels = self.routineHeaderLabels(),
                             headerFontSize = 15,
                             headerFontWeight = "normal",
@@ -1080,6 +1113,7 @@ class RoutineTab(cc.CustomWidget):
             self.setAlternativeView(
                     CustomTableView.CustomModelView(
                             self.alternativeModel(),
+                            self, 
                             headerLabels = self.alternativeHeaderLabels(),
                             headerFontSize = 15,
                             headerFontWeight = "normal",
@@ -1240,7 +1274,9 @@ class RoutineTab(cc.CustomWidget):
                             type_name = CustomTableView.CustomModelView
                         )
                 )
-        view.keyPressed.connect(self.updateRoutineTable)
+        view.keyReleased.connect(self.updateRoutineTable)
+        view.leftClicked.connect(self.updateRoutineTable)
+        view.leftDoubleClicked.connect(self.updateRoutineTable)
         self._routineView = view
 
     def updatePanel(self):
@@ -1280,7 +1316,6 @@ class RoutineTab(cc.CustomWidget):
         for i in range(tableView.model().rowCount()):
             rowData = [tableView.model().item(i, col).userData() for col in range(tableView.model().columnCount())]
             modelData.append(rowData)
-
         self.database().deleteAllEntries("training_routine")
         self.database().addManyEntries("training_routine", modelData)
 

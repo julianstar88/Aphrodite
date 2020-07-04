@@ -44,4 +44,4 @@ def run():
         os.chdir(str(currentPath))
 
 if __name__ == "__main__":
-    main()
+    run()
