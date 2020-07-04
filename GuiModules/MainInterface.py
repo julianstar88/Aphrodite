@@ -142,6 +142,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def closeRoutine(self):
 
+        # delete all widgets 
         self.setWindowTitle("Aphrodite")
         def deleteTabWidget(widget):
             for i in range(widget.count()):
@@ -163,7 +164,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 for n in reversed(range(child.count())):
                     grandChild = child.takeAt(n)
                     grandChild.widget().deleteLater()
-
+            
+        # write recently closed database to the configFile
+        file = self.database().path() / (self.database().databaseName() + self.database().extension())
+        self.configParser().last_closed_routine = str(file)
+        self.configParser().writeConfigFile()
+        
     def configParser(self):
         return self._configParser
 
@@ -266,7 +272,7 @@ class MainWindow(QtWidgets.QMainWindow):
         
     def onOpenLastClosed(self, *args):
         # collect database name of last closed database
-        lastClosedFileStr = self.configParser().last_opened_routine
+        lastClosedFileStr = self.configParser().last_closed_routine
         
         #  provide database name to database and open the new trainingroutine 
         self.database().setPath(lastClosedFileStr)
@@ -294,12 +300,12 @@ class MainWindow(QtWidgets.QMainWindow):
         if (dialog.exec()):
             file = pathlib2.Path(dialog.selectedFiles()[0])
             if (file.is_file()):
+                self.closeRoutine()
                 self.configParser().last_opened_routine = str(file)
                 self.configParser().writeConfigFile()
                 
                 # provide database name to database and open the new trainingroutine
                 self.database().setPath(file)
-                self.closeRoutine()
                 self.populateMainObjects()
                 self.openRoutine()
                 self.updateWindow()
