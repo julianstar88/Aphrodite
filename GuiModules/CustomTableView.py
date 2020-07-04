@@ -75,7 +75,8 @@ class CustomModelView(QtWidgets.QTableView):
         self.timer.setInterval(200)
         self.clickMode = str()
 
-        self.setItemDelegate(CustomDelegate.CustomItemDelegate(self))
+        # CustomItemDelegate doesn´t work properly yet
+        # self.setItemDelegate(CustomDelegate.CustomItemDelegate(self))
 
         if self.viewParent():
             self.setParent(self.viewParent())
