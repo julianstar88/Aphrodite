@@ -1386,10 +1386,3 @@ class EvaluatorTab(cc.CustomWidget):
                 self.evaluator().mainWidget().removeTab(i)
             self.evaluator().createTabs(self.evaluator().dataFromModel())
             self.evaluator().plotData(self.evaluator().dataFromModel())
-
-if __name__ == "__main__":
-    qapp = QtWidgets.QApplication(sys.argv)
-
-    app = MainWindow()
-
-    sys.exit(qapp.exec_())
