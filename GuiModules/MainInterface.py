@@ -263,6 +263,17 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             return False
         
+    def onOpenLastClosed(self, *args):
+        # collect database name of last closed database
+        lastClosedFileStr = self.configParser().last_opened_routine
+        
+        #  provide database name to database and open the new trainingroutine 
+        self.database().setPath(lastClosedFileStr)
+        self.closeRoutine()
+        self.populateMainObjects()
+        self.openRoutine()
+        self.updateWindow()
+        
     def onOpenTrainingroutine(self, *args):
         # collect database name
         dialog = QtWidgets.QFileDialog()
