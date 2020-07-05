@@ -457,16 +457,27 @@ class Exporter():
     def populateRoutine(self, routineData, alternativeData, noteData):
         """
         by invoking this method, the workbook in the 'workBook' property gets
-        populated with data from the database. make sure, that 'routineLayout'
-        has been invoked prior.
+        populated with data from routineData, alternativeData and noteData.
+        These arguments are typically set by 'dataFromDatabase' or
+        'dataFromModel'
+
+        Note:
+        make sure, that 'routineLayout' has been invoked prior.
+
+        Note:
         if no proper values either for the database-property or the
         workBook-property have been set, a ValueError will be raised
 
         Parameters
         ----------
-        databasePath : str
-            this parameter must point to a valid db-file
-            (typically a trainingroutine).
+        routineData: list
+            a list with values representing the trainingroutine
+
+        alternativeData: list
+            a list with values representing the trainingalternatives
+
+        noteData: list
+            a list with values representing the trainingnotes
 
         Raises
         ------
@@ -475,9 +486,8 @@ class Exporter():
              'workBook' property does not hold a valid 'openpyxl.Workbook' object
 
         ValueError
-            will be raised, if the 'database' property does not point to a valid
-            database-file. it will also be raised, if the dimension of the
-            'numpy.array' representation of data does not match (n, m)
+            will be raised, if the dimension of the 'numpy.array' representation
+            of the input arguments does not match (n, m)
 
         Returns
         -------
@@ -499,11 +509,6 @@ class Exporter():
                         )
                 )
 
-        if not self.database():
-            raise ValueError(
-                    "tried to access an invalid database. set a vild Database.database-object as database, before populating a trainingroutine"
-                )
-
         if not isinstance(self.workBook(), openpyxl.Workbook):
             raise TypeError(
                     "tried to access an invalid workbook. set a valid openpyxl.Workbook-object as workbook, before populating a trainingroutine "
@@ -511,6 +516,7 @@ class Exporter():
 
         ws = self.workBook().active
 
+        # set header data
         ws["A3"] = self.name()
         ws["F3"] = self.trainingPeriode()[0]
         ws["F4"] = self.trainingPeriode()[1]
