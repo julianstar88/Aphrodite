@@ -42,7 +42,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         """process input parameter"""
         self.setConfigParser(configParser)
-        self.populateMainObjects()
+        self.populateMainObjects("last_opened_routine")
 
         """general settings for app"""
         self.setWindowTitle("Aphrodite")
@@ -210,7 +210,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.configParser().last_opened_routine = str(file)
             self.configParser().writeConfigFile()
 
-            self.populateMainObjects()
+            self.populateMainObjects("last_opened_routine")
             self.closeRoutine()
             self.openRoutine()
             return True
@@ -277,7 +277,7 @@ class MainWindow(QtWidgets.QMainWindow):
         #  provide database name to database and open the new trainingroutine 
         self.database().setPath(lastClosedFileStr)
         self.closeRoutine()
-        self.populateMainObjects()
+        self.populateMainObjects("last_closed_routine")
         self.openRoutine()
         self.updateWindow()
         
@@ -306,7 +306,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 
                 # provide database name to database and open the new trainingroutine
                 self.database().setPath(file)
-                self.populateMainObjects()
+                self.populateMainObjects("last_opened_routine")
                 self.openRoutine()
                 self.updateWindow()
 
@@ -374,8 +374,9 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self.setWindowTitle("Aphrodite")
 
-    def populateMainObjects(self):
-        path = pathlib2.Path(self.configParser().readAttributes()["last_opened_routine"])
+    def populateMainObjects(self, attr):
+        path = pathlib2.Path(self.configParser().readAttributes()[attr])
+        # path = pathlib2.Path(self.configParser().readAttributes()["last_opened_routine"])
 
         if self.database() is None:
             database = Database.database(path)
