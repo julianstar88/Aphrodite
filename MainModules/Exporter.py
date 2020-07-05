@@ -319,18 +319,32 @@ class Exporter():
 
         Parameters
         ----------
-        model : CustomSqlModel, optional
-            reference to a valid CustomSqlModel. The default is None.
+        routineModel : CustomSqlModel or QtGui.QStandardItemModel, optional
+            data source for routine data. The default is None.
+
+        alternativeModel : CustomSqlModel or QtGui.QStandardItemModel, optional
+            data source for alternative data. The default is None.
+
+        noteModel : CustomSqlModel or QtGui.QStandardItemModel, optional
+            data source for model data. The default is None.
 
         Raises
         ------
         TypeError
-            will be raised, if no valid value for the 'model' property has been set.
+            will be raised, if the values for the properties does not match
+            <CustomSqlModel> or <QtGui.QStandardItemModel>.
+            EXCEPTION: noteModel must explicitly be <QtGui.QStandardItemModel>
 
         Returns
         -------
-        modelData : list
-            all data in a CustomSqlModel as nested list.
+        routineData : list
+            all data from the routineModel as nested list.
+
+        alternativeData : list
+            all data from the alternativeModel as nested list.
+
+        noteData : list
+            all data from the noteModel as nested list.
 
         """
 
@@ -440,7 +454,7 @@ class Exporter():
         """
         return self._noteModel
 
-    def populateRoutine(self, data):
+    def populateRoutine(self, routineData, alternativeData, noteData):
         """
         by invoking this method, the workbook in the 'workBook' property gets
         populated with data from the database. make sure, that 'routineLayout'
