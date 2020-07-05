@@ -116,23 +116,63 @@ class Exporter():
     def __init__(self,
                  database = None,
                  exportPath = None,
-                 model = None,
                  name = None,
                  routineName = None,
-                 trainingPeriode = [None, None],
+                 startDate = None,
                  trainingMode = None,
-                 workBook = None):
+                 workBook = None,
+                 routineModel = None,
+                 alternativeModel = None,
+                 noteModel = None):
 
-        self._database = database
+        self._database = None
         self._databaseName = None
         self._databasePath = None
-        self._exportPath = exportPath
-        self._model = None
-        self._name = name
-        self._routineName = routineName
-        self._trainingPeriode = trainingPeriode
-        self._trainingMode = trainingMode
-        self._workBook = workBook
+        self._exportPath = None
+        self._name = None
+        self._routineName = None
+        self._trainingPeriode = list()
+        self._trainingMode = None
+        self._workBook = None
+        self._routineModel = None
+        self._alternativeModel = None
+        self._noteModel = None
+
+        if (database):
+            self.setDatabase(database)
+        if (exportPath):
+            self.setExportPath(exportPath)
+        if (name):
+            self.setName(name)
+        if (routineName):
+            self.setRoutineName(routineName)
+        if (isinstance(startDate, tuple)) and (len(starDate) == 3):
+            self.setTrainingPeriode(
+                    startDate[0],
+                    startDate[1],
+                    startDate[2]
+                )
+        if (trainingMode):
+            self.setTrainingMode(trainingMode)
+        if (workBook):
+            self.setWorkBook(workBook)
+        if (routineModel):
+            self.setRoutineModel(routineModel)
+        if (alternativeModel):
+            self.setAlternativeModel(alternativeModel)
+        if (noteModel):
+            self.setNoteModel(noteModel)
+
+    def alternativeModel(self):
+        """
+        getter method for the attribute 'alternativeModel'
+
+        Returns
+        -------
+        CustomSqlModel or QtGui.QStandardItemModel
+
+        """
+        return self._alternativeModel
 
     def database(self):
         """
@@ -221,9 +261,9 @@ class Exporter():
         databaseObj = db.database(self.database())
         routineData = databaseObj.data("training_routine")
         alternativeData = databaseObj.data("training_alternatives")
-        informationData = databaseObj.data("general_information")
+        noteData = databaseObj.data("training_notes")
 
-        return routineData, alternativeData, informationData
+        return routineData, alternativeData, noteData
 
     # old approach only retrieve data from training_routine
     # def dataFromDatabase(self, database = None, tableName = "training_routine"):
@@ -268,11 +308,14 @@ class Exporter():
 
     #     return data
 
-    def dataFromModel(self, model = None):
+    def dataFromModel(
+                self,
+                routineModel = None,
+                alternativeModel = None,
+                noteModel = None):
         """
-        retrieve data from a CustomSqlModel as source for training data. the property
-        'mdoel' can be st either by calling 'setModel' or directly by
-        calling 'dataFromModel(model)' with a reference to a valid CustomSqlModel.
+        retrieve data from different Models as source for routine-data,
+        alternative-data and note-data and returns the data as lists.
 
         Parameters
         ----------
@@ -291,25 +334,61 @@ class Exporter():
 
         """
 
-        if model:
-            self.setModel(model)
+        if routineModel:
+            self.setRoutineModel(routineModel)
+        if alternativeModel:
+            self.setAlternativeModel(alternativeModel)
+        if noteModel:
+            self.setNoteModel(noteModel)
 
-        if not isinstance(self.model(), CustomSqlModel):
+        if (not isinstance(self.routineModel(), CustomSqlModel)) and \
+            (not isinstance(self.routineModel(), QtGui.QStandarItemModel)):
             raise TypeError(
-                    "before fetching data from a model, a valid <QStandardItemModel> has to be set for the model-property of 'GraphicalEvaluator'"
+                    "before fetching data from a model, a valid model has to be set for 'routineModel'"
+                )
+        if (not isinstance(self.alternativeModel(), CustomSqlModel)) and \
+            (not isinstance(self.alternative(), QtGui.QStandarItemModel)):
+            raise TypeError(
+                    "before fetching data from a model, a valid model has to be set for 'alternativeModel'"
+                )
+        if (not isinstance(self.noteModel(), QtGui.QStandardItemModel)):
+            raise TypeError(
+                    "before fetching data from a model, a valid model has to be set for 'noteModel'"
                 )
 
-        rows = self.model().rowCount()
-        cols = self.model().columnCount()
-
-        modelData = []
+        # retrieve routine Data
+        rows = self.routineModel().rowCount()
+        cols = self.routineModel().columnCount()
+        routineData = list()
         for row in range(rows):
             line = []
             for col in range(cols):
-                item = self.model().item(row, col)
+                item = self.routineModel().item(row, col)
                 line.append(item.userData())
-            modelData.append(line)
-        return modelData
+            routineData.append(line)
+
+        # retrieve alternative Data
+        rows = self.alternativeModel().rowCount()
+        cols = self.alternativeModel().columnCount()
+        alternativeData = list()
+        for row in range(rows):
+            line = []
+            for col in range(cols):
+                item = self.alternativeModel().item(row, col)
+                line.append(item.userData())
+            alternativeData.append(line)
+
+        # retrieve note Data
+        rows = self.noteModel().rowCount()
+        cols = self.noteModel().columnCount()
+        noteData = list()
+        for row in range(rows):
+            line = []
+            for col in range(cols):
+                item = self.noteModel().item(row, col)
+                line.append(item.userData())
+            noteData.append(line)
+        return routineData, alternativeData, noteData
 
     def exportPath(self):
         """
@@ -324,17 +403,17 @@ class Exporter():
 
         return self._exportPath
 
-    def model(self):
-        """
-        holds a reference to a valid CustomSqlModel-object
+    # def model(self):
+    #     """
+    #     holds a reference to a valid CustomSqlModel-object
 
-        Returns
-        -------
-        CustomSqlModel
+    #     Returns
+    #     -------
+    #     CustomSqlModel
 
-        """
+    #     """
 
-        return self._model
+    #     return self._model
 
     def name(self):
         """
@@ -349,6 +428,17 @@ class Exporter():
         """
 
         return self._name
+
+    def noteModel(self):
+        """
+        getter method for the attribute 'noteModel'
+
+        Returns
+        -------
+        QtGui.QStandardItemModel
+
+        """
+        return self._noteModel
 
     def populateRoutine(self, data):
         """
@@ -448,6 +538,18 @@ class Exporter():
         self.setWorkBook(workBook)
         return workBook
 
+    def routineModel(self):
+        """
+        holds a reference to a vild CustomSqlModel representing routine-data
+        of a trainingroutine
+
+        Returns
+        -------
+        CustomSqlModel
+
+        """
+        return self._routineModel
+
     def routineName(self):
         """
         holds the routinename for the exportfile. this will be the name for the
@@ -521,6 +623,35 @@ class Exporter():
                 )
         path = pathlib2.Path(self.exportPath()) / pathlib2.Path(self.routineName())
         self.workBook().save(str(path))
+
+    def setAlternativeModel(self, model):
+        """
+        setter method for the attribute 'alternativeModel'
+
+        Parameters
+        ----------
+        model : CustomSqlModel or QtGui.QStandardItemModel
+
+        Raises
+        ------
+        TypeError
+            will be raised, if <model> does not match <CustomSqlModel> or <QtGui.QStandardItemModel>.
+
+        Returns
+        -------
+        None.
+
+        """
+        if (not isinstance(model, QtGui.QStandardItemModel)) and (not isinstance(model, CustomSqlModel)):
+            raise TypeError(
+                    "input <{input_name}> does not match {input_name_1} or {input_name_2}".format(
+                            input_name = str(model),
+                            type_name_1 = QtGui.QStandardItemModel,
+                            type_name_2 = CustomSqlModel
+                        )
+                )
+
+        self._alternativeModel = model
 
     def setDatabase(self, databasePath):
         """
@@ -676,6 +807,62 @@ class Exporter():
             raise ValueError("empty input for the attribute 'name'")
 
         self._name = name
+
+    def setNoteModel(self, model):
+        """
+        setter method for the attribute 'noteModel'
+
+        Parameters
+        ----------
+        model : QtGui.QStandardItemModel
+
+        Raises
+        ------
+        TypeError
+            will be raised if <model> is not type <QtGui.QStandardItemModel>.
+
+        Returns
+        -------
+        None.
+
+        """
+        if not isinstance(model, QtGui.QStandardItemModel):
+            raise TypeError(
+                    "input <{input_name}> does not match {type_name}".format(
+                            input_name = str(model),
+                            type_name = QtGui.QStandardItemModel
+                        )
+                )
+
+        self._noteModel = model
+
+    def setRoutineModel(self, model):
+        """
+        set the attribute 'routineModel' to <model>
+
+        Parameters
+        ----------
+        model : CustomSqlModle, QtGui.QStandartItemModel
+
+        Raises
+        ------
+        TypeError
+            will be raised if <model> is not type 'CustomSqlModel' or 'QtGui.QStandardItemModel'
+
+        Returns
+        -------
+        None.
+
+        """
+        if (not isinstance(model, QtGui.QStandardItemModel)) and (not isinstance(model, CustomSqlModel)):
+            raise TypeError(
+                    "input <{input_name}> does not match {type_name}".format(
+                            input_name = str(model),
+                            type_name = QtGui.QStandardItemModel
+                        )
+                )
+
+        self._routineModel = model
 
     def setRoutineName(self, routineName):
         """
