@@ -42,7 +42,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         """process input parameter"""
         self.setConfigParser(configParser)
-        self.populateMainObjects()
+        self.populateMainObjects("last_opened_routine")
 
         """general settings for app"""
         self.setWindowTitle("Aphrodite")
@@ -112,6 +112,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # connections
         self.newRoutineAction.triggered.connect(self.onCreateNewRoutine)
         self.openRoutineAction.triggered.connect(self.onOpenTrainingroutine)
+        self.openLastClosedAction.triggered.connect(self.onOpenLastClosed)
         self.quitAction.triggered.connect(self.onDestroyed)
 
         self.editAlternativesAction.triggered.connect(self.onEditAlternatives)
@@ -141,6 +142,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def closeRoutine(self):
 
+        # delete all widgets 
         self.setWindowTitle("Aphrodite")
         def deleteTabWidget(widget):
             for i in range(widget.count()):
@@ -162,7 +164,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 for n in reversed(range(child.count())):
                     grandChild = child.takeAt(n)
                     grandChild.widget().deleteLater()
-
+            
+        # write recently closed database to the configFile
+        file = self.database().path() / (self.database().databaseName() + self.database().extension())
+        self.configParser().last_closed_routine = str(file)
+        self.configParser().writeConfigFile()
+        
     def configParser(self):
         return self._configParser
 
@@ -203,7 +210,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.configParser().last_opened_routine = str(file)
             self.configParser().writeConfigFile()
 
-            self.populateMainObjects()
+            self.populateMainObjects("last_opened_routine")
             self.closeRoutine()
             self.openRoutine()
             return True
@@ -263,6 +270,17 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             return False
         
+    def onOpenLastClosed(self, *args):
+        # collect database name of last closed database
+        lastClosedFileStr = self.configParser().last_closed_routine
+        
+        #  provide database name to database and open the new trainingroutine 
+        self.database().setPath(lastClosedFileStr)
+        self.closeRoutine()
+        self.populateMainObjects("last_closed_routine")
+        self.openRoutine()
+        self.updateWindow()
+        
     def onOpenTrainingroutine(self, *args):
         # collect database name
         dialog = QtWidgets.QFileDialog()
@@ -282,13 +300,13 @@ class MainWindow(QtWidgets.QMainWindow):
         if (dialog.exec()):
             file = pathlib2.Path(dialog.selectedFiles()[0])
             if (file.is_file()):
+                self.closeRoutine()
                 self.configParser().last_opened_routine = str(file)
                 self.configParser().writeConfigFile()
                 
                 # provide database name to database and open the new trainingroutine
                 self.database().setPath(file)
-                self.closeRoutine()
-                self.populateMainObjects()
+                self.populateMainObjects("last_opened_routine")
                 self.openRoutine()
                 self.updateWindow()
 
@@ -356,8 +374,9 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self.setWindowTitle("Aphrodite")
 
-    def populateMainObjects(self):
-        path = pathlib2.Path(self.configParser().readAttributes()["last_opened_routine"])
+    def populateMainObjects(self, attr):
+        path = pathlib2.Path(self.configParser().readAttributes()[attr])
+        # path = pathlib2.Path(self.configParser().readAttributes()["last_opened_routine"])
 
         if self.database() is None:
             database = Database.database(path)
@@ -1375,10 +1394,3 @@ class EvaluatorTab(cc.CustomWidget):
                 self.evaluator().mainWidget().removeTab(i)
             self.evaluator().createTabs(self.evaluator().dataFromModel())
             self.evaluator().plotData(self.evaluator().dataFromModel())
-
-if __name__ == "__main__":
-    qapp = QtWidgets.QApplication(sys.argv)
-
-    app = MainWindow()
-
-    sys.exit(qapp.exec_())

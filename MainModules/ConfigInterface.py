@@ -13,6 +13,7 @@ class ConfigParser():
     knownConfigKeys = (
         "new_routine_directory",
         "last_opened_routine",
+        "last_closed_routine",
         "export_routine_directory"
     )
 
