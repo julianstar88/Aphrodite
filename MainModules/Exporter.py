@@ -94,11 +94,15 @@ class Exporter():
 
         >>> exporter.setDatabase(...)
         >>> exporter.setExportPath(...)
-        >>> exporter.setModel(...)
         >>> exporter.setName(...)
         >>> exporter.setRoutineName(...)
         >>> exporter.setTrainingPeriode(...)
         >>> exporter.setTrainingMode(...)
+
+        >>> exporter.setRoutineModel(...)
+        >>> exporter.setAlternativeModel(...)
+        >>> exporter.setNoteModel(...)
+
 
     3. layout the exportfile:
 
@@ -106,7 +110,13 @@ class Exporter():
 
     4. populate the exportfile with exercises, sets and repetitions
 
-        >>> exporter.populateRoutine()
+        either with data from Database:
+
+        >>> exporter.populateRoutine(exporter.dataFromDatabase(...))
+
+        or, if routineModel, alternativeModel and noteModel have been set
+
+        >>> exporter.populateRoutine(exporter.dataFromModel(...))
 
     5. save the workBook to create the exportfile
 
@@ -522,6 +532,7 @@ class Exporter():
         ws["F4"] = self.trainingPeriode()[1]
         ws["I3"] = self.trainingMode()
 
+        # set routine data
         inputValues = [data[i][0] for i in range(len(data))]
         for i, val in enumerate(inputValues):
             ws["A" + str(7 + i)] = val
@@ -533,6 +544,10 @@ class Exporter():
         inputValues = [data[i][2] for i in range(len(data))]
         for i, val in enumerate(inputValues):
             ws["D" + str(7 + i)] = val
+
+        #TODO set alternative data
+
+        #TODO set note data
 
     def routineLayout(self, rows = 40):
         """
