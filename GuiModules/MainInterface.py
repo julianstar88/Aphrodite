@@ -54,7 +54,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.openRoutine()
 
         """show the app"""
-        self.showMaximized()
+        # self.showMaximized()
+        self.show()
 
     def __connectButtons(self):
         self.editAlternativesButton.clicked.connect(self.onEditAlternatives)
@@ -112,6 +113,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.newRoutineAction.triggered.connect(self.onCreateNewRoutine)
         self.openRoutineAction.triggered.connect(self.onOpenTrainingroutine)
         self.openLastClosedAction.triggered.connect(self.onOpenLastClosed)
+        self.exportAction.triggered.connect(self.onExportTrainingroutine)
         self.quitAction.triggered.connect(self.onDestroyed)
 
         self.editAlternativesAction.triggered.connect(self.onEditAlternatives)
@@ -141,7 +143,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def closeRoutine(self):
 
-        # delete all widgets 
+        # delete all widgets
         self.setWindowTitle("Aphrodite")
         def deleteTabWidget(widget):
             for i in range(widget.count()):
@@ -163,12 +165,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 for n in reversed(range(child.count())):
                     grandChild = child.takeAt(n)
                     grandChild.widget().deleteLater()
-            
+
         # write recently closed database to the configFile
         file = self.database().path() / (self.database().databaseName() + self.database().extension())
         self.configParser().last_closed_routine = str(file)
         self.configParser().writeConfigFile()
-        
+
     def configParser(self):
         return self._configParser
 
@@ -268,25 +270,86 @@ class MainWindow(QtWidgets.QMainWindow):
             return True
         else:
             return False
-        
+
+    def onExportTrainingroutine(self):
+        # collect export path
+        dialog = QtWidgets.QFileDialog()
+        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+        dialog.setNameFilter("Excel (*.xlsx)")
+        dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
+
+        exportDirStr = self.configParser().export_routine_directory
+        defaultName = self.database().databaseName()
+        if exportDirStr:
+            exportDir = pathlib2.Path(exportDirStr)
+        else:
+            exportDir = pathlib2.Path(__file__).cwd() / pathlib2.Path("training_routines")
+
+        dialog.setDirectory(str(exportDir))
+        dialog.selectFile(defaultName)
+
+        if (dialog.exec()):
+            file = pathlib2.Path(dialog.selectedFiles()[0])
+            data = self.database().data("general_information")
+            path = file.parent
+            routineName = file.name
+
+            try:
+                userName = data[0][0]
+            except:
+                userName = "None"
+            try:
+                startDateStr = data[0][1]
+            except:
+                date = datetime.date.today()
+                startDateStr = date.strftime("%d.%m.%Y")
+            try:
+                trainingMode = data[0][2]
+                if len(trainingMode) == 0:
+                    trainingMode = "None"
+            except:
+                trainingMode = "None"
+
+            match = re.search("(?P<d>\d+).(?P<m>\d+).(?P<y>\d+)", startDateStr)
+
+            self.configParser().export_routine_directory = path
+            self.configParser().writeConfigFile()
+
+            self.exporter().setExportPath(str(path))
+            self.exporter().setDatabase(
+                    self.database().path() / (self.database().databaseName() + self.database().extension())
+                )
+            self.exporter().setRoutineName(routineName)
+            self.exporter().setName(userName)
+            self.exporter().setTrainingMode(trainingMode)
+            self.exporter().setTrainingPeriode(
+                    int(match.group("y")), int(match.group("m")), int(match.group("d"))
+                )
+            self.exporter().routineLayout()
+            data,_,_ = self.exporter().dataFromDatabase()
+            self.exporter().populateRoutine(data)
+            self.exporter().saveRoutine()
+            return True
+
+        return False
     def onOpenLastClosed(self, *args):
         # collect database name of last closed database
         lastClosedFileStr = self.configParser().last_closed_routine
-        
-        #  provide database name to database and open the new trainingroutine 
+
+        #  provide database name to database and open the new trainingroutine
         self.database().setPath(lastClosedFileStr)
         self.closeRoutine()
         self.populateMainObjects("last_closed_routine")
         self.openRoutine()
         self.updateWindow()
-        
+
     def onOpenTrainingroutine(self, *args):
         # collect database name
         dialog = QtWidgets.QFileDialog()
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
         dialog.setNameFilter("database (*db)")
         dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
-        
+
         lastOpenedFileStr = self.configParser().last_opened_routine
         if lastOpenedFileStr:
             lastOpenedFile = pathlib2.Path(lastOpenedFileStr)
@@ -294,7 +357,7 @@ class MainWindow(QtWidgets.QMainWindow):
             dialog.selectFile(lastOpenedFile.name)
         else:
             lastOpenedDir = pathlib2.Path(__file__).cwd() / pathlib2.Path("training_routines")
-        
+
         dialog.setDirectory(str(lastOpenedDir))
         if (dialog.exec()):
             file = pathlib2.Path(dialog.selectedFiles()[0])
@@ -302,7 +365,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.closeRoutine()
                 self.configParser().last_opened_routine = str(file)
                 self.configParser().writeConfigFile()
-                
+
                 # provide database name to database and open the new trainingroutine
                 self.database().setPath(file)
                 self.populateMainObjects("last_opened_routine")
@@ -1131,7 +1194,7 @@ class RoutineTab(cc.CustomWidget):
             self.setAlternativeView(
                     CustomTableView.CustomModelView(
                             self.alternativeModel(),
-                            self, 
+                            self,
                             headerLabels = self.alternativeHeaderLabels(),
                             headerFontSize = 15,
                             headerFontWeight = "normal",

@@ -179,7 +179,7 @@ class Exporter():
 
         return self._databasePath
 
-    def dataFromDatabase(self, database = None, tableName = "training_routine"):
+    def dataFromDatabase(self, database = None):
         """
         retrieve data from a database as source for training data. the property
         'database' can be st either by calling 'setDatabase' or directly by
@@ -191,8 +191,6 @@ class Exporter():
         ----------
         database : str, optional
             path to a valid database-file. The default is None.
-        tableName : str, optional
-            name of a table in database. The default is "training_routine".
 
         Raises
         ------
@@ -202,8 +200,14 @@ class Exporter():
 
         Returns
         -------
-        data : list
-            all data within a database as nested list.
+        routineData : list
+            all data from training_routine  as nested list.
+
+        alternativeData : list
+            all data from training_alternatives as nested list.
+
+        informationData : list
+            all data from general_information as nested list.
 
         """
 
@@ -214,12 +218,55 @@ class Exporter():
             raise TypeError(
                     "before fetching data from a database, set a path to a valid database-file"
                 )
-        pathObj = pathlib2.Path(self.database())
-        databaseName = pathObj.stem
-        databaseObj = db.database(pathObj.parent)
-        data = databaseObj.data(tableName, databaseName)
+        databaseObj = db.database(self.database())
+        routineData = databaseObj.data("training_routine")
+        alternativeData = databaseObj.data("training_alternatives")
+        informationData = databaseObj.data("general_information")
 
-        return data
+        return routineData, alternativeData, informationData
+
+    # old approach only retrieve data from training_routine
+    # def dataFromDatabase(self, database = None, tableName = "training_routine"):
+    #     """
+    #     retrieve data from a database as source for training data. the property
+    #     'database' can be st either by calling 'setDatabase' or directly by
+    #     calling 'dataFromDatabase(database)' with a path to a valid database-file.
+    #     additionally, one can set the tabel from wich to retrive data, by setting
+    #     the 'tableName' argument to a valid table.
+
+    #     Parameters
+    #     ----------
+    #     database : str, optional
+    #         path to a valid database-file. The default is None.
+    #     tableName : str, optional
+    #         name of a table in database. The default is "training_routine".
+
+    #     Raises
+    #     ------
+    #     TypeError
+    #         will be raised, if no valid value for the database-property
+    #         has been set.
+
+    #     Returns
+    #     -------
+    #     data : list
+    #         all data within a database as nested list.
+
+    #     """
+
+    #     if database:
+    #         self.setDatabase(database)
+
+    #     if not self.database():
+    #         raise TypeError(
+    #                 "before fetching data from a database, set a path to a valid database-file"
+    #             )
+    #     pathObj = pathlib2.Path(self.database())
+    #     databaseName = pathObj.stem
+    #     databaseObj = db.database(pathObj.parent)
+    #     data = databaseObj.data(tableName, databaseName)
+
+    #     return data
 
     def dataFromModel(self, model = None):
         """
@@ -481,7 +528,7 @@ class Exporter():
 
         Parameters
         ----------
-        databasePath : str
+        databasePath : str; pathlib2.Path()
             this parameter must point to a valid db-file
             (typically a trainingroutine).
 
@@ -528,7 +575,7 @@ class Exporter():
 
         Parameters
         ----------
-        exportPath : str
+        exportPath : str, pathlib2.Path
             exportPath must point to a directory, where the exportfile
             will be stored.
 
