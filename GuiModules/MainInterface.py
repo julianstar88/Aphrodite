@@ -5,7 +5,6 @@ Created on Thu May 14 14:58:37 2020
 @author: Julian
 """
 
-import sys
 import re
 import pathlib2
 import datetime
