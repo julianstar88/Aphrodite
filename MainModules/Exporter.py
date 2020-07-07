@@ -7,10 +7,12 @@ Created on Tue Mar  3 22:30:14 2020
 import datetime
 import pathlib2
 import openpyxl
+import xlsxwriter
 import numpy as np
 import MainModules.Database as db
 import UtilityModules.ExporterUtilityModules as exporterUtils
 from UtilityModules.CustomModel import CustomSqlModel
+import tempfile
 
 class Exporter():
     """
@@ -172,6 +174,9 @@ class Exporter():
             self.setAlternativeModel(alternativeModel)
         if (noteModel):
             self.setNoteModel(noteModel)
+
+    def __finalizeLayout(self, file):
+        print(file)
 
     def alternativeModel(self):
         """
@@ -504,21 +509,48 @@ class Exporter():
         None.
 
         """
-        if not isinstance(data, tuple) and not isinstance(data, list):
+        if not isinstance(routineData, tuple) and not isinstance(routineData, list):
             raise TypeError(
-                    "input {input_type} does not match {expected_type_1} nor {expected_type_2}".format(
-                            input_type = type(data),
+                    "input <{input_type}> does not match {expected_type_1} or {expected_type_2} for argument 'routineData'".format(
+                            input_type = type(routineData),
                             expected_type_1 = tuple,
                             expected_type_2 = list
                         )
                 )
-        if not len(np.array(data).shape) == 2:
-            raise ValueError(
-                    "dim = {input_dim} for argument 'data' does not match the expected dim = 2".format(
-                            input_dim = str(len(np.array(data).shape))
+        # if not len(np.array(routineData).shape) == 2:
+        #     raise ValueError(
+        #             "dim = {input_dim} for argument 'routineData' does not match the expected dim = 2".format(
+        #                     input_dim = str(len(np.array(routineData).shape))
+        #                 )
+        #         )
+        if not isinstance(alternativeData, tuple) and not isinstance(alternativeData, list):
+            raise TypeError(
+                    "input <{input_type}> does not match {expected_type_1} or {expected_type_2} for argument 'alternativeData'".format(
+                            input_type = type(alternativeData),
+                            expected_type_1 = tuple,
+                            expected_type_2 = list
                         )
                 )
-
+        # if not len(np.array(alternativeData).shape) == 2:
+        #     raise ValueError(
+        #             "dim = {input_dim} for argument 'alternativeData' does not match the expected dim = 2".format(
+        #                     input_dim = str(len(np.array(alternativeData).shape))
+        #                 )
+        #         )
+        if not isinstance(noteData, tuple) and not isinstance(noteData, list):
+            raise TypeError(
+                    "input <{input_type}> does not match {expected_type_1} or {expected_type_2} for argument 'noteData'".format(
+                            input_type = type(noteData),
+                            expected_type_1 = tuple,
+                            expected_type_2 = list
+                        )
+                )
+        # if not len(np.array(noteData).shape) == 2:
+        #     raise ValueError(
+        #             "dim = {input_dim} for argument 'noteData' does not match the expected dim = 2".format(
+        #                     input_dim = str(len(np.array(noteData).shape))
+        #                 )
+        #         )
         if not isinstance(self.workBook(), openpyxl.Workbook):
             raise TypeError(
                     "tried to access an invalid workbook. set a valid openpyxl.Workbook-object as workbook, before populating a trainingroutine "
@@ -530,24 +562,95 @@ class Exporter():
         ws["A3"] = self.name()
         ws["F3"] = self.trainingPeriode()[0]
         ws["F4"] = self.trainingPeriode()[1]
-        ws["I3"] = self.trainingMode()
+        ws["H3"] = self.trainingMode()
+
+        startRoutineRow = 7
+        exporterUtils.setAlignment(
+                ws,
+                exporterUtils.generateRangeExpression(
+                        startRow = startRoutineRow,
+                        endRow = len(list(ws.rows)),
+                        startColumn = "C",
+                        endColumn = "J"
+                    ),
+                horizontal = "left"
+            )
 
         # set routine data
-        inputValues = [data[i][0] for i in range(len(data))]
+        inputValues = [routineData[i][0] for i in range(len(routineData))]
         for i, val in enumerate(inputValues):
-            ws["A" + str(7 + i)] = val
+            rowID = i + 1
 
-        inputValues = [data[i][1] for i in range(len(data))]
+            l = list()
+            for alternative in alternativeData:
+                if rowID == alternative[0]:
+                    l.append(alternative[1])
+            alternatives = "%s)"*len(l)
+            alternatives = alternatives % tuple(l)
+
+            l = list()
+            for note in noteData:
+                if rowID == note[0]:
+                    l.append(note[1])
+            notes = "%s)"*len(l)
+            notes = notes % tuple(l)
+
+            ws["A" + str(startRoutineRow + i)] = val + " " + alternatives + notes
+
+
+        for n, row in enumerate(routineData):
+            row = row[1:-1]
+            del row[2]
+            for m, val in enumerate(row):
+                ws.cell(
+                        row = startRoutineRow + n,
+                        column = 3 + m,
+                        value = val
+                    )
+
+        # set alternative data
+        alternativeStartRow = startRoutineRow + len(routineData) + 3
+
+        ws.cell(alternativeStartRow, 1, value = "Alternativen:").font = openpyxl.styles.Font(
+            b = True
+        )
+
+        alternativeStartRow += 1
+
+        inputValues = [alternativeData[i][1:4] for i in range(len(alternativeData))]
         for i, val in enumerate(inputValues):
-            ws["C" + str(7 + i)] = val
+            ws["A" + str(alternativeStartRow + i)] = val[0] + ") " + val[2]
 
-        inputValues = [data[i][2] for i in range(len(data))]
+        for n, row in enumerate(alternativeData):
+            row = row[4:-1]
+            del row[2]
+            for m, val in enumerate(row):
+                ws.cell(
+                        row = alternativeStartRow + n,
+                        column = 3 + m,
+                        value = val
+                    )
+
+        # set note data
+        noteStartRow = len(list(ws.rows)) + 1
+        ws.cell(noteStartRow, 1, value = "Notes:").font = openpyxl.styles.Font(
+            b = True
+        )
+        noteStartRow += 1
+
+        inputValues = [noteData[i][1] for i in range(len(noteData))]
         for i, val in enumerate(inputValues):
-            ws["D" + str(7 + i)] = val
+            ws["A" + str(noteStartRow + i)] = val + ")"
 
-        #TODO set alternative data
-
-        #TODO set note data
+        inputValues = [noteData[i][3] for i in range(len(noteData))]
+        for i, val in enumerate(inputValues):
+            ws.merge_cells(exporterUtils.generateRangeExpression(
+                    noteStartRow + i,
+                    noteStartRow + i,
+                    "B",
+                    "J"
+                ))
+            ws["B" + str(noteStartRow + i)] = val
 
     def routineLayout(self, rows = 40):
         """
