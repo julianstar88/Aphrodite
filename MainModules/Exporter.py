@@ -10,7 +10,7 @@ import openpyxl
 import numpy as np
 
 import tempfile
-import win32com.client
+import comtypes.client as com
 
 import MainModules.Database as db
 import UtilityModules.ExporterUtilityModules as exporterUtils
@@ -455,9 +455,10 @@ class Exporter():
 
         routineData, alternativeData, noteData = self.dataFromDatabase()
         file = pathlib2.Path(file)
-        app = win32com.client.Dispatch("Excel.Application")
+        app = com.CreateObject("Excel.Application")
+        app.Visible = True
         wb = app.Workbooks.Open(str(file))
-        ws = wb.worksheets(1)
+        ws = wb.worksheets[1]
 
         for i in range(len(routineData)):
             row = self.__routineStartRow + i
@@ -477,7 +478,7 @@ class Exporter():
             notes = "%s"*len(l)
             notes = notes % tuple(l)
 
-            base = ws.Cells(row, 1).Value
+            base = routineData[i][0]
 
             newValue = "{baseName}{alternatives}{notes}".format(
                     baseName = base,
@@ -485,16 +486,22 @@ class Exporter():
                     notes = notes
                 )
 
-            cell = ws.Cells(row, 1)
-            cell.Value = newValue
+            cell = ws.Cells[25, 1]
+            cell.Value[:] = newValue
 
             # set superscript
-            # ch = ws.Range("A5").GetCharacters()
+            pos = len(base)
+            length = len(alternatives)
+            cell.Characters[pos, length].Font.Superscript = True
 
             # set subscript
+            pos = len(base) + len(alternatives)
+            length = len(notes)
+            print(cell.Characters[pos, length])
+            # cell.Characters[pos, length].Font.Subscript = True
 
-
-        wb.Close()
+        # wb.Save()
+        # app.Quit()
 
 
     def name(self):
@@ -634,21 +641,21 @@ class Exporter():
         for i, val in enumerate(inputValues):
             rowID = i + 1
             ws["A" + str(self.__routineStartRow + i)] = val
-            # l = list()
-            # for alternative in alternativeData:
-            #     if rowID == alternative[0]:
-            #         l.append(alternative[1])
-            # alternatives = "%s)"*len(l)
-            # alternatives = alternatives % tuple(l)
+            l = list()
+            for alternative in alternativeData:
+                if rowID == alternative[0]:
+                    l.append(alternative[1])
+            alternatives = "%s)"*len(l)
+            alternatives = alternatives % tuple(l)
 
-            # l = list()
-            # for note in noteData:
-            #     if rowID == note[0]:
-            #         l.append(note[1])
-            # notes = "%s)"*len(l)
-            # notes = notes % tuple(l)
+            l = list()
+            for note in noteData:
+                if rowID == note[0]:
+                    l.append(note[1])
+            notes = "%s)"*len(l)
+            notes = notes % tuple(l)
 
-            # ws["A" + str(self.__routineStartRow + i)] = val + " " + alternatives + notes
+            ws["A" + str(self.__routineStartRow + i)] = val + " " + alternatives + notes
 
 
         for n, row in enumerate(routineData):
