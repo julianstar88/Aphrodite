@@ -333,6 +333,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     noteData
                 )
             self.exporter().saveRoutine()
+            file = pathlib2.Path(self.exporter().exportPath()) / pathlib2.Path(self.exporter().routineName())
+            self.exporter().finalizeLayout(file)
             return True
 
         return False

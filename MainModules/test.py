@@ -4,20 +4,19 @@ Created on Thu Apr 30 18:11:28 2020
 
 @author: Julian
 """
-from openpyxl import Workbook
-from xlrd import open_workbook
+import win32com.client
+import inspect
+# from comtypes.client import CreateObject
 
-wb = Workbook()
-ws = wb.active
+# app = CreateObject("Excel.Application")
+app = win32com.client.dynamic.Dispatch("Excel.Application")
+app.Visible = False
 
-ws["A1"] = "test"
-wb.save("test.xlsx")
+wb = app.Workbooks.Add()
+ws = wb.Worksheets(1)
 
-xwb = open_workbook("test.xlsx")
-xws = xwb.sheet_by_index(0)
+cell = ws.Cells(1, 1)
+cell.Value = "test"
+cell.Characters(2, 1).Font.Superscript = True
 
-print(xws)
-
-# xws.write_rich_text(1, 1, ["test"])
-
-xwb.save("test.xlsx")
+# print(cell.Characters())

@@ -7,12 +7,15 @@ Created on Tue Mar  3 22:30:14 2020
 import datetime
 import pathlib2
 import openpyxl
-import xlsxwriter
 import numpy as np
+
+import tempfile
+import win32com.client
+
 import MainModules.Database as db
 import UtilityModules.ExporterUtilityModules as exporterUtils
 from UtilityModules.CustomModel import CustomSqlModel
-import tempfile
+
 
 class Exporter():
     """
@@ -150,6 +153,13 @@ class Exporter():
         self._alternativeModel = None
         self._noteModel = None
 
+        # purly private properties without getter or setter.
+        # this properties are uesed to finalize the layout (set superscripts
+        # and subscripts) after saving the epxort file.
+        self.__routineStartRow = int()
+        self.__alternativeStartRow = int()
+        self.__noteStartRow = int()
+
         if (database):
             self.setDatabase(database)
         if (exportPath):
@@ -174,9 +184,6 @@ class Exporter():
             self.setAlternativeModel(alternativeModel)
         if (noteModel):
             self.setNoteModel(noteModel)
-
-    def __finalizeLayout(self, file):
-        print(file)
 
     def alternativeModel(self):
         """
@@ -444,6 +451,52 @@ class Exporter():
 
     #     return self._model
 
+    def finalizeLayout(self, file):
+
+        routineData, alternativeData, noteData = self.dataFromDatabase()
+        file = pathlib2.Path(file)
+        app = win32com.client.Dispatch("Excel.Application")
+        wb = app.Workbooks.Open(str(file))
+        ws = wb.worksheets(1)
+
+        for i in range(len(routineData)):
+            row = self.__routineStartRow + i
+            rowID = i + 1
+
+            l = list()
+            for alternative in alternativeData:
+                if rowID == alternative[0]:
+                    l.append(alternative[1])
+            alternatives = "%s"*len(l)
+            alternatives = alternatives % tuple(l)
+
+            l = list()
+            for note in noteData:
+                if rowID == note[0]:
+                    l.append(note[1])
+            notes = "%s"*len(l)
+            notes = notes % tuple(l)
+
+            base = ws.Cells(row, 1).Value
+
+            newValue = "{baseName}{alternatives}{notes}".format(
+                    baseName = base,
+                    alternatives = alternatives,
+                    notes = notes
+                )
+
+            cell = ws.Cells(row, 1)
+            cell.Value = newValue
+
+            # set superscript
+            # ch = ws.Range("A5").GetCharacters()
+
+            # set subscript
+
+
+        wb.Close()
+
+
     def name(self):
         """
         holds the username for the trainingroutine. this is the name, which
@@ -564,11 +617,11 @@ class Exporter():
         ws["F4"] = self.trainingPeriode()[1]
         ws["H3"] = self.trainingMode()
 
-        startRoutineRow = 7
+        self.__routineStartRow = 7
         exporterUtils.setAlignment(
                 ws,
                 exporterUtils.generateRangeExpression(
-                        startRow = startRoutineRow,
+                        startRow = self.__routineStartRow,
                         endRow = len(list(ws.rows)),
                         startColumn = "C",
                         endColumn = "J"
@@ -580,22 +633,22 @@ class Exporter():
         inputValues = [routineData[i][0] for i in range(len(routineData))]
         for i, val in enumerate(inputValues):
             rowID = i + 1
+            ws["A" + str(self.__routineStartRow + i)] = val
+            # l = list()
+            # for alternative in alternativeData:
+            #     if rowID == alternative[0]:
+            #         l.append(alternative[1])
+            # alternatives = "%s)"*len(l)
+            # alternatives = alternatives % tuple(l)
 
-            l = list()
-            for alternative in alternativeData:
-                if rowID == alternative[0]:
-                    l.append(alternative[1])
-            alternatives = "%s)"*len(l)
-            alternatives = alternatives % tuple(l)
+            # l = list()
+            # for note in noteData:
+            #     if rowID == note[0]:
+            #         l.append(note[1])
+            # notes = "%s)"*len(l)
+            # notes = notes % tuple(l)
 
-            l = list()
-            for note in noteData:
-                if rowID == note[0]:
-                    l.append(note[1])
-            notes = "%s)"*len(l)
-            notes = notes % tuple(l)
-
-            ws["A" + str(startRoutineRow + i)] = val + " " + alternatives + notes
+            # ws["A" + str(self.__routineStartRow + i)] = val + " " + alternatives + notes
 
 
         for n, row in enumerate(routineData):
@@ -603,54 +656,54 @@ class Exporter():
             del row[2]
             for m, val in enumerate(row):
                 ws.cell(
-                        row = startRoutineRow + n,
+                        row = self.__routineStartRow + n,
                         column = 3 + m,
                         value = val
                     )
 
         # set alternative data
-        alternativeStartRow = startRoutineRow + len(routineData) + 3
+        self.__alternativeStartRow = self.__routineStartRow + len(routineData) + 3
 
-        ws.cell(alternativeStartRow, 1, value = "Alternativen:").font = openpyxl.styles.Font(
+        ws.cell(self.__alternativeStartRow, 1, value = "Alternativen:").font = openpyxl.styles.Font(
             b = True
         )
 
-        alternativeStartRow += 1
+        self.__alternativeStartRow += 1
 
         inputValues = [alternativeData[i][1:4] for i in range(len(alternativeData))]
         for i, val in enumerate(inputValues):
-            ws["A" + str(alternativeStartRow + i)] = val[0] + ") " + val[2]
+            ws["A" + str(self.__alternativeStartRow + i)] = val[0] + ") " + val[2]
 
         for n, row in enumerate(alternativeData):
             row = row[4:-1]
             del row[2]
             for m, val in enumerate(row):
                 ws.cell(
-                        row = alternativeStartRow + n,
+                        row = self.__alternativeStartRow + n,
                         column = 3 + m,
                         value = val
                     )
 
         # set note data
-        noteStartRow = len(list(ws.rows)) + 1
-        ws.cell(noteStartRow, 1, value = "Notes:").font = openpyxl.styles.Font(
+        self.__noteStartRow = len(list(ws.rows)) + 1
+        ws.cell(self.__noteStartRow, 1, value = "Notes:").font = openpyxl.styles.Font(
             b = True
         )
-        noteStartRow += 1
+        self.__noteStartRow += 1
 
         inputValues = [noteData[i][1] for i in range(len(noteData))]
         for i, val in enumerate(inputValues):
-            ws["A" + str(noteStartRow + i)] = val + ")"
+            ws["A" + str(self.__noteStartRow + i)] = val + ")"
 
         inputValues = [noteData[i][3] for i in range(len(noteData))]
         for i, val in enumerate(inputValues):
             ws.merge_cells(exporterUtils.generateRangeExpression(
-                    noteStartRow + i,
-                    noteStartRow + i,
+                    self.__noteStartRow + i,
+                    self.__noteStartRow + i,
                     "B",
                     "J"
                 ))
-            ws["B" + str(noteStartRow + i)] = val
+            ws["B" + str(self.__noteStartRow + i)] = val
 
     def routineLayout(self, rows = 40):
         """
