@@ -456,7 +456,10 @@ class Exporter():
         routineData, alternativeData, noteData = self.dataFromDatabase()
         file = pathlib2.Path(file)
         app = com.CreateObject("Excel.Application")
-        app.Visible = True
+
+        # for debugging purposes can this property set to True
+        app.Visible = False
+
         wb = app.Workbooks.Open(str(file))
         ws = wb.worksheets[1]
 
@@ -486,22 +489,23 @@ class Exporter():
                     notes = notes
                 )
 
-            cell = ws.Cells[25, 1]
+            cell = ws.Cells[self.__routineStartRow + i, 1]
             cell.Value[:] = newValue
 
             # set superscript
-            pos = len(base)
+            pos = len(base) + 1
             length = len(alternatives)
-            cell.Characters[pos, length].Font.Superscript = True
+            if length > 0:
+                cell.Characters[pos, length].Font.Superscript = True
 
             # set subscript
-            pos = len(base) + len(alternatives)
+            pos = len(base) + len(alternatives) + 1
             length = len(notes)
-            print(cell.Characters[pos, length])
-            # cell.Characters[pos, length].Font.Subscript = True
+            if length > 0:
+                cell.Characters[pos, length].Font.Subscript = True
 
-        # wb.Save()
-        # app.Quit()
+        wb.Save()
+        app.Quit()
 
 
     def name(self):
