@@ -40,6 +40,11 @@ class ExporterProperties(unittest.TestCase):
                 self.exporter, Exporter
             )
 
+    def test_alternativeModel_getter(self):
+        self.assertEqual(
+                self.exporter.alternativeModel(), None
+            )
+
     def test_database_getter(self):
         self.assertEqual(
                 self.exporter.database(), None
@@ -60,19 +65,24 @@ class ExporterProperties(unittest.TestCase):
                 self.exporter.databasePath(), None
             )
 
-    def test_model_getter(self):
-        self.assertEqual(
-                self.exporter.model(), None
-            )
-
     def test_name_getter(self):
         self.assertEqual(
                 self.exporter.name(), None
             )
 
+    def test_noteModel_getter(self):
+        self.assertEqual(
+                self.exporter.noteModel(), None
+            )
+
     def test_routineName_getter(self):
         self.assertEqual(
                 self.exporter.routineName(), None
+            )
+
+    def test_routineModel_getter(self):
+        self.assertEqual(
+                self.exporter.routineModel(), None
             )
 
     def test_trainingMode_getter(self):
