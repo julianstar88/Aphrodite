@@ -599,7 +599,10 @@ class Exporter():
             del row[2]
             for m, val in enumerate(row):
 
-                #TODO implement value validation
+                # if values are readable as numeric values in a
+                # 'ModelInputValidation' manner, convert them into integer
+                # (prevent excel from throwing a warning for writing numbers
+                # as text)
                 if validator.checkValue(val):
                     val = validator.readValue(val)[0]
 
@@ -627,7 +630,10 @@ class Exporter():
             del row[2]
             for m, val in enumerate(row):
 
-                #TODO implement value validation
+                # if values are readable as numeric values in a
+                # 'ModelInputValidation' manner, convert them into integer
+                # (prevent excel from throwing a warning for writing numbers
+                # as text)
                 if validator.checkValue(val):
                     val = validator.readValue(val)[0]
 
