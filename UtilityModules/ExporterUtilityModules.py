@@ -362,7 +362,7 @@ def TamplateLayout(endRow):
     # ws.cell(4, 6, value = "15.04.2020")
 
 
-    ws.cell(2, 9, value = "Trainingsmodus").font = Font(
+    ws.cell(2, 8, value = "Trainingsmodus").font = Font(
             b = True
         )
     # ws.cell(3, 9, value = "Maximalkraft")
@@ -375,13 +375,15 @@ def TamplateLayout(endRow):
     ws.merge_cells("D4:E4")
     ws.merge_cells("F3:G3")
     ws.merge_cells("F4:G4")
-    ws.merge_cells("I2:J2")
-    ws.merge_cells("I3:J3")
+    ws.merge_cells("H2:J2")
+    ws.merge_cells("H3:J3")
     setAlignment(ws, "A1:J5")
     setAlignment(ws, "D3:E3", horizontal = "left")
     setAlignment(ws, "D4:E4", horizontal = "left")
     setAlignment(ws, "F3:G3", horizontal = "right")
     setAlignment(ws, "F4:G4", horizontal = "right")
+    setAlignment(ws, "H2:H2", horizontal = "right")
+    setAlignment(ws, "H3:H3", horizontal = "right")
     setBorder(ws, "A1:J2")
     setBorder(ws, "A3:J5")
     setBorder(ws, "C2:C3", borderStyle = None)

@@ -47,7 +47,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle("Aphrodite")
         self.mainWidget = cc.CustomWidget()
         self.mainLayout = QtWidgets.QGridLayout(self.mainWidget)
-        self.setGeometry(100,200,1500,500)
+        self.setGeometry(50,200,1600,500)
         self.setCentralWidget(self.mainWidget)
 
         """populate app app"""
@@ -326,9 +326,15 @@ class MainWindow(QtWidgets.QMainWindow):
                     int(match.group("y")), int(match.group("m")), int(match.group("d"))
                 )
             self.exporter().routineLayout()
-            data,_,_ = self.exporter().dataFromDatabase()
-            self.exporter().populateRoutine(data)
+            routineData, alternativeData, noteData = self.exporter().dataFromDatabase()
+            self.exporter().populateRoutine(
+                    routineData,
+                    alternativeData,
+                    noteData
+                )
             self.exporter().saveRoutine()
+            file = pathlib2.Path(self.exporter().exportPath()) / pathlib2.Path(self.exporter().routineName())
+            self.exporter().finalizeLayout(file)
             return True
 
         return False
@@ -428,7 +434,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.mainLayout.addWidget(self.tabWidget, 0, 1, 3, 1)
             self.mainLayout.setRowStretch(1, 2)
             self.mainLayout.setColumnStretch(0, 1)
-            self.mainLayout.setColumnStretch(1, 2)
+            self.mainLayout.setColumnStretch(1, 3)
             self.mainLayout.setSpacing(5)
 
             self.__createMenuBar()

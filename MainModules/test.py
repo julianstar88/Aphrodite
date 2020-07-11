@@ -4,9 +4,7 @@ Created on Thu Apr 30 18:11:28 2020
 
 @author: Julian
 """
-from MainModules.Database import database
+t = 1
 
-database = database()
-
-print(database.path())
+x = eval(t)
 

@@ -8,9 +8,16 @@ import datetime
 import pathlib2
 import openpyxl
 import numpy as np
+
+import tempfile
+import comtypes.client as com
+
+from PyQt5 import QtGui
+
 import MainModules.Database as db
 import UtilityModules.ExporterUtilityModules as exporterUtils
 from UtilityModules.CustomModel import CustomSqlModel
+
 
 class Exporter():
     """
@@ -94,11 +101,15 @@ class Exporter():
 
         >>> exporter.setDatabase(...)
         >>> exporter.setExportPath(...)
-        >>> exporter.setModel(...)
         >>> exporter.setName(...)
         >>> exporter.setRoutineName(...)
         >>> exporter.setTrainingPeriode(...)
         >>> exporter.setTrainingMode(...)
+
+        >>> exporter.setRoutineModel(...)
+        >>> exporter.setAlternativeModel(...)
+        >>> exporter.setNoteModel(...)
+
 
     3. layout the exportfile:
 
@@ -106,7 +117,13 @@ class Exporter():
 
     4. populate the exportfile with exercises, sets and repetitions
 
-        >>> exporter.populateRoutine()
+        either with data from Database:
+
+        >>> exporter.populateRoutine(exporter.dataFromDatabase(...))
+
+        or, if routineModel, alternativeModel and noteModel have been set
+
+        >>> exporter.populateRoutine(exporter.dataFromModel(...))
 
     5. save the workBook to create the exportfile
 
@@ -116,23 +133,70 @@ class Exporter():
     def __init__(self,
                  database = None,
                  exportPath = None,
-                 model = None,
                  name = None,
                  routineName = None,
-                 trainingPeriode = [None, None],
+                 startDate = None,
                  trainingMode = None,
-                 workBook = None):
+                 workBook = None,
+                 routineModel = None,
+                 alternativeModel = None,
+                 noteModel = None):
 
-        self._database = database
+        self._database = None
         self._databaseName = None
         self._databasePath = None
-        self._exportPath = exportPath
-        self._model = None
-        self._name = name
-        self._routineName = routineName
-        self._trainingPeriode = trainingPeriode
-        self._trainingMode = trainingMode
-        self._workBook = workBook
+        self._exportPath = None
+        self._name = None
+        self._routineName = None
+        self._trainingPeriode = list()
+        self._trainingMode = None
+        self._workBook = None
+        self._routineModel = None
+        self._alternativeModel = None
+        self._noteModel = None
+
+        # purly private properties without getter or setter.
+        # this properties are uesed to finalize the layout (set superscripts
+        # and subscripts) after saving the epxort file.
+        self.__routineStartRow = int()
+        self.__alternativeStartRow = int()
+        self.__noteStartRow = int()
+
+        if (database):
+            self.setDatabase(database)
+        if (exportPath):
+            self.setExportPath(exportPath)
+        if (name):
+            self.setName(name)
+        if (routineName):
+            self.setRoutineName(routineName)
+        if (isinstance(startDate, tuple)) and (len(starDate) == 3):
+            self.setTrainingPeriode(
+                    startDate[0],
+                    startDate[1],
+                    startDate[2]
+                )
+        if (trainingMode):
+            self.setTrainingMode(trainingMode)
+        if (workBook):
+            self.setWorkBook(workBook)
+        if (routineModel):
+            self.setRoutineModel(routineModel)
+        if (alternativeModel):
+            self.setAlternativeModel(alternativeModel)
+        if (noteModel):
+            self.setNoteModel(noteModel)
+
+    def alternativeModel(self):
+        """
+        getter method for the attribute 'alternativeModel'
+
+        Returns
+        -------
+        CustomSqlModel or QtGui.QStandardItemModel
+
+        """
+        return self._alternativeModel
 
     def database(self):
         """
@@ -221,95 +285,105 @@ class Exporter():
         databaseObj = db.database(self.database())
         routineData = databaseObj.data("training_routine")
         alternativeData = databaseObj.data("training_alternatives")
-        informationData = databaseObj.data("general_information")
+        noteData = databaseObj.data("training_notes")
 
-        return routineData, alternativeData, informationData
+        return routineData, alternativeData, noteData
 
-    # old approach only retrieve data from training_routine
-    # def dataFromDatabase(self, database = None, tableName = "training_routine"):
-    #     """
-    #     retrieve data from a database as source for training data. the property
-    #     'database' can be st either by calling 'setDatabase' or directly by
-    #     calling 'dataFromDatabase(database)' with a path to a valid database-file.
-    #     additionally, one can set the tabel from wich to retrive data, by setting
-    #     the 'tableName' argument to a valid table.
-
-    #     Parameters
-    #     ----------
-    #     database : str, optional
-    #         path to a valid database-file. The default is None.
-    #     tableName : str, optional
-    #         name of a table in database. The default is "training_routine".
-
-    #     Raises
-    #     ------
-    #     TypeError
-    #         will be raised, if no valid value for the database-property
-    #         has been set.
-
-    #     Returns
-    #     -------
-    #     data : list
-    #         all data within a database as nested list.
-
-    #     """
-
-    #     if database:
-    #         self.setDatabase(database)
-
-    #     if not self.database():
-    #         raise TypeError(
-    #                 "before fetching data from a database, set a path to a valid database-file"
-    #             )
-    #     pathObj = pathlib2.Path(self.database())
-    #     databaseName = pathObj.stem
-    #     databaseObj = db.database(pathObj.parent)
-    #     data = databaseObj.data(tableName, databaseName)
-
-    #     return data
-
-    def dataFromModel(self, model = None):
+    def dataFromModel(
+                self,
+                routineModel = None,
+                alternativeModel = None,
+                noteModel = None):
         """
-        retrieve data from a CustomSqlModel as source for training data. the property
-        'mdoel' can be st either by calling 'setModel' or directly by
-        calling 'dataFromModel(model)' with a reference to a valid CustomSqlModel.
+        retrieve data from different Models as source for routine-data,
+        alternative-data and note-data and returns the data as lists.
 
         Parameters
         ----------
-        model : CustomSqlModel, optional
-            reference to a valid CustomSqlModel. The default is None.
+        routineModel : CustomSqlModel or QtGui.QStandardItemModel, optional
+            data source for routine data. The default is None.
+
+        alternativeModel : CustomSqlModel or QtGui.QStandardItemModel, optional
+            data source for alternative data. The default is None.
+
+        noteModel : CustomSqlModel or QtGui.QStandardItemModel, optional
+            data source for model data. The default is None.
 
         Raises
         ------
         TypeError
-            will be raised, if no valid value for the 'model' property has been set.
+            will be raised, if the values for the properties does not match
+            <CustomSqlModel> or <QtGui.QStandardItemModel>.
+            EXCEPTION: noteModel must explicitly be <QtGui.QStandardItemModel>
 
         Returns
         -------
-        modelData : list
-            all data in a CustomSqlModel as nested list.
+        routineData : list
+            all data from the routineModel as nested list.
+
+        alternativeData : list
+            all data from the alternativeModel as nested list.
+
+        noteData : list
+            all data from the noteModel as nested list.
 
         """
 
-        if model:
-            self.setModel(model)
+        if routineModel:
+            self.setRoutineModel(routineModel)
+        if alternativeModel:
+            self.setAlternativeModel(alternativeModel)
+        if noteModel:
+            self.setNoteModel(noteModel)
 
-        if not isinstance(self.model(), CustomSqlModel):
+        if (not isinstance(self.routineModel(), CustomSqlModel)) and \
+            (not isinstance(self.routineModel(), QtGui.QStandarItemModel)):
             raise TypeError(
-                    "before fetching data from a model, a valid <QStandardItemModel> has to be set for the model-property of 'GraphicalEvaluator'"
+                    "before fetching data from a model, a valid model has to be set for 'routineModel'"
+                )
+        if (not isinstance(self.alternativeModel(), CustomSqlModel)) and \
+            (not isinstance(self.alternative(), QtGui.QStandarItemModel)):
+            raise TypeError(
+                    "before fetching data from a model, a valid model has to be set for 'alternativeModel'"
+                )
+        if (not isinstance(self.noteModel(), QtGui.QStandardItemModel)):
+            raise TypeError(
+                    "before fetching data from a model, a valid model has to be set for 'noteModel'"
                 )
 
-        rows = self.model().rowCount()
-        cols = self.model().columnCount()
-
-        modelData = []
+        # retrieve routine Data
+        rows = self.routineModel().rowCount()
+        cols = self.routineModel().columnCount()
+        routineData = list()
         for row in range(rows):
             line = []
             for col in range(cols):
-                item = self.model().item(row, col)
+                item = self.routineModel().item(row, col)
                 line.append(item.userData())
-            modelData.append(line)
-        return modelData
+            routineData.append(line)
+
+        # retrieve alternative Data
+        rows = self.alternativeModel().rowCount()
+        cols = self.alternativeModel().columnCount()
+        alternativeData = list()
+        for row in range(rows):
+            line = []
+            for col in range(cols):
+                item = self.alternativeModel().item(row, col)
+                line.append(item.userData())
+            alternativeData.append(line)
+
+        # retrieve note Data
+        rows = self.noteModel().rowCount()
+        cols = self.noteModel().columnCount()
+        noteData = list()
+        for row in range(rows):
+            line = []
+            for col in range(cols):
+                item = self.noteModel().item(row, col)
+                line.append(item.userData())
+            noteData.append(line)
+        return routineData, alternativeData, noteData
 
     def exportPath(self):
         """
@@ -324,17 +398,62 @@ class Exporter():
 
         return self._exportPath
 
-    def model(self):
-        """
-        holds a reference to a valid CustomSqlModel-object
+    def finalizeLayout(self, file):
 
-        Returns
-        -------
-        CustomSqlModel
+        routineData, alternativeData, noteData = self.dataFromDatabase()
+        file = pathlib2.Path(file)
+        app = com.CreateObject("Excel.Application")
 
-        """
+        # for debugging purposes can this property set to True
+        app.Visible = False
 
-        return self._model
+        wb = app.Workbooks.Open(str(file))
+        ws = wb.worksheets[1]
+
+        for i in range(len(routineData)):
+            row = self.__routineStartRow + i
+            rowID = i + 1
+
+            l = list()
+            for alternative in alternativeData:
+                if rowID == alternative[0]:
+                    l.append(alternative[1])
+            alternatives = "%s"*len(l)
+            alternatives = alternatives % tuple(l)
+
+            l = list()
+            for note in noteData:
+                if rowID == note[0]:
+                    l.append(note[1])
+            notes = "%s"*len(l)
+            notes = notes % tuple(l)
+
+            base = routineData[i][0]
+
+            newValue = "{baseName}{alternatives}{notes}".format(
+                    baseName = base,
+                    alternatives = alternatives,
+                    notes = notes
+                )
+
+            cell = ws.Cells[self.__routineStartRow + i, 1]
+            cell.Value[:] = newValue
+
+            # set superscript
+            pos = len(base) + 1
+            length = len(alternatives)
+            if length > 0:
+                cell.Characters[pos, length].Font.Superscript = True
+
+            # set subscript
+            pos = len(base) + len(alternatives) + 1
+            length = len(notes)
+            if length > 0:
+                cell.Characters[pos, length].Font.Subscript = True
+
+        wb.Save()
+        app.Quit()
+
 
     def name(self):
         """
@@ -350,19 +469,41 @@ class Exporter():
 
         return self._name
 
-    def populateRoutine(self, data):
+    def noteModel(self):
+        """
+        getter method for the attribute 'noteModel'
+
+        Returns
+        -------
+        QtGui.QStandardItemModel
+
+        """
+        return self._noteModel
+
+    def populateRoutine(self, routineData, alternativeData, noteData):
         """
         by invoking this method, the workbook in the 'workBook' property gets
-        populated with data from the database. make sure, that 'routineLayout'
-        has been invoked prior.
+        populated with data from routineData, alternativeData and noteData.
+        These arguments are typically set by 'dataFromDatabase' or
+        'dataFromModel'
+
+        Note:
+        make sure, that 'routineLayout' has been invoked prior.
+
+        Note:
         if no proper values either for the database-property or the
         workBook-property have been set, a ValueError will be raised
 
         Parameters
         ----------
-        databasePath : str
-            this parameter must point to a valid db-file
-            (typically a trainingroutine).
+        routineData: list
+            a list with values representing the trainingroutine
+
+        alternativeData: list
+            a list with values representing the trainingalternatives
+
+        noteData: list
+            a list with values representing the trainingnotes
 
         Raises
         ------
@@ -371,33 +512,39 @@ class Exporter():
              'workBook' property does not hold a valid 'openpyxl.Workbook' object
 
         ValueError
-            will be raised, if the 'database' property does not point to a valid
-            database-file. it will also be raised, if the dimension of the
-            'numpy.array' representation of data does not match (n, m)
+            will be raised, if the dimension of the 'numpy.array' representation
+            of the input arguments does not match (n, m)
 
         Returns
         -------
         None.
 
         """
-        if not isinstance(data, tuple) and not isinstance(data, list):
+        if not isinstance(routineData, tuple) and not isinstance(routineData, list):
             raise TypeError(
-                    "input {input_type} does not match {expected_type_1} nor {expected_type_2}".format(
-                            input_type = type(data),
+                    "input <{input_type}> does not match {expected_type_1} or {expected_type_2} for argument 'routineData'".format(
+                            input_type = type(routineData),
                             expected_type_1 = tuple,
                             expected_type_2 = list
                         )
                 )
-        if not len(np.array(data).shape) == 2:
-            raise ValueError(
-                    "dim = {input_dim} for argument 'data' does not match the expected dim = 2".format(
-                            input_dim = str(len(np.array(data).shape))
+
+        if not isinstance(alternativeData, tuple) and not isinstance(alternativeData, list):
+            raise TypeError(
+                    "input <{input_type}> does not match {expected_type_1} or {expected_type_2} for argument 'alternativeData'".format(
+                            input_type = type(alternativeData),
+                            expected_type_1 = tuple,
+                            expected_type_2 = list
                         )
                 )
 
-        if not self.database():
-            raise ValueError(
-                    "tried to access an invalid database. set a vild Database.database-object as database, before populating a trainingroutine"
+        if not isinstance(noteData, tuple) and not isinstance(noteData, list):
+            raise TypeError(
+                    "input <{input_type}> does not match {expected_type_1} or {expected_type_2} for argument 'noteData'".format(
+                            input_type = type(noteData),
+                            expected_type_1 = tuple,
+                            expected_type_2 = list
+                        )
                 )
 
         if not isinstance(self.workBook(), openpyxl.Workbook):
@@ -407,22 +554,99 @@ class Exporter():
 
         ws = self.workBook().active
 
+        # set header data
         ws["A3"] = self.name()
         ws["F3"] = self.trainingPeriode()[0]
         ws["F4"] = self.trainingPeriode()[1]
-        ws["I3"] = self.trainingMode()
+        ws["H3"] = self.trainingMode()
 
-        inputValues = [data[i][0] for i in range(len(data))]
-        for i, val in enumerate(inputValues):
-            ws["A" + str(7 + i)] = val
+        self.__routineStartRow = 7
+        exporterUtils.setAlignment(
+                ws,
+                exporterUtils.generateRangeExpression(
+                        startRow = self.__routineStartRow,
+                        endRow = len(list(ws.rows)),
+                        startColumn = "C",
+                        endColumn = "J"
+                    ),
+                horizontal = "left"
+            )
 
-        inputValues = [data[i][1] for i in range(len(data))]
+        # set routine data
+        inputValues = [routineData[i][0] for i in range(len(routineData))]
         for i, val in enumerate(inputValues):
-            ws["C" + str(7 + i)] = val
+            rowID = i + 1
+            ws["A" + str(self.__routineStartRow + i)] = val
+            l = list()
+            for alternative in alternativeData:
+                if rowID == alternative[0]:
+                    l.append(alternative[1])
+            alternatives = "%s)"*len(l)
+            alternatives = alternatives % tuple(l)
 
-        inputValues = [data[i][2] for i in range(len(data))]
+            l = list()
+            for note in noteData:
+                if rowID == note[0]:
+                    l.append(note[1])
+            notes = "%s)"*len(l)
+            notes = notes % tuple(l)
+
+            ws["A" + str(self.__routineStartRow + i)] = val + alternatives + notes
+
+
+        for n, row in enumerate(routineData):
+            row = row[1:-1]
+            del row[2]
+            for m, val in enumerate(row):
+                ws.cell(
+                        row = self.__routineStartRow + n,
+                        column = 3 + m,
+                        value = val
+                    )
+
+        # set alternative data
+        self.__alternativeStartRow = self.__routineStartRow + len(routineData) + 3
+
+        ws.cell(self.__alternativeStartRow, 1, value = "Alternativen:").font = openpyxl.styles.Font(
+            b = True
+        )
+
+        self.__alternativeStartRow += 1
+
+        inputValues = [alternativeData[i][1:4] for i in range(len(alternativeData))]
         for i, val in enumerate(inputValues):
-            ws["D" + str(7 + i)] = val
+            ws["A" + str(self.__alternativeStartRow + i)] = val[0] + ") " + val[2]
+
+        for n, row in enumerate(alternativeData):
+            row = row[4:-1]
+            del row[2]
+            for m, val in enumerate(row):
+                ws.cell(
+                        row = self.__alternativeStartRow + n,
+                        column = 3 + m,
+                        value = val
+                    )
+
+        # set note data
+        self.__noteStartRow = len(list(ws.rows)) + 1
+        ws.cell(self.__noteStartRow, 1, value = "Notes:").font = openpyxl.styles.Font(
+            b = True
+        )
+        self.__noteStartRow += 1
+
+        inputValues = [noteData[i][1] for i in range(len(noteData))]
+        for i, val in enumerate(inputValues):
+            ws["A" + str(self.__noteStartRow + i)] = val + ")"
+
+        inputValues = [noteData[i][3] for i in range(len(noteData))]
+        for i, val in enumerate(inputValues):
+            ws.merge_cells(exporterUtils.generateRangeExpression(
+                    self.__noteStartRow + i,
+                    self.__noteStartRow + i,
+                    "B",
+                    "J"
+                ))
+            ws["B" + str(self.__noteStartRow + i)] = val
 
     def routineLayout(self, rows = 40):
         """
@@ -447,6 +671,18 @@ class Exporter():
         workBook = exporterUtils.TamplateLayout(rows)
         self.setWorkBook(workBook)
         return workBook
+
+    def routineModel(self):
+        """
+        holds a reference to a vild CustomSqlModel representing routine-data
+        of a trainingroutine
+
+        Returns
+        -------
+        CustomSqlModel
+
+        """
+        return self._routineModel
 
     def routineName(self):
         """
@@ -521,6 +757,35 @@ class Exporter():
                 )
         path = pathlib2.Path(self.exportPath()) / pathlib2.Path(self.routineName())
         self.workBook().save(str(path))
+
+    def setAlternativeModel(self, model):
+        """
+        setter method for the attribute 'alternativeModel'
+
+        Parameters
+        ----------
+        model : CustomSqlModel or QtGui.QStandardItemModel
+
+        Raises
+        ------
+        TypeError
+            will be raised, if <model> does not match <CustomSqlModel> or <QtGui.QStandardItemModel>.
+
+        Returns
+        -------
+        None.
+
+        """
+        if (not isinstance(model, QtGui.QStandardItemModel)) and (not isinstance(model, CustomSqlModel)):
+            raise TypeError(
+                    "input <{input_name}> does not match {input_name_1} or {input_name_2}".format(
+                            input_name = str(model),
+                            type_name_1 = QtGui.QStandardItemModel,
+                            type_name_2 = CustomSqlModel
+                        )
+                )
+
+        self._alternativeModel = model
 
     def setDatabase(self, databasePath):
         """
@@ -676,6 +941,63 @@ class Exporter():
             raise ValueError("empty input for the attribute 'name'")
 
         self._name = name
+
+    def setNoteModel(self, model):
+        """
+        setter method for the attribute 'noteModel'
+
+        Parameters
+        ----------
+        model : QtGui.QStandardItemModel
+
+        Raises
+        ------
+        TypeError
+            will be raised if <model> is not type <QtGui.QStandardItemModel>.
+
+        Returns
+        -------
+        None.
+
+        """
+        if (not isinstance(model, QtGui.QStandardItemModel)) and (not isinstance(model, CustomSqlModel)):
+            raise TypeError(
+                    "input <{input_name}> does not match {input_name_1} or {input_name_2}".format(
+                            input_name = str(model),
+                            type_name_1 = QtGui.QStandardItemModel,
+                            type_name_2 = CustomSqlModel
+                        )
+                )
+
+        self._noteModel = model
+
+    def setRoutineModel(self, model):
+        """
+        set the attribute 'routineModel' to <model>
+
+        Parameters
+        ----------
+        model : CustomSqlModle, QtGui.QStandartItemModel
+
+        Raises
+        ------
+        TypeError
+            will be raised if <model> is not type 'CustomSqlModel' or 'QtGui.QStandardItemModel'
+
+        Returns
+        -------
+        None.
+
+        """
+        if (not isinstance(model, QtGui.QStandardItemModel)) and (not isinstance(model, CustomSqlModel)):
+            raise TypeError(
+                    "input <{input_name}> does not match {type_name}".format(
+                            input_name = str(model),
+                            type_name = QtGui.QStandardItemModel
+                        )
+                )
+
+        self._routineModel = model
 
     def setRoutineName(self, routineName):
         """
