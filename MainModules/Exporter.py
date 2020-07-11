@@ -8,15 +8,14 @@ import datetime
 import pathlib2
 import openpyxl
 import numpy as np
-
 import tempfile
 import comtypes.client as com
-
 from PyQt5 import QtGui
 
 import MainModules.Database as db
 import UtilityModules.ExporterUtilityModules as exporterUtils
 from UtilityModules.CustomModel import CustomSqlModel
+from UtilityModules.MiscUtilities import ModelInputValidation
 
 
 class Exporter():
@@ -553,6 +552,7 @@ class Exporter():
                 )
 
         ws = self.workBook().active
+        validator = ModelInputValidation()
 
         # set header data
         ws["A3"] = self.name()
@@ -598,6 +598,14 @@ class Exporter():
             row = row[1:-1]
             del row[2]
             for m, val in enumerate(row):
+
+                # if values are readable as numeric values in a
+                # 'ModelInputValidation' manner, convert them into integer
+                # (prevent excel from throwing a warning for writing numbers
+                # as text)
+                if validator.checkValue(val):
+                    val = validator.readValue(val)[0]
+
                 ws.cell(
                         row = self.__routineStartRow + n,
                         column = 3 + m,
@@ -621,6 +629,14 @@ class Exporter():
             row = row[4:-1]
             del row[2]
             for m, val in enumerate(row):
+
+                # if values are readable as numeric values in a
+                # 'ModelInputValidation' manner, convert them into integer
+                # (prevent excel from throwing a warning for writing numbers
+                # as text)
+                if validator.checkValue(val):
+                    val = validator.readValue(val)[0]
+
                 ws.cell(
                         row = self.__alternativeStartRow + n,
                         column = 3 + m,

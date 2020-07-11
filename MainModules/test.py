@@ -4,7 +4,9 @@ Created on Thu Apr 30 18:11:28 2020
 
 @author: Julian
 """
-t = 1
+from UtilityModules.MiscUtilities import ModelInputValidation as validator
 
-x = eval(t)
+t = "1"
+validator = validator()
+print(validator.checkValue(t))
 
