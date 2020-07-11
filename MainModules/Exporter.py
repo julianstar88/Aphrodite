@@ -289,49 +289,6 @@ class Exporter():
 
         return routineData, alternativeData, noteData
 
-    # old approach only retrieve data from training_routine
-    # def dataFromDatabase(self, database = None, tableName = "training_routine"):
-    #     """
-    #     retrieve data from a database as source for training data. the property
-    #     'database' can be st either by calling 'setDatabase' or directly by
-    #     calling 'dataFromDatabase(database)' with a path to a valid database-file.
-    #     additionally, one can set the tabel from wich to retrive data, by setting
-    #     the 'tableName' argument to a valid table.
-
-    #     Parameters
-    #     ----------
-    #     database : str, optional
-    #         path to a valid database-file. The default is None.
-    #     tableName : str, optional
-    #         name of a table in database. The default is "training_routine".
-
-    #     Raises
-    #     ------
-    #     TypeError
-    #         will be raised, if no valid value for the database-property
-    #         has been set.
-
-    #     Returns
-    #     -------
-    #     data : list
-    #         all data within a database as nested list.
-
-    #     """
-
-    #     if database:
-    #         self.setDatabase(database)
-
-    #     if not self.database():
-    #         raise TypeError(
-    #                 "before fetching data from a database, set a path to a valid database-file"
-    #             )
-    #     pathObj = pathlib2.Path(self.database())
-    #     databaseName = pathObj.stem
-    #     databaseObj = db.database(pathObj.parent)
-    #     data = databaseObj.data(tableName, databaseName)
-
-    #     return data
-
     def dataFromModel(
                 self,
                 routineModel = None,
@@ -440,18 +397,6 @@ class Exporter():
         """
 
         return self._exportPath
-
-    # def model(self):
-    #     """
-    #     holds a reference to a valid CustomSqlModel-object
-
-    #     Returns
-    #     -------
-    #     CustomSqlModel
-
-    #     """
-
-    #     return self._model
 
     def finalizeLayout(self, file):
 
@@ -583,12 +528,7 @@ class Exporter():
                             expected_type_2 = list
                         )
                 )
-        # if not len(np.array(routineData).shape) == 2:
-        #     raise ValueError(
-        #             "dim = {input_dim} for argument 'routineData' does not match the expected dim = 2".format(
-        #                     input_dim = str(len(np.array(routineData).shape))
-        #                 )
-        #         )
+
         if not isinstance(alternativeData, tuple) and not isinstance(alternativeData, list):
             raise TypeError(
                     "input <{input_type}> does not match {expected_type_1} or {expected_type_2} for argument 'alternativeData'".format(
@@ -597,12 +537,7 @@ class Exporter():
                             expected_type_2 = list
                         )
                 )
-        # if not len(np.array(alternativeData).shape) == 2:
-        #     raise ValueError(
-        #             "dim = {input_dim} for argument 'alternativeData' does not match the expected dim = 2".format(
-        #                     input_dim = str(len(np.array(alternativeData).shape))
-        #                 )
-        #         )
+
         if not isinstance(noteData, tuple) and not isinstance(noteData, list):
             raise TypeError(
                     "input <{input_type}> does not match {expected_type_1} or {expected_type_2} for argument 'noteData'".format(
@@ -611,12 +546,7 @@ class Exporter():
                             expected_type_2 = list
                         )
                 )
-        # if not len(np.array(noteData).shape) == 2:
-        #     raise ValueError(
-        #             "dim = {input_dim} for argument 'noteData' does not match the expected dim = 2".format(
-        #                     input_dim = str(len(np.array(noteData).shape))
-        #                 )
-        #         )
+
         if not isinstance(self.workBook(), openpyxl.Workbook):
             raise TypeError(
                     "tried to access an invalid workbook. set a valid openpyxl.Workbook-object as workbook, before populating a trainingroutine "
