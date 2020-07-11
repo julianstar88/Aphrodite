@@ -294,6 +294,19 @@ class MainWindow(QtWidgets.QMainWindow):
             path = file.parent
             routineName = file.name
 
+            if file.is_file():
+                message = "The file '{filename}' already exists. Do you want to replace it?".format(
+                        filename = routineName
+                    )
+                messageBox = cc.CustomMessageBox(
+                    message,
+                    windowTitle = "Export Trainingroutine",
+                    )
+                if messageBox.result() == QtWidgets.QMessageBox.Save:
+                    pass
+                if messageBox.result() == QtWidgets.QMessageBox.Cancel:
+                    return False
+
             try:
                 userName = data[0][0]
             except:

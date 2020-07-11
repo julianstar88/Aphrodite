@@ -1251,6 +1251,46 @@ class CustomLabel(QtWidgets.QLabel):
         self.setPixmap(QPixmap)
         self.setAutoFillBackground(False)
 
+class CustomMessageBox(QtWidgets.QMessageBox):
+
+    def __init__(
+                self,
+                message,
+                icon = QtWidgets.QMessageBox.Warning,
+                buttons = QtWidgets.QMessageBox.Cancel | QtWidgets.QMessageBox.Ok,
+                windowTitle = None
+            ):
+        super().__init__()
+        self._result = None
+
+        self.setInformativeText(message)
+        self.setStandardButtons(buttons)
+        self.setDefaultButton(QtWidgets.QMessageBox.Save)
+        self.setIcon(icon)
+        if windowTitle:
+            self.setWindowTitle(windowTitle)
+        else:
+            if icon == QtWidgets.QMessageBox.Warning:
+                self.setWindowTitle("Warning")
+            elif icon == QtWidgets.QMessageBox.Critical:
+                self.setWindowTitle("Error")
+            else:
+                self.setWindowTitle("Message")
+
+        self.setResult(self.exec())
+
+    def message(self):
+        return self._message
+
+    def resutl(self):
+        return self._result
+
+    def setMessage(self, message):
+        self._message = message
+
+    def setResult(self, result):
+        self._result = result
+
 class CustomModelItem(QtGui.QStandardItem):
 
     ObjectType = "CustomModelItem"
