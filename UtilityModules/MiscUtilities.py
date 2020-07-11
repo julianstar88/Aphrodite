@@ -24,6 +24,9 @@ class ModelInputValidation():
         """
 
         match = re.split("/", value)
+        if not match:
+            return False
+
         for testVal in match:
             try:
                 ast.literal_eval(testVal)
