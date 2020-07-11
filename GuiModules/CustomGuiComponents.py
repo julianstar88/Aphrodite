@@ -299,7 +299,7 @@ class CustomCreateNewRoutineDialog(QtWidgets.QDialog):
 
         self.nameEdit = QtWidgets.QLineEdit(self)
         self.nameEdit.setPlaceholderText("Enter Username...")
-        
+
         self.trainingModeEdit = QtWidgets.QLineEdit(self)
         self.trainingModeEdit.setPlaceholderText("Enter Trainingmode...")
 
@@ -311,7 +311,7 @@ class CustomCreateNewRoutineDialog(QtWidgets.QDialog):
         self.endDateView.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
         self.setEndDate()
         self.endDateView.setReadOnly(True)
-        
+
         self.pathEdit = QtWidgets.QLineEdit(self)
         self.pathEdit.setPlaceholderText("Enter Save Path...")
 
@@ -1451,12 +1451,15 @@ class CustomModelItem(QtGui.QStandardItem):
 
     def setUserData(self, data):
         if not isinstance(data, str):
-            raise TypeError(
-                    "input <{input_name}> for 'setUserData' does not match {type_name_1}".format(
-                            input_name = str(data),
-                            type_name_1 = str
-                        )
-                )
+            if isinstance(data, int):
+                data = str(data)
+            else:
+                raise TypeError(
+                        "input <{input_name}> for 'setUserData' does not match {type_name_1}".format(
+                                input_name = str(data),
+                                type_name_1 = str
+                            )
+                    )
         self._userData = data
 
     def type():
@@ -1792,7 +1795,7 @@ class CustomNewTrainingroutineDialog(QtWidgets.QDialog):
             self.acceptButton.setEnabled(False)
         else:
             self.acceptButton.setEnabled(True)
-            
+
 class CustomRoutineEditor(QtWidgets.QTableView):
 
     ObjectType = "CustomRoutineEditor"

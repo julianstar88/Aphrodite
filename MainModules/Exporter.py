@@ -12,6 +12,8 @@ import numpy as np
 import tempfile
 import comtypes.client as com
 
+from PyQt5 import QtGui
+
 import MainModules.Database as db
 import UtilityModules.ExporterUtilityModules as exporterUtils
 from UtilityModules.CustomModel import CustomSqlModel
@@ -659,7 +661,7 @@ class Exporter():
             notes = "%s)"*len(l)
             notes = notes % tuple(l)
 
-            ws["A" + str(self.__routineStartRow + i)] = val + " " + alternatives + notes
+            ws["A" + str(self.__routineStartRow + i)] = val + alternatives + notes
 
 
         for n, row in enumerate(routineData):
@@ -1028,11 +1030,12 @@ class Exporter():
         None.
 
         """
-        if not isinstance(model, QtGui.QStandardItemModel):
+        if (not isinstance(model, QtGui.QStandardItemModel)) and (not isinstance(model, CustomSqlModel)):
             raise TypeError(
-                    "input <{input_name}> does not match {type_name}".format(
+                    "input <{input_name}> does not match {input_name_1} or {input_name_2}".format(
                             input_name = str(model),
-                            type_name = QtGui.QStandardItemModel
+                            type_name_1 = QtGui.QStandardItemModel,
+                            type_name_2 = CustomSqlModel
                         )
                 )
 

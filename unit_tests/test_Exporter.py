@@ -13,6 +13,7 @@ import pathlib2
 import numpy as np
 from MainModules.Exporter import Exporter
 from UtilityModules.CustomModel import CustomSqlModel
+from PyQt5.QtGui import QStandardItemModel
 import MainModules.Database as db
 
 
@@ -92,7 +93,7 @@ class ExporterProperties(unittest.TestCase):
 
     def test_trainingPeriode_getter(self):
         self.assertEqual(
-                self.exporter.trainingPeriode(), [None, None]
+                self.exporter.trainingPeriode(), list()
             )
 
     def test_workBook_getter(self):
@@ -100,12 +101,12 @@ class ExporterProperties(unittest.TestCase):
                 self.exporter.workBook(), None
             )
 
-    def test_model_setter(self):
+    def test_alternativeModel_setter(self):
         model = CustomSqlModel()
-        self.exporter.setModel(model)
+        self.exporter.setAlternativeModel(model)
 
         self.assertEqual(
-                self.exporter.model(), model
+                self.exporter.alternativeModel(), model
             )
 
         for val in self.raiseTypeErrors:
@@ -161,6 +162,14 @@ class ExporterProperties(unittest.TestCase):
                         ValueError, self.exporter.setExportPath, val
                     )
 
+    def test_noteModel_setter(self):
+        model = QStandardItemModel()
+        self.exporter.setNoteModel(model)
+
+        self.assertEqual(
+                self.exporter.noteModel(), model
+            )
+
     def test_routineName_setter(self):
         self.exporter.setRoutineName("Test Name")
         self.assertEqual(
@@ -173,6 +182,14 @@ class ExporterProperties(unittest.TestCase):
                     )
         self.assertRaises(
                 ValueError, self.exporter.setRoutineName, self.raiseValueErrors[1]
+            )
+
+    def test_routineModel_setter(self):
+        model = CustomSqlModel()
+        self.exporter.setRoutineModel(model)
+
+        self.assertEqual(
+                self.exporter.routineModel(), model
             )
 
     def test_trainingMode_setter(self):
@@ -274,7 +291,6 @@ class TrainingRoutineLayout(unittest.TestCase):
         self.parentDir = pathlib2.Path().cwd().parent
         self.databaseName = self.database.stem
         self.routineName = "temp_test_routine.xlsx"
-        self.tableName = "training_routine"
         self.name = "Aphrodite"
         self.trainingMode = "TestMode"
         self.columnCount = 10
@@ -282,17 +298,35 @@ class TrainingRoutineLayout(unittest.TestCase):
 
         self.db = db.database(self.database)
 
-        self.model = CustomSqlModel(
+        self.alternativeModel = CustomSqlModel(
                 database = self.db,
-                table = self.tableName,
+                table = "training_alternatives",
                 valueStartIndex = 0,
                 tableStartIndex = 0
                 )
-        self.model.populateModel()
+        self.alternativeModel.populateModel()
+
+        self.noteModel = CustomSqlModel(
+                database = self.db,
+                table = "training_notes",
+                valueStartIndex = 0,
+                tableStartIndex = 0
+                )
+        self.noteModel.populateModel()
+
+        self.routineModel = CustomSqlModel(
+                database = self.db,
+                table = "training_routine",
+                valueStartIndex = 0,
+                tableStartIndex = 0
+                )
+        self.routineModel.populateModel()
 
         self.exporter = Exporter()
         self.exporter.setDatabase(self.database)
-        self.exporter.setModel(self.model)
+        self.exporter.setAlternativeModel(self.alternativeModel)
+        self.exporter.setNoteModel(self.noteModel)
+        self.exporter.setRoutineModel(self.routineModel)
         self.exporter.setName(self.name)
         self.exporter.setRoutineName(self.routineName)
         self.exporter.setTrainingMode(self.trainingMode)
@@ -304,24 +338,63 @@ class TrainingRoutineLayout(unittest.TestCase):
         self.assertIsInstance(wb, openpyxl.Workbook)
 
     def test_dataFromDatabase(self):
-        data = self.exporter.dataFromDatabase(str(self.database))
+        routineData, alternativeData, noteData = self.exporter.dataFromDatabase(str(self.database))
 
+        # test routine data
         self.assertEqual(
-                len(np.array(data).shape), 2
+                len(np.array(routineData).shape), 2
             )
 
         self.assertEqual(
-                len(data[0]), 11
+                len(routineData[0]), 11
+            )
+
+        # test alternative data
+        self.assertEqual(
+                len(np.array(alternativeData).shape), 2
+            )
+
+        self.assertEqual(
+                len(alternativeData[0]), 14
+            )
+
+        # test note data
+        self.assertEqual(
+                len(np.array(noteData).shape), 2
+            )
+
+        self.assertEqual(
+                len(noteData[0]), 4
             )
 
     def test_dataFromModel(self):
-        data = self.exporter.dataFromModel()
+        routineData, alternativeData, noteData = self.exporter.dataFromModel()
+
+        # test routine data
         self.assertEqual(
-                len(np.array(data).shape), 2
+                len(np.array(routineData).shape), 2
             )
 
         self.assertEqual(
-                len(data[0]), 11
+                len(routineData[0]), 11
+            )
+
+        # test alternative data
+        self.assertEqual(
+                len(np.array(alternativeData).shape), 2
+            )
+
+        self.assertEqual(
+                len(alternativeData[0]), 14
+            )
+
+        #TODO test note data
+        self.assertEqual(
+                len(np.array(noteData).shape), 2
+            )
+
+        self.assertEqual(
+                len(noteData[0]), 4
             )
 
     def test_layout_dimenstions(self):
@@ -364,8 +437,10 @@ class TrainingRoutineLayout(unittest.TestCase):
         self.assertFalse(cell.font.b)
 
         cell = ws["I2"]
-        self.assertEqual(cell.value, "Trainingsmodus")
         self.assertEqual(cell.border.bottom.style, "thick")
+
+        cell = ws["H2"]
+        self.assertEqual(cell.value, "Trainingsmodus")
         self.assertTrue(cell.font.b)
 
         cell = ws["A6"]
@@ -460,11 +535,12 @@ class TrainingRoutineLayout(unittest.TestCase):
 
     def test_populateRoutine_from_database(self):
         self.exporter.routineLayout()
-        self.exporter.populateRoutine(self.exporter.dataFromDatabase())
-        data = self.db.data(self.tableName, self.databaseName)
+        routineData,_,_ = self.exporter.dataFromDatabase()
+        self.exporter.populateRoutine(routineData, [], [])
+        data = self.db.data("training_routine", self.databaseName)
         ws = self.exporter.workBook().active
 
-        headerTestCells = ["A3", "F3", "F4", "I3"]
+        headerTestCells = ["A3", "F3", "F4", "H3"]
         headerTestResults = [
                         self.name,
                         self.exporter.trainingPeriode()[0],
@@ -503,11 +579,12 @@ class TrainingRoutineLayout(unittest.TestCase):
 
     def test_populateRoutine_from_model(self):
         self.exporter.routineLayout()
-        self.exporter.populateRoutine(self.exporter.dataFromModel())
-        data = self.db.data(self.tableName, self.databaseName)
+        routineData,_,_ = self.exporter.dataFromModel()
+        self.exporter.populateRoutine(routineData, [], [])
+        data = self.db.data("training_routine", self.databaseName)
         ws = self.exporter.workBook().active
 
-        headerTestCells = ["A3", "F3", "F4", "I3"]
+        headerTestCells = ["A3", "F3", "F4", "H3"]
         headerTestResults = [
                         self.name,
                         self.exporter.trainingPeriode()[0],
@@ -547,7 +624,6 @@ class TrainingRoutineLayout(unittest.TestCase):
     def test_saveRoutine(self):
         path = self.currentDir / pathlib2.Path(self.routineName)
         self.exporter.routineLayout()
-        self.exporter.populateRoutine(self.exporter.dataFromModel())
         self.exporter.saveRoutine()
         self.assertTrue(path.is_file())
 
