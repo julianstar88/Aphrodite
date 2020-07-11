@@ -601,7 +601,7 @@ class Exporter():
 
                 #TODO implement value validation
                 if validator.checkValue(val):
-                    val = validator.readValue(val)
+                    val = validator.readValue(val)[0]
 
                 ws.cell(
                         row = self.__routineStartRow + n,
@@ -629,7 +629,7 @@ class Exporter():
 
                 #TODO implement value validation
                 if validator.checkValue(val):
-                    val = validator.readValue(val)
+                    val = validator.readValue(val)[0]
 
                 ws.cell(
                         row = self.__alternativeStartRow + n,
