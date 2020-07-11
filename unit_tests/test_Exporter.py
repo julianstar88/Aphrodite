@@ -561,7 +561,7 @@ class TrainingRoutineLayout(unittest.TestCase):
                         cell.value, val
                     )
 
-        testValues = [data[i][1] for i in range(len(data))]
+        testValues = [int(data[i][1]) for i in range(len(data))]
         for i, val in enumerate(testValues):
             with self.subTest(i = i):
                 cell = ws["C" + str(7 + i)]
@@ -569,7 +569,7 @@ class TrainingRoutineLayout(unittest.TestCase):
                         cell.value, val
                     )
 
-        testValues = [data[i][2] for i in range(len(data))]
+        testValues = [int(data[i][2]) for i in range(len(data))]
         for i, val in enumerate(testValues):
             with self.subTest(i = i):
                 cell = ws["D" + str(7 + i)]
@@ -605,7 +605,7 @@ class TrainingRoutineLayout(unittest.TestCase):
                         cell.value, val
                     )
 
-        testValues = [data[i][1] for i in range(len(data))]
+        testValues = [int(data[i][1]) for i in range(len(data))]
         for i, val in enumerate(testValues):
             with self.subTest(i = i):
                 cell = ws["C" + str(7 + i)]
@@ -613,7 +613,7 @@ class TrainingRoutineLayout(unittest.TestCase):
                         cell.value, val
                     )
 
-        testValues = [data[i][2] for i in range(len(data))]
+        testValues = [int(data[i][2]) for i in range(len(data))]
         for i, val in enumerate(testValues):
             with self.subTest(i = i):
                 cell = ws["D" + str(7 + i)]
