@@ -47,7 +47,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle("Aphrodite")
         self.mainWidget = cc.CustomWidget()
         self.mainLayout = QtWidgets.QGridLayout(self.mainWidget)
-        self.setGeometry(100,200,1500,500)
+        self.setGeometry(50,200,1600,500)
         self.setCentralWidget(self.mainWidget)
 
         """populate app app"""
@@ -434,7 +434,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.mainLayout.addWidget(self.tabWidget, 0, 1, 3, 1)
             self.mainLayout.setRowStretch(1, 2)
             self.mainLayout.setColumnStretch(0, 1)
-            self.mainLayout.setColumnStretch(1, 2)
+            self.mainLayout.setColumnStretch(1, 3)
             self.mainLayout.setSpacing(5)
 
             self.__createMenuBar()
