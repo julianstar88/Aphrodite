@@ -195,6 +195,23 @@ class MainWindow(QtWidgets.QMainWindow):
             databaseName = dialog.toCommit()["databaseName"]
             general_information = dialog.toCommit()["general_information"]
             new_routine_directory = dialog.toCommit()["new_routine_directory"]
+
+            file = pathlib2.Path(new_routine_directory) / pathlib2.Path(databaseName + self.database().extension())
+
+            if file.is_file():
+                message = "The file '{filename}' already exists. Do you want to replace it?".format(
+                        filename = databaseName + self.database().extension()
+                    )
+                messageBox = cc.CustomMessageBox(
+                    message,
+                    windowTitle = "Export Trainingroutine",
+                    )
+                if messageBox.result() == QtWidgets.QMessageBox.Ok:
+                    pass
+                if messageBox.result() == QtWidgets.QMessageBox.Cancel:
+                    return False
+
+
             self.database().setPath(new_routine_directory)
             self.database().setDatabaseName(databaseName)
             self.database().createDatabase()
@@ -206,7 +223,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     general_information[2]
                 )
 
-            file = self.database().path() / (self.database().databaseName() + self.database().extension())
+            # file = self.database().path() / (self.database().databaseName() + self.database().extension())
             self.configParser().new_routine_directory = new_routine_directory
             self.configParser().last_opened_routine = str(file)
             self.configParser().writeConfigFile()
@@ -302,7 +319,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     message,
                     windowTitle = "Export Trainingroutine",
                     )
-                if messageBox.result() == QtWidgets.QMessageBox.Save:
+                if messageBox.result() == QtWidgets.QMessageBox.Ok:
                     pass
                 if messageBox.result() == QtWidgets.QMessageBox.Cancel:
                     return False
