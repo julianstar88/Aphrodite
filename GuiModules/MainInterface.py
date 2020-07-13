@@ -189,10 +189,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.configParser().readConfigFile()
 
     def onAboutAphrodite(self):
-
-        # messageBox.setWindowTitle("About Aphrodite")
-        # messageBox.setTextFormat(QtCore.Qt.RichText)
-
         msg = """
             <p style='text-align:center'>
             <img style='text-align:center' src='files/icons/Aphrodite.png'>
@@ -227,6 +223,7 @@ class MainWindow(QtWidgets.QMainWindow):
         messageBox.setIcon(QtWidgets.QMessageBox.NoIcon)
         messageBox.setStandardButtons(QtWidgets.QMessageBox.Ok)
         messageBox.setDefaultButton(QtWidgets.QMessageBox.Ok)
+        messageBox.setWindowTitle("About Aphrodite...")
         messageBox.exec()
 
     def onCreateNewRoutine(self, *args):
@@ -334,7 +331,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def onExportTrainingroutine(self):
         # collect export path
-        dialog = QtWidgets.QFileDialog()
+        # dialog = QtWidgets.QFileDialog()
+        dialog = cc.CustomFileDialog()
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
         dialog.setNameFilter("Excel (*.xlsx)")
         dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)

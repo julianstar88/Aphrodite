@@ -199,22 +199,21 @@ class CustomAddAlternativeDialog(QtWidgets.QDialog):
         else:
             self.acceptButton.setEnabled(True)
 
-class CustomBaseDialog(QtWidgets.QDialog):
+class CustomDialogBase(QtWidgets.QDialog):
 
     ObjectType = "CustomBaseDialog"
 
     def __init__(self, *args, customIconPath = None):
         super().__init__(*args)
         self._customIconPath = None
-        self._customIcon = None
 
         if customIconPath:
             self.setCustomIconPath(customIconPath)
+        else:
+            self.setCustomIconPath("files/icons/Aphrodite.png")
 
         self.setCustomIcon()
 
-    def customIcon(self):
-        return self._customIcon
 
     def customIconPath(self):
         return self._customIconPath
@@ -223,9 +222,8 @@ class CustomBaseDialog(QtWidgets.QDialog):
         if iconPath:
             self.setCustomIconPath(iconPath)
 
-        icon = QtGui.QIcon(self.customIconPath())
+        icon = QtGui.QIcon(str(self.customIconPath()))
         self.setWindowIcon(icon)
-        self.setCustomIcon(icon)
 
     def setCustomIconPath(self, path):
         if (not isinstance(path, str)) and (not isinstance(path, pathlib2.Path)):
@@ -323,14 +321,15 @@ class CustomComboBox(QtWidgets.QComboBox):
         self.clear()
         self.insertItems(0, [], mode = text)
 
-class CustomCreateNewRoutineDialog(QtWidgets.QDialog):
+class CustomCreateNewRoutineDialog(CustomDialogBase):
 
-    def __init__(self, configParser, *args, parent = None):
+    def __init__(self, configParser, *args, parent = None, windowTitle = "Create new Trainingroutine..."):
         super().__init__(parent, *args)
-        self.setWindowTitle("Create new Trainingroutine")
         self._toCommit = dict()
         self._configParser = None
         self.setConfigParser(configParser)
+
+        self.setWindowTitle(windowTitle)
 
         self.configParser().readConfigFile()
 
@@ -489,15 +488,16 @@ class CustomCreateNewRoutineDialog(QtWidgets.QDialog):
     def toCommit(self):
         return self._toCommit
 
-class CustomEditAlternativesDialog(QtWidgets.QDialog):
+class CustomEditAlternativesDialog(CustomDialogBase):
 
-    def __init__(self, database, *args, parent = None):
+    def __init__(self, database, *args, parent = None, windowTitle = "Edit Trainingalternatives..."):
         super().__init__(parent, *args)
-        self.setWindowTitle("Edit Trainingalternatives")
         self._toCommit = None
         self._database = None
         self._movedRows = list()
         self.setDatabase(database)
+
+        self.setWindowTitle(windowTitle)
 
         # Layouts
         self.mainLayout = QtWidgets.QVBoxLayout(self)
@@ -704,17 +704,18 @@ class CustomEditAlternativesDialog(QtWidgets.QDialog):
     def toCommit(self):
         return self._toCommit
 
-class CustomEditNotesDialog(QtWidgets.QDialog):
+class CustomEditNotesDialog(CustomDialogBase):
 
     lowercaseLetters = string.ascii_lowercase
 
-    def __init__(self, database, *args, parent = None):
+    def __init__(self, database, *args, parent = None, windowTitle = "Edit Trainingnotes..."):
         super().__init__(parent, *args)
-        self.setWindowTitle("Edit Trainingnotes")
         self._toCommit = None
         self._database = None
         self._movedRows = list()
         self.setDatabase(database)
+
+        self.setWindowTitle(windowTitle)
 
         # Layouts
         self.mainLayout = QtWidgets.QVBoxLayout(self)
@@ -908,13 +909,15 @@ class CustomEditNotesDialog(QtWidgets.QDialog):
     def toCommit(self):
         return self._toCommit
 
-class CustomEditRoutineDialog(QtWidgets.QDialog):
+class CustomEditRoutineDialog(CustomDialogBase):
 
-    def __init__(self, database, *args, parent = None):
+    def __init__(self, database, *args, parent = None, windowTitle = "Edit Trainingroutine..."):
         super().__init__(parent, *args)
         self._database = None
         self._toCommit = dict()
         self._movedRows = list()
+
+        self.setWindowTitle(windowTitle)
 
         self.setDatabase(database)
 
@@ -1221,7 +1224,7 @@ class CustomEditRoutineDialog(QtWidgets.QDialog):
     def toCommit(self):
         return self._toCommit
 
-class CustomEnterTextDialog(QtWidgets.QDialog):
+class CustomEnterTextDialog(CustomDialogBase):
 
     def __init__(self, text, *args, parent = None, dialogTitle = "Edit..."):
         super().__init__(parent, *args)
@@ -1287,6 +1290,50 @@ class CustomEventFilter(QtCore.QObject):
         print(event.type())
         return False
 
+class CustomFileDialog(QtWidgets.QFileDialog):
+
+    ObjectType = "CustomFileDialog"
+
+    def __init__(self, *args, customIconPath = None):
+        super().__init__(*args)
+        self._customIconPath = None
+
+        if customIconPath:
+            self.setCustomIconPath(customIconPath)
+        else:
+            self.setCustomIconPath("files/icons/Aphrodite.png")
+
+        self.setCustomIcon()
+
+
+    def customIconPath(self):
+        return self._customIconPath
+
+    def setCustomIcon(self, iconPath = None):
+        if iconPath:
+            self.setCustomIconPath(iconPath)
+
+        icon = QtGui.QIcon(str(self.customIconPath()))
+        self.setWindowIcon(icon)
+
+    def setCustomIconPath(self, path):
+        if (not isinstance(path, str)) and (not isinstance(path, pathlib2.Path)):
+            raise TypeError(
+                    "input <{input_name}> does not match {type_name_1} or {type_name_2}".format(
+                            input_name = str(path),
+                            type_name_1 = str,
+                            type_name_2 = pathlib2.Path
+                        )
+                )
+        path = pathlib2.Path(path)
+        if not path.is_file():
+            raise ValueError(
+                    "<{path_name}> does not point to an existing file".format(
+                            path_name = path
+                        )
+                )
+        self._customIconPath = path
+
 class CustomLabel(QtWidgets.QLabel):
 
     ObjectType = "CustomLabel"
@@ -1308,7 +1355,6 @@ class CustomMessageBox(QtWidgets.QMessageBox):
                 customIconPath = None
             ):
         super().__init__()
-        self._result = None
         self._customIconPath = None
 
         self.setText(message)
@@ -1326,6 +1372,8 @@ class CustomMessageBox(QtWidgets.QMessageBox):
                 self.setWindowTitle("Message")
         if customIconPath:
             self.setCustomIconPath(customIconPath)
+        else:
+            self.setCustomIconPath("files/icons/Aphrodite.png")
 
         # self.setResult(self.exec())
         self.setCustomIcon()
@@ -1336,9 +1384,12 @@ class CustomMessageBox(QtWidgets.QMessageBox):
     def message(self):
         return self._message
 
-    def setCustomIcon(self):
+    def setCustomIcon(self, iconPath = None):
+        if iconPath:
+            self.setIconPath(iconPath)
+
         if self.customIconPath():
-            self.setWindowIcon(QtGui.QIcon(self.customIconPath()))
+            self.setWindowIcon(QtGui.QIcon(str(self.customIconPath())))
 
     def setCustomIconPath(self, path):
         if (not isinstance(path, str)) and (not isinstance(path, pathlib2.Path)):
