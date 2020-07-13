@@ -1263,7 +1263,7 @@ class CustomMessageBox(QtWidgets.QMessageBox):
         super().__init__()
         self._result = None
 
-        self.setInformativeText(message)
+        self.setText(message)
         self.setStandardButtons(buttons)
         self.setDefaultButton(QtWidgets.QMessageBox.Save)
         self.setIcon(icon)

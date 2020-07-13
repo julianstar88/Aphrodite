@@ -120,6 +120,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.editNotesAction.triggered.connect(self.onEditNotes)
         self.editRoutineAction.triggered.connect(self.onEditRoutine)
 
+        self.aboutAphroditeAction.triggered.connect(self.onAboutAphrodite)
+
         if self.database().isValid():
             self.quitAction.setEnabled(True)
             self.editRoutineAction.setEnabled(True)
@@ -185,6 +187,44 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def initiateMainObjects(self):
         self.configParser().readConfigFile()
+
+    def onAboutAphrodite(self):
+        messageBox = QtWidgets.QMessageBox()
+        messageBox.setWindowTitle("About Aphrodite")
+        messageBox.setTextFormat(QtCore.Qt.RichText)
+
+        msg = """
+            <p style='text-align:center'>
+            <img style='text-align:center' src='files/icons/Aphrodite.png'>
+            </p>
+
+            <p style='text-align:center'>
+            <b>Aphrodite is a program to create Training routines.</b><br>
+            Copyright (C) 2020 Julian Blaser
+            </p>
+
+            <p style='text-align:center'>
+            This programm is free software: you can resistribute it and/ or modify
+            it under the terms of the GNU General Public License as published by
+            the Free Software Foundation, either version 3 of the License, or
+            (at your option) any later version.
+            </p>
+
+            <p style='text-align:center'>
+            This program is distributed in the hope that it will be usefule,
+            but WITHOUT ANY WARRANTY; without even the implied warranty of
+            MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+            GNU General Public License for more details.
+            </p>
+
+            <p style='text-align:center'>
+            You should have received a copy of the GNU General Public License
+            along with this programm. If not, see <a href="https://www.gnu.org/licenses/">GNU GPL</a>.
+            </p>
+        """
+
+        messageBox.setText(msg)
+        messageBox.exec()
 
     def onCreateNewRoutine(self, *args):
         dialog = cc.CustomCreateNewRoutineDialog(
