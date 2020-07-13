@@ -189,9 +189,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.configParser().readConfigFile()
 
     def onAboutAphrodite(self):
-        messageBox = QtWidgets.QMessageBox()
-        messageBox.setWindowTitle("About Aphrodite")
-        messageBox.setTextFormat(QtCore.Qt.RichText)
+
+        # messageBox.setWindowTitle("About Aphrodite")
+        # messageBox.setTextFormat(QtCore.Qt.RichText)
 
         msg = """
             <p style='text-align:center'>
@@ -222,8 +222,11 @@ class MainWindow(QtWidgets.QMainWindow):
             along with this programm. If not, see <a href="https://www.gnu.org/licenses/">GNU GPL</a>.
             </p>
         """
-
-        messageBox.setText(msg)
+        messageBox = cc.CustomMessageBox(msg)
+        messageBox.setTextFormat(QtCore.Qt.RichText)
+        messageBox.setIcon(QtWidgets.QMessageBox.NoIcon)
+        messageBox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        messageBox.setDefaultButton(QtWidgets.QMessageBox.Ok)
         messageBox.exec()
 
     def onCreateNewRoutine(self, *args):
@@ -246,6 +249,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     message,
                     windowTitle = "Export Trainingroutine",
                     )
+                messageBox.exec()
                 if messageBox.result() == QtWidgets.QMessageBox.Ok:
                     pass
                 if messageBox.result() == QtWidgets.QMessageBox.Cancel:
@@ -359,6 +363,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     message,
                     windowTitle = "Export Trainingroutine",
                     )
+                messageBox.exec()
                 if messageBox.result() == QtWidgets.QMessageBox.Ok:
                     pass
                 if messageBox.result() == QtWidgets.QMessageBox.Cancel:

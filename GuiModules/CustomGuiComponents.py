@@ -199,6 +199,52 @@ class CustomAddAlternativeDialog(QtWidgets.QDialog):
         else:
             self.acceptButton.setEnabled(True)
 
+class CustomBaseDialog(QtWidgets.QDialog):
+
+    ObjectType = "CustomBaseDialog"
+
+    def __init__(self, *args, customIconPath = None):
+        super().__init__(*args)
+        self._customIconPath = None
+        self._customIcon = None
+
+        if customIconPath:
+            self.setCustomIconPath(customIconPath)
+
+        self.setCustomIcon()
+
+    def customIcon(self):
+        return self._customIcon
+
+    def customIconPath(self):
+        return self._customIconPath
+
+    def setCustomIcon(self, iconPath = None):
+        if iconPath:
+            self.setCustomIconPath(iconPath)
+
+        icon = QtGui.QIcon(self.customIconPath())
+        self.setWindowIcon(icon)
+        self.setCustomIcon(icon)
+
+    def setCustomIconPath(self, path):
+        if (not isinstance(path, str)) and (not isinstance(path, pathlib2.Path)):
+            raise TypeError(
+                    "input <{input_name}> does not match {type_name_1} or {type_name_2}".format(
+                            input_name = str(path),
+                            type_name_1 = str,
+                            type_name_2 = pathlib2.Path
+                        )
+                )
+        path = pathlib2.Path(path)
+        if not path.is_file():
+            raise ValueError(
+                    "<{path_name}> does not point to an existing file".format(
+                            path_name = path
+                        )
+                )
+        self._customIconPath = path
+
 class CustomBoxLayout(QtWidgets.QBoxLayout):
 
     ObjectType = "CustomBoxLayout"
@@ -1258,10 +1304,12 @@ class CustomMessageBox(QtWidgets.QMessageBox):
                 message,
                 icon = QtWidgets.QMessageBox.Warning,
                 buttons = QtWidgets.QMessageBox.Cancel | QtWidgets.QMessageBox.Ok,
-                windowTitle = None
+                windowTitle = None,
+                customIconPath = None
             ):
         super().__init__()
         self._result = None
+        self._customIconPath = None
 
         self.setText(message)
         self.setStandardButtons(buttons)
@@ -1276,20 +1324,42 @@ class CustomMessageBox(QtWidgets.QMessageBox):
                 self.setWindowTitle("Error")
             else:
                 self.setWindowTitle("Message")
+        if customIconPath:
+            self.setCustomIconPath(customIconPath)
 
-        self.setResult(self.exec())
+        # self.setResult(self.exec())
+        self.setCustomIcon()
+
+    def customIconPath(self):
+        return self._customIconPath
 
     def message(self):
         return self._message
 
-    def resutl(self):
-        return self._result
+    def setCustomIcon(self):
+        if self.customIconPath():
+            self.setWindowIcon(QtGui.QIcon(self.customIconPath()))
+
+    def setCustomIconPath(self, path):
+        if (not isinstance(path, str)) and (not isinstance(path, pathlib2.Path)):
+            raise TypeError(
+                    "input {input_name} does not match {type_name_1} or {type_name_2}".format(
+                            input_name = str(path),
+                            type_name_1 = str,
+                            type_name_2 = pathlib2.Path()
+                        )
+                )
+        path = pathlib2.Path(path)
+        if not path.is_file():
+            raise ValueError(
+                    "<path_name> does not point to an existing file".format(
+                            path_name = path
+                        )
+                )
+        self._customIconPath = path
 
     def setMessage(self, message):
         self._message = message
-
-    def setResult(self, result):
-        self._result = result
 
 class CustomModelItem(QtGui.QStandardItem):
 
