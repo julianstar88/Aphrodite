@@ -1292,6 +1292,12 @@ class CustomEventFilter(QtCore.QObject):
 
 class CustomFileDialog(QtWidgets.QFileDialog):
 
+
+    # this class can be used in the future to develop a custom
+    # file dialog. the approach like it is written below doesnt work because
+    # the native dialog doesn´t allow to change the window icon via
+    # self.setWindowIcon()
+
     ObjectType = "CustomFileDialog"
 
     def __init__(self, *args, customIconPath = None):
