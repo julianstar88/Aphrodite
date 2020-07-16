@@ -87,7 +87,7 @@ class ConfigParser():
 
     def setConfigDir(self, wdir):
         if not isinstance(wdir, pathlib2.Path) and not isinstance(wdir, str):
-            raise ValueError(
+            raise TypeError(
                     "input <{input_name}> for 'setConfigDir' does not match {type_name_1} or {type_name_2}".format(
                             input_name = str(wdir),
                             type_name_1 = pathlib2.Path,

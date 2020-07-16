@@ -1,0 +1,4 @@
+new_routine_directory:test\routine\directory
+last_opened_routine:test\last\opened\routine.db
+last_closed_routine:test\last\closed\routine.db
+export_routine_directory:test\routine\directory
