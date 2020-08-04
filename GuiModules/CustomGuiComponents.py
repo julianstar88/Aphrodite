@@ -1311,7 +1311,6 @@ class CustomFileDialog(QtWidgets.QFileDialog):
 
         self.setCustomIcon()
 
-
     def customIconPath(self):
         return self._customIconPath
 

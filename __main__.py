@@ -9,7 +9,7 @@ import sys
 import pathlib2
 import os
 import matplotlib
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtCore
 
 # imports from Aphrodite
 import GuiModules.MainInterface as mi
@@ -37,6 +37,12 @@ def run():
 
     """start app"""
     qapp = QtWidgets.QApplication(sys.argv)
+    
+    # dirty fix for scaling problems with windows and pyqt5
+    font = qapp.font()
+    font.setPixelSize(11)
+    qapp.setFont(font)
+    
     app = mi.MainWindow(configParser)
     try:
         sys.exit(qapp.exec_())

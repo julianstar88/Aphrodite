@@ -331,7 +331,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def onExportTrainingroutine(self):
         # collect export path
-        dialog = QtWidgets.QFileDialog()
+        # dialog = QtWidgets.QFileDialog()
+        dialog = cc.CustomFileDialog()
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
         dialog.setNameFilter("Excel (*.xlsx)")
         dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
@@ -423,7 +424,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def onOpenTrainingroutine(self, *args):
         # collect database name
-        dialog = QtWidgets.QFileDialog()
+        # dialog = QtWidgets.QFileDialog()
+        dialog = cc.CustomFileDialog()
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
         dialog.setNameFilter("database (*.db)")
         dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
