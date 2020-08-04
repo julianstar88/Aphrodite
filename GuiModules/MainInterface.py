@@ -49,13 +49,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.mainLayout = QtWidgets.QGridLayout(self.mainWidget)
         self.setGeometry(50,200,1600,500)
         self.setCentralWidget(self.mainWidget)
+        self.setWindowIcon(cc.CustomIcon(iconPath = "files/icons/app_icons"))
 
         """populate app app"""
         self.openRoutine()
 
         """show the app"""
-        # self.showMaximized()
-        self.show()
+        self.showMaximized()
 
     def __connectButtons(self):
         self.editAlternativesButton.clicked.connect(self.onEditAlternatives)
@@ -169,9 +169,12 @@ class MainWindow(QtWidgets.QMainWindow):
                     grandChild.widget().deleteLater()
 
         # write recently closed database to the configFile
-        file = self.database().path() / (self.database().databaseName() + self.database().extension())
-        self.configParser().last_closed_routine = str(file)
-        self.configParser().writeConfigFile()
+        try:
+            file = self.database().path() / (self.database().databaseName() + self.database().extension())
+            self.configParser().last_closed_routine = str(file)
+            self.configParser().writeConfigFile()
+        except TypeError:
+            pass
 
     def configParser(self):
         return self._configParser
@@ -191,12 +194,18 @@ class MainWindow(QtWidgets.QMainWindow):
     def onAboutAphrodite(self):
         msg = """
             <p style='text-align:center'>
-            <img style='text-align:center' src='files/icons/Aphrodite.png'>
+            <b>Aphrodite</b><br>
+            v.x.x.x
+            </p>
+        
+            <p style='text-align:center'>
+            <img style='text-align:center' src='files/icons/app_icons/About_Aphrodite.png'>
             </p>
 
             <p style='text-align:center'>
-            <b>Aphrodite is a program to create Training routines.</b><br>
-            Copyright (C) 2020 Julian Blaser
+            <b>Aphrodite is a programm to create Training routines.</b><br>
+            Copyright (C) 2020 Julian Blaser<br>
+            Mail To: <a href=mailto:milits-julian@web.de>milites-julian@web.de</a>
             </p>
 
             <p style='text-align:center'>
@@ -223,7 +232,7 @@ class MainWindow(QtWidgets.QMainWindow):
         messageBox.setIcon(QtWidgets.QMessageBox.NoIcon)
         messageBox.setStandardButtons(QtWidgets.QMessageBox.Ok)
         messageBox.setDefaultButton(QtWidgets.QMessageBox.Ok)
-        messageBox.setWindowTitle("About Aphrodite...")
+        messageBox.setWindowTitle("About Aphrodite")
         messageBox.exec()
 
     def onCreateNewRoutine(self, *args):
@@ -331,8 +340,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def onExportTrainingroutine(self):
         # collect export path
-        # dialog = QtWidgets.QFileDialog()
-        dialog = cc.CustomFileDialog()
+        dialog = QtWidgets.QFileDialog()
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
         dialog.setNameFilter("Excel (*.xlsx)")
         dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
@@ -424,8 +432,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def onOpenTrainingroutine(self, *args):
         # collect database name
-        # dialog = QtWidgets.QFileDialog()
-        dialog = cc.CustomFileDialog()
+        dialog = QtWidgets.QFileDialog()
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
         dialog.setNameFilter("database (*.db)")
         dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
