@@ -39,9 +39,9 @@ def run():
     qapp = QtWidgets.QApplication(sys.argv)
     
     # dirty fix for scaling problems with windows and pyqt5
-    font = qapp.font()
-    font.setPixelSize(11)
-    qapp.setFont(font)
+    # font = qapp.font()
+    # font.setPixelSize(11)
+    # qapp.setFont(font)
     
     app = mi.MainWindow(configParser)
     try:
