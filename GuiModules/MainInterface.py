@@ -205,7 +205,7 @@ class MainWindow(QtWidgets.QMainWindow):
             <p style='text-align:center'>
             <b>Aphrodite is a programm to create Training routines.</b><br>
             Copyright (C) 2020 Julian Blaser<br>
-            Mail To: <a href=mailto:milits-julian@web.de>milites-julian@web.de</a>
+            Email: <a href=mailto:milits-julian@web.de>milites-julian@web.de</a>
             </p>
 
             <p style='text-align:center'>
