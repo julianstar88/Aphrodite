@@ -1,4 +1,4 @@
 new_routine_directory:C:\Users\Julian\Documents\Python\Projekte\Aphrodite\Aphrodite\training_routines
 last_opened_routine:C:\Users\Julian\Documents\Python\Projekte\Aphrodite\Aphrodite\training_routines\Training-200805.db
-last_closed_routine:C:\Users\Julian\Documents\Python\Projekte\Aphrodite\Aphrodite\Training-200805.db
+last_closed_routine:C:\Users\Julian\Documents\Python\Projekte\Aphrodite\Aphrodite\training_routines\Training-200805.db
 export_routine_directory:C:\Users\Julian\Documents\Python\Projekte\Aphrodite\Aphrodite\training_routines
