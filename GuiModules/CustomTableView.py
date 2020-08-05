@@ -416,4 +416,8 @@ class CustomModelView(QtWidgets.QTableView):
 
     def onRightClick(self, index):
         # print("right click")
-        pass
+        print(index)
+        # row = index.row()
+        # col = index.column()
+        # if col == 2:
+        #     print("Sets")

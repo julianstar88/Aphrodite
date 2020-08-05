@@ -55,7 +55,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.openRoutine()
 
         """show the app"""
-        self.showMaximized()
+        # self.showMaximized()
+        self.show()
 
     def __connectButtons(self):
         self.editAlternativesButton.clicked.connect(self.onEditAlternatives)
