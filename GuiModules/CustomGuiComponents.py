@@ -658,7 +658,7 @@ class CustomEditAlternativesDialog(CustomDialogBase):
     def onWheelTurned(self, obj, event):
         angle = event.angleDelta().y()
         model = self.editor.model()
-        if angle > 0:
+        if angle < 0:
             oldRowCount = model.rowCount()
             items = [QtGui.QStandardItem(None) for item in range(model.columnCount())]
             model.appendRow(items)
@@ -682,7 +682,7 @@ class CustomEditAlternativesDialog(CustomDialogBase):
                         exerciseCombo.onTextChanged
                     )
 
-        if angle < 0:
+        if angle > 0:
             oldValue = model.rowCount()
             newValue = oldValue-1
             for i in range(oldValue, newValue-1, -1):
@@ -888,7 +888,7 @@ class CustomEditNotesDialog(CustomDialogBase):
     def onWheelTurned(self, obj, event):
         angle = event.angleDelta().y()
         model = self.editor.model()
-        if angle > 0:
+        if angle < 0:
             oldRowCount = model.rowCount()
             items = [QtGui.QStandardItem(None) for item in range(model.columnCount())]
             model.appendRow(items)
@@ -899,7 +899,7 @@ class CustomEditNotesDialog(CustomDialogBase):
             items[2].setText("note {}".format(newRowCount))
             items[3].setEditable(False)
 
-        if angle < 0:
+        if angle > 0:
             oldValue = model.rowCount()
             newValue = oldValue-1
             for i in range(oldValue, newValue-1, -1):
@@ -1150,7 +1150,7 @@ class CustomEditRoutineDialog(CustomDialogBase):
     def onWheelTurned(self, obj, event):
         angle = event.angleDelta().y()
         model = self.editor.model()
-        if angle > 0:
+        if angle < 0:
             oldRowCount = model.rowCount()
             items = [QtGui.QStandardItem(None) for item in range(model.columnCount())]
             model.appendRow(items)
@@ -1175,7 +1175,7 @@ class CustomEditRoutineDialog(CustomDialogBase):
                         exerciseCombo.onTextChanged
                     )
 
-        if angle < 0:
+        if angle > 0:
             oldValue = model.rowCount()
             newValue = oldValue-1
             for i in range(oldValue, newValue-1, -1):
