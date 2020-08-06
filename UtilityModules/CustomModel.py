@@ -24,6 +24,7 @@ class CustomSqlModel(QtGui.QStandardItemModel):
         self._tableData = None
         self._tableStartIndex = None
         self._valueStartIndex = None
+        self._itemBackgroundColor = QtGui.QColor(160, 160, 160, 120)
 
         self.setDatabase(database)
         self.setTable(table)
@@ -39,13 +40,16 @@ class CustomSqlModel(QtGui.QStandardItemModel):
         col = item.column()
 
         if col >= self.valueStartIndex():
-            brush = QtGui.QBrush(QtGui.QColor(160,160,160,120), QtCore.Qt.SolidPattern)
+            brush = QtGui.QBrush(self.itemBackgroundColor(), QtCore.Qt.SolidPattern)
             item.setBackground(brush)
 
         return super().data(index, role)
 
     def database(self):
         return self._database
+    
+    def itemBackgroundColor(self):
+        return self._itemBackgroundColor
     
     def onItemChanged(self, item, role, defaultPurpose):
         if defaultPurpose:
@@ -81,6 +85,9 @@ class CustomSqlModel(QtGui.QStandardItemModel):
 
     def setDatabase(self, database):
         self._database = database
+        
+    def setItemBackgroundColor(self, color):
+        self._itemBackgroundColor = color
 
     def setTable(self, table):
         self._table = table

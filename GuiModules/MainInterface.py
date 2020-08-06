@@ -1266,7 +1266,7 @@ class RoutineTab(cc.CustomWidget):
         sumOfSets = 0
         setLimit = 30
         tipText = str()
-        
+
         for i in range(rows):
             sets = item.model().item(i, 1).userData()
             try:
@@ -1276,14 +1276,7 @@ class RoutineTab(cc.CustomWidget):
             sumOfSets += sets
             
         if sumOfSets <= setLimit:
-            color = None
-        else:
-            color = "firebrick"
-            
-        brush = QtGui.QBrush(QtGui.QColor(color))
-        if role == QtCore.Qt.DisplayRole:
-            for i in range(rows):
-                item.model().item(i, 1).setBackground(brush)
+            pass
         
         if sumOfSets <= setLimit:
             color = "black"
