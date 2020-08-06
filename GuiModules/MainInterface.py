@@ -1222,6 +1222,8 @@ class RoutineTab(cc.CustomWidget):
 
 
         self.createContent()
+        self.routineModel().itemChanged.connect(self.calculateSumOfSets)
+        self.alternativeModel().itemChanged.connect(self.calculateSumOfSets)
 
     def __harmonizeColumnWidths(self, *args):
         newWidth = list()
@@ -1257,6 +1259,46 @@ class RoutineTab(cc.CustomWidget):
 
     def alternativeView(self):
         return self._alternativeView
+    
+    def calculateSumOfSets(self, item, role, defaultPurpose):
+
+        rows = item.model().rowCount()
+        sumOfSets = 0
+        setLimit = 30
+        tipText = str()
+        
+        for i in range(rows):
+            sets = item.model().item(i, 1).userData()
+            try:
+                sets = round(float(sets))
+            except:
+                sets = 0
+            sumOfSets += sets
+            
+        if sumOfSets <= setLimit:
+            color = None
+        else:
+            color = "firebrick"
+            
+        brush = QtGui.QBrush(QtGui.QColor(color))
+        if role == QtCore.Qt.DisplayRole:
+            for i in range(rows):
+                item.model().item(i, 1).setBackground(brush)
+        
+        if sumOfSets <= setLimit:
+            color = "black"
+        else:
+            color = "firebrick"
+
+        tipText = """
+            <p style='text-align:center'>
+            Number of Sets: 
+            </p>
+            <p style='text-align:center'>
+            <b style='color:{color}'>{num}</b> / <b style='color:black'>{limit}</b>
+            </p>
+        """.format(num = sumOfSets, color = color, limit = setLimit)
+        item.model().horizontalHeaderItem(1).setToolTip(tipText)
 
     def createContent(self):
         if self.routineModel() and self.alternativeModel():
@@ -1306,7 +1348,10 @@ class RoutineTab(cc.CustomWidget):
 
             self.layout().addWidget(self.routineScrollArea())
             self.layout().addWidget(self.alternativeScrollArea())
-
+            
+            # item will be used to display the sum of sets in the Tooltip
+            item = QtGui.QStandardItem()
+            self.routineModel().setHorizontalHeaderItem(1, item)
 
     def database(self):
         return self._database

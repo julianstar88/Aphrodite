@@ -12,7 +12,7 @@ from PyQt5 import QtGui, QtCore
 class CustomSqlModel(QtGui.QStandardItemModel):
 
     ObjectType = "CustomSqlModel"
-    itemChanged = QtCore.pyqtSignal(CustomModelItem, bool)
+    itemChanged = QtCore.pyqtSignal(CustomModelItem, int, bool)
     dataChanged = QtCore.pyqtSignal()
 
     def __init__(self, database = None, table = "training_routine", parent = None,
@@ -47,7 +47,7 @@ class CustomSqlModel(QtGui.QStandardItemModel):
     def database(self):
         return self._database
     
-    def onItemChanged(self, item, defaultPurpose):
+    def onItemChanged(self, item, role, defaultPurpose):
         if defaultPurpose:
             return
         pass
