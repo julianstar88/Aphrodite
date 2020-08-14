@@ -231,7 +231,7 @@ class CustomModelView(QtWidgets.QTableView):
                     label,
                     fontSize = self.headerFontSize(),
                     fontWeight = self.headerFontWeight(),
-                    fontColor = color
+                    fontColor = color,
                 )
 
             pixmap = GraphicUtilityModules.CreateQPixmap(canvas)
@@ -417,3 +417,4 @@ class CustomModelView(QtWidgets.QTableView):
     def onRightClick(self, *args):
         # print("right click")
         pass
+            

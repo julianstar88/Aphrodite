@@ -1222,8 +1222,10 @@ class RoutineTab(cc.CustomWidget):
 
 
         self.createContent()
-        self.routineModel().itemChanged.connect(self.calculateSumOfSets)
-        self.alternativeModel().itemChanged.connect(self.calculateSumOfSets)
+        self.routineModel().itemChanged.connect(self.displaySumOfSets)
+        self.routineModel().dataChanged.connect(self.alertSumOfSets)
+        self.alternativeModel().itemChanged.connect(self.displaySumOfSets)
+        self.alternativeModel().itemChanged.connect(self.alertSumOfSets)
 
     def __harmonizeColumnWidths(self, *args):
         newWidth = list()
@@ -1247,6 +1249,9 @@ class RoutineTab(cc.CustomWidget):
                 if i > 0:
                     table.resizeColumnToContents(i)
         return True
+    
+    def alertSumOfSets(self, topLeft, rightBottom, role):
+        print("Background")
 
     def alternativeHeaderLabels(self):
         return self._alternativeHeaderLabels
@@ -1259,39 +1264,6 @@ class RoutineTab(cc.CustomWidget):
 
     def alternativeView(self):
         return self._alternativeView
-    
-    def calculateSumOfSets(self, item, role, defaultPurpose):
-
-        rows = item.model().rowCount()
-        sumOfSets = 0
-        setLimit = 30
-        tipText = str()
-
-        for i in range(rows):
-            sets = item.model().item(i, 1).userData()
-            try:
-                sets = round(float(sets))
-            except:
-                sets = 0
-            sumOfSets += sets
-            
-        if sumOfSets <= setLimit:
-            pass
-        
-        if sumOfSets <= setLimit:
-            color = "black"
-        else:
-            color = "firebrick"
-
-        tipText = """
-            <p style='text-align:center'>
-            Number of Sets: 
-            </p>
-            <p style='text-align:center'>
-            <b style='color:{color}'>{num}</b> / <b style='color:black'>{limit}</b>
-            </p>
-        """.format(num = sumOfSets, color = color, limit = setLimit)
-        item.model().horizontalHeaderItem(1).setToolTip(tipText)
 
     def createContent(self):
         if self.routineModel() and self.alternativeModel():
@@ -1341,13 +1313,36 @@ class RoutineTab(cc.CustomWidget):
 
             self.layout().addWidget(self.routineScrollArea())
             self.layout().addWidget(self.alternativeScrollArea())
-            
-            # item will be used to display the sum of sets in the Tooltip
-            item = QtGui.QStandardItem()
-            self.routineModel().setHorizontalHeaderItem(1, item)
 
     def database(self):
         return self._database
+    
+    def displaySumOfSets(self, item, role, defaultPurpose):
+        
+        setLimit = 30
+        tipText = str()
+        
+        # exerciseSetItem will be used to display the sum of sets in the Tooltip
+        if not item.model().horizontalHeaderItem(1):
+            exerciseSetItem = QtGui.QStandardItem()
+            item.model().setHorizontalHeaderItem(1, exerciseSetItem)
+        
+        sumOfSets = self.sumOfSets(item.model())
+        
+        if sumOfSets <= setLimit:
+            color = "black"
+        else:
+            color = "firebrick"
+
+        tipText = """
+            <p style='text-align:center'>
+            Number of Sets: 
+            </p>
+            <p style='text-align:center'>
+            <b style='color:{color}'>{num}</b> / <b style='color:black'>{limit}</b>
+            </p>
+        """.format(num = sumOfSets, color = color, limit = setLimit)
+        item.model().horizontalHeaderItem(1).setToolTip(tipText)
 
     def layout(self):
         return self._layout
@@ -1485,6 +1480,21 @@ class RoutineTab(cc.CustomWidget):
         view.leftClicked.connect(self.updateRoutineTable)
         view.leftDoubleClicked.connect(self.updateRoutineTable)
         self._routineView = view
+        
+    def sumOfSets(self, model):
+        rows = model.rowCount()
+        sumOfSets = 0
+        
+        if rows > 0:
+            for i in range(rows):
+                sets = model.item(i, 1).userData()
+                try:
+                    sets = round(float(sets))
+                except:
+                    sets = 0
+                sumOfSets += sets
+            
+        return sumOfSets
 
     def updatePanel(self):
         routineModel = self.routineView().model()
