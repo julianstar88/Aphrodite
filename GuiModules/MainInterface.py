@@ -1223,7 +1223,7 @@ class RoutineTab(cc.CustomWidget):
 
         self.createContent()
         self.routineModel().itemChanged.connect(self.displaySumOfSets)
-        self.routineModel().dataChanged.connect(self.alertSumOfSets)
+        self.routineModel().itemChanged.connect(self.alertSumOfSets)
         self.alternativeModel().itemChanged.connect(self.displaySumOfSets)
         self.alternativeModel().itemChanged.connect(self.alertSumOfSets)
 
@@ -1250,8 +1250,8 @@ class RoutineTab(cc.CustomWidget):
                     table.resizeColumnToContents(i)
         return True
     
-    def alertSumOfSets(self, topLeft, rightBottom, role):
-        print("Background")
+    def alertSumOfSets(self, item, role, defaultPurpose):
+        pass
 
     def alternativeHeaderLabels(self):
         return self._alternativeHeaderLabels

@@ -98,3 +98,45 @@ class CustomItemDelegate(QtWidgets.QStyledItemDelegate):
             #     self.view.horizontalHeader().setSectionResizeMode(i, QtWidgets.QHeaderView.Fixed)
             # else:
                 self.view.horizontalHeader().setSectionResizeMode(i, QtWidgets.QHeaderView.Stretch)
+                
+class BackgroundAlertDelegate(QtWidgets.QStyledItemDelegate):
+    
+    def __init__(self, model, *args, exerciseLimit = 30):
+        super().__init__(*args)
+        self._model = model
+        self._exerciseLimit = exerciseLimit
+        self._backgroundColor = QtGui.QColor(178, 34, 34, 255)
+        
+    def sumOfSets(self):
+        rows = self._model.rowCount()
+        sumOfSets = 0
+        
+        if rows > 0:
+            for i in range(rows):
+                sets = self._model.item(i, 1).userData()
+                try:
+                    sets = round(float(sets))
+                except:
+                    sets = 0
+                sumOfSets += sets
+            
+        return sumOfSets
+        
+    def paint(self, painter, option, index):
+
+        if not option.rect.isValid():
+            return        
+
+        if index.column() == 1:
+            sets = self.sumOfSets()
+            
+            if sets <= self._exerciseLimit:
+                brush = QtGui.QBrush(QtGui.QColor(0,0,0,0))
+            else:
+                brush = QtGui.QBrush(self._backgroundColor)
+                
+            painter.save()
+            painter.fillRect(option.rect, brush)
+            painter.restore()
+            
+        super().paint(painter, option, index)

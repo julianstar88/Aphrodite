@@ -79,6 +79,7 @@ class CustomModelView(QtWidgets.QTableView):
 
         # CustomItemDelegate doesn´t work properly yet
         # self.setItemDelegate(CustomDelegate.CustomItemDelegate(self))
+        self.setItemDelegate(CustomDelegate.BackgroundAlertDelegate(self.model(), self))
 
         if self.viewParent():
             self.setParent(self.viewParent())
