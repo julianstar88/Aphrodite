@@ -24,8 +24,7 @@ class CustomSqlModel(QtGui.QStandardItemModel):
         self._tableData = None
         self._tableStartIndex = None
         self._valueStartIndex = None
-        self._itemBackgroundColor = QtGui.QColor(160, 160, 160, 120)
-        # self._itemBackgroundColor = QtGui.QColor(255, 0, 0, 255)
+        self._itemBackgroundColor = QtGui.QColor(160, 160, 160, 180)
 
         self.setDatabase(database)
         self.setTable(table)

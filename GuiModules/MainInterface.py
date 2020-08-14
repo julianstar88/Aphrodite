@@ -1223,9 +1223,7 @@ class RoutineTab(cc.CustomWidget):
 
         self.createContent()
         self.routineModel().itemChanged.connect(self.displaySumOfSets)
-        self.routineModel().itemChanged.connect(self.alertSumOfSets)
         self.alternativeModel().itemChanged.connect(self.displaySumOfSets)
-        self.alternativeModel().itemChanged.connect(self.alertSumOfSets)
 
     def __harmonizeColumnWidths(self, *args):
         newWidth = list()
@@ -1249,9 +1247,6 @@ class RoutineTab(cc.CustomWidget):
                 if i > 0:
                     table.resizeColumnToContents(i)
         return True
-    
-    def alertSumOfSets(self, item, role, defaultPurpose):
-        pass
 
     def alternativeHeaderLabels(self):
         return self._alternativeHeaderLabels
