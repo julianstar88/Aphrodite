@@ -57,6 +57,9 @@ class MainWindow(QtWidgets.QMainWindow):
         """show the app"""
         # self.showMaximized()
         self.show()
+        
+        """update widget geometries"""
+        self.updateWindow()
 
     def __connectButtons(self):
         self.editAlternativesButton.clicked.connect(self.onEditAlternatives)
@@ -1225,19 +1228,24 @@ class RoutineTab(cc.CustomWidget):
         self.routineModel().itemChanged.connect(self.displaySumOfSets)
         self.alternativeModel().itemChanged.connect(self.displaySumOfSets)
 
-    def __harmonizeColumnWidths(self, *args):
+    def __harmonizeColumnWidths(self, *args):        
         newWidth = list()
         for table in args:
             header = table.horizontalHeader()
             width = list()
             for i in range(header.count()):
                 width.append(header.sectionSize(i))
-
-            if len(width) == 0:
-                return False
-
-            width = max(width)
+                
+            # if len(width) == 0:
+            #     continue
+            #     # return False
+            try:
+                width = max(width)    
+            except ValueError:
+                width = 0
+            
             newWidth.append(width)
+            
         newWidth = max(newWidth)
 
         for table in args:
@@ -1341,6 +1349,10 @@ class RoutineTab(cc.CustomWidget):
 
     def layout(self):
         return self._layout
+    
+    def resizeEvent(self, event):
+        self.__harmonizeColumnWidths(self.alternativeView(), self.routineView())
+        super().resizeEvent(event)
 
     def routineHeaderLabels(self):
         return self._routineHeaderLabels

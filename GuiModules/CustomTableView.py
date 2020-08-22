@@ -67,6 +67,7 @@ class CustomModelView(QtWidgets.QTableView):
         self.setModel(model)
         self.model().setParent(self)
         self.setHorizontalHeader(CustomHeaderView.CustomHeader(self))
+        self.verticalHeader().setMinimumSectionSize(40)
         self.verticalHeader().hide()
         self.exerciseNameColumn = exerciseNameColumn
         self.setColumnHidden(self.model().columnCount()-1, True)
