@@ -66,6 +66,11 @@ class CustomHeader(QtWidgets.QHeaderView):
                baseHeight = max(pixmap.height(), baseHeight)
         baseSize.setHeight(baseHeight)
 
-        self.parentWidget().repaint()
+        # this line causes an cascade of qt5 warnings concerning several methods
+        # like QWidget.repaint() and QWidget.paintEngine(). 
+        # the first waring: QWidget::repaint: Recurcive repaint detectec
+        # im not sure if this line is realy needed
+        #
+        # self.parentWidget().repaint()
 
         return baseSize

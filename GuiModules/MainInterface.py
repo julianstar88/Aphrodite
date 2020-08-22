@@ -658,7 +658,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.evaluatorTab2.updatePanel()
         self.repaint()
         self.menu.repaint()
-        # self.tabWidget.repaint()
+        self.tabWidget.repaint()
 
 class GridPanel(cc.CustomWidget):
 
@@ -1494,9 +1494,9 @@ class RoutineTab(cc.CustomWidget):
     def updatePanel(self):
         routineModel = self.routineView().model()
         alternativeModel = self.alternativeView().model()
-
+        
         for n in range(routineModel.rowCount(), -1, -1):
-            routineModel.removeRow(n)
+            routineModel.removeRow(n)    
         routineModel.populateModel()
         self.routineView().updateView()
 
