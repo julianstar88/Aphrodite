@@ -55,8 +55,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.openRoutine()
 
         """show the app"""
-        # self.showMaximized()
-        self.show()
+        self.showMaximized()
+        # self.show()
         
         """update widget geometries"""
         self.updateWindow()
@@ -483,10 +483,15 @@ class MainWindow(QtWidgets.QMainWindow):
                 noteValues.append(note[3])
 
             self.setWindowTitle("Aphrodite: " + self.database().databaseName())
-            self.panel1 = GridPanel(generalLabels, generalValues, fontSize = 10, split = [1,5])
+            self.panel1 = GridPanel(
+                    generalLabels, 
+                    generalValues, 
+                    fontSize = None, 
+                    split = [1,5]
+                )
             self.panel2 = DynamicLinePanel(
                     noteLabels, noteValues,
-                    fontSize = 10,
+                    fontSize = None,
                     split = [1,5],
                     lineMinHeight = 55,
                     lineMaxHeight = 55
@@ -711,21 +716,8 @@ class GridPanel(cc.CustomWidget):
         for i,_ in enumerate(self.labels()):
             label = self.labels()[i]
             value = self.values()[i]
-
-            labelString = label
-            labelFont = QtGui.QFont()
-            labelFont.setBold(True)
-            labelFont.setPointSize(self.fontSize())
-            labelWidget = QtWidgets.QLabel(labelString)
-            labelWidget.setTextFormat(QtCore.Qt.RichText)
-            labelWidget.setFont(labelFont)
-
-            valueString = value
-            valueFont = QtGui.QFont()
-            valueFont.setPointSize(self.fontSize())
-            valueWidget = QtWidgets.QLabel(valueString)
-            valueWidget.setTextFormat(QtCore.Qt.RichText)
-            valueWidget.setFont(valueFont)
+            
+            labelWidget, valueWidget = self.panelLineContent(label, value)
 
             layout.addWidget(
                     labelWidget, i, 0, QtCore.Qt.AlignLeft
@@ -747,27 +739,55 @@ class GridPanel(cc.CustomWidget):
 
     def labels(self):
         return self._labels
+    
+    def panelLineContent(self, label, value):
+            labelString = label
+            labelFont = QtGui.QFont()
+            labelFont.setBold(True)
+            if self.fontSize():
+                labelFont.setPointSize(self.fontSize())
+                
+            labelWidget = QtWidgets.QLabel(labelString)
+            labelWidget.setTextFormat(QtCore.Qt.RichText)
+            labelWidget.setFont(labelFont)
+        
+            valueString = value
+            valueFont = QtGui.QFont()
+            if self.fontSize():
+                valueFont.setPointSize(self.fontSize())
+            
+            valueWidget = QtWidgets.QLabel(valueString)
+            valueWidget.setTextFormat(QtCore.Qt.RichText)
+            valueWidget.setFont(valueFont)
+            
+            return labelWidget, valueWidget
 
     def setFontSize(self, size):
-        if not isinstance(size, int):
+        if (not isinstance(size, int)) and (size is not None):
             raise TypeError(
-                    "MainInterface.Panel.setFontSize: input <{input_name}> does not match {type_name}".format(
+                    "input <{input_name}> does not match {type_name_1} or {type_name_2}".format(
                             input_name = str(size),
-                            type_name = int
+                            type_name_1 = int,
+                            type_name_2 = None
                         )
                 )
-        if size < 0:
-            raise ValueError(
-                    "MainInterface.Panel.setFontSize: input <{input_name}> has to be greater than zero".format(
-                            input_name = str(size)
-                        )
-                )
+        try:
+            if size < 0:
+                raise ValueError(
+                        "input <{input_name}> has to be greater than zero or {type_name}".format(
+                                input_name = str(size),
+                                type_name = None
+                            )
+                    )
+        except TypeError: # if size is eg. None
+            pass
+            
         self._fontSize = size
 
     def setLabels(self, labels):
         if not isinstance(labels, list):
             raise TypeError(
-                    "Panel.setLabels: input <{input_name}> does not match {type_name}".format(
+                    "input <{input_name}> does not match {type_name}".format(
                             input_name = str(labels),
                             type_name = list
                         )
@@ -846,20 +866,8 @@ class GridPanel(cc.CustomWidget):
             label = self.labels()[i]
             value = self.values()[i]
 
-            labelString = label
-            labelFont = QtGui.QFont()
-            labelFont.setBold(True)
-            labelFont.setPointSize(self.fontSize())
-            labelWidget = QtWidgets.QLabel(labelString)
-            labelWidget.setTextFormat(QtCore.Qt.RichText)
-            labelWidget.setFont(labelFont)
-
-            valueString = value
-            valueFont = QtGui.QFont()
-            valueFont.setPointSize(self.fontSize())
-            valueWidget = QtWidgets.QLabel(valueString)
-            valueWidget.setTextFormat(QtCore.Qt.RichText)
-            valueWidget.setFont(valueFont)
+            
+            labelWidget, valueWidget = self.panelLineContent(label, value)
 
             self.layout().addWidget(
                     labelWidget, i, 0, QtCore.Qt.AlignLeft
@@ -1036,19 +1044,25 @@ class DynamicLinePanel(cc.CustomWidget):
         super().resizeEvent(event)
 
     def setFontSize(self, size):
-        if not isinstance(size, int):
+        if (not isinstance(size, int)) and (size is not None):
             raise TypeError(
-                    "MainInterface.Panel.setFontSize: input <{input_name}> does not match {type_name}".format(
+                    "input <{input_name}> does not match {type_name_1} or {type_name_2}".format(
                             input_name = str(size),
-                            type_name = int
+                            type_name_1 = int,
+                            type_name_2 = None
                         )
                 )
-        if size < 0:
-            raise ValueError(
-                    "MainInterface.Panel.setFontSize: input <{input_name}> has to be greater than zero".format(
-                            input_name = str(size)
-                        )
-                )
+            
+        try:
+            if size < 0:
+                raise ValueError(
+                        "MainInterface.Panel.setFontSize: input <{input_name}> has to be greater than zero".format(
+                                input_name = str(size)
+                            )
+                    )
+        except TypeError: # if size is eg. None
+            pass
+        
         self._fontSize = size
 
     def setLabels(self, labels):
