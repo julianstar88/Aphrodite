@@ -304,6 +304,7 @@ class CustomComboBox(QtWidgets.QComboBox):
                         "Bankdrücken M",
                         "Bauch variationen",
                         "Bizeps KH",
+                        "Bizeps Seilzug",
                         "Bizeps SZ",
                         "Bizeps LH",
                         "Bizeps Scott Curles",
