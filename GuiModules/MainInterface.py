@@ -1250,9 +1250,6 @@ class RoutineTab(cc.CustomWidget):
             for i in range(header.count()):
                 width.append(header.sectionSize(i))
                 
-            # if len(width) == 0:
-            #     continue
-            #     # return False
             try:
                 width = max(width)    
             except ValueError:
