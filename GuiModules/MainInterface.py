@@ -642,7 +642,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._routineModel = routineModel
 
     def updateWindow(self):
-        if self.database():
+        if self.database().isValid():
             data = self.database().data("general_information")[0]
             generalValues = [data[0], data[1], self.__calculateEndData(data[1]), data[2]]
 
@@ -656,17 +656,36 @@ class MainWindow(QtWidgets.QMainWindow):
                     noteLabels.append("")
                 noteValues.append(note[3])
 
-        self.panel1.setValues(generalValues)
-        self.panel1.updatePanel()
-        self.panel2.setLabels(noteLabels)
-        self.panel2.setValues(noteValues)
-        self.panel2.updatePanel()
-        self.routineTab.updatePanel()
-        self.evaluatorTab1.updatePanel()
-        self.evaluatorTab2.updatePanel()
-        self.repaint()
-        self.menu.repaint()
-        self.tabWidget.repaint()
+        try:
+            self.panel1.setValues(generalValues)
+            self.panel1.updatePanel()
+        except AttributeError: # generalValues is not valid
+            pass
+        
+        try:
+            self.panel2.setLabels(noteLabels)
+            self.panel2.setValues(noteValues)
+            self.panel2.updatePanel()
+        except AttributeError: # notelabels and/ or noteValues are not valid
+            pass
+        
+        try:
+            self.routineTab.updatePanel()
+        except AttributeError: # no valid panels to update
+            pass
+        
+        try:
+            self.evaluatorTab1.updatePanel()
+            self.evaluatorTab2.updatePanel()
+        except AttributeError: # no valid panels to update
+            pass
+        
+        try: 
+            self.repaint()
+            self.menu.repaint()
+            self.tabWidget.repaint()
+        except AttributeError: # no valid panels to repaint
+            pass
 
 class GridPanel(cc.CustomWidget):
 
