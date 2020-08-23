@@ -1689,10 +1689,12 @@ class CustomModelItem(QtGui.QStandardItem):
         if (role == QtCore.Qt.DisplayRole):
             if len(value) != 0:
                 self.setUserData(value)
+                self.model().itemChanged.emit(self, role, defaultPurpose)
         if (role == QtCore.Qt.EditRole):
             self.setUserData(value)
+            self.model().itemChanged.emit(self, role, defaultPurpose)
         super().setData(value, role)
-        self.model().itemChanged.emit(self, defaultPurpose)
+        self.model().itemChanged.emit(self, role, defaultPurpose)
 
     def setUserData(self, data):
         if not isinstance(data, str):

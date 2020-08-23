@@ -67,6 +67,7 @@ class CustomModelView(QtWidgets.QTableView):
         self.setModel(model)
         self.model().setParent(self)
         self.setHorizontalHeader(CustomHeaderView.CustomHeader(self))
+        self.verticalHeader().setMinimumSectionSize(40)
         self.verticalHeader().hide()
         self.exerciseNameColumn = exerciseNameColumn
         self.setColumnHidden(self.model().columnCount()-1, True)
@@ -79,6 +80,7 @@ class CustomModelView(QtWidgets.QTableView):
 
         # CustomItemDelegate doesn´t work properly yet
         # self.setItemDelegate(CustomDelegate.CustomItemDelegate(self))
+        self.setItemDelegate(CustomDelegate.BackgroundAlertDelegate(self.model(), self))
 
         if self.viewParent():
             self.setParent(self.viewParent())
@@ -231,7 +233,7 @@ class CustomModelView(QtWidgets.QTableView):
                     label,
                     fontSize = self.headerFontSize(),
                     fontWeight = self.headerFontWeight(),
-                    fontColor = color
+                    fontColor = color,
                 )
 
             pixmap = GraphicUtilityModules.CreateQPixmap(canvas)
@@ -414,10 +416,7 @@ class CustomModelView(QtWidgets.QTableView):
         # print("double left click")
         pass
 
-    def onRightClick(self, index):
+    def onRightClick(self, *args):
         # print("right click")
-        print(index)
-        # row = index.row()
-        # col = index.column()
-        # if col == 2:
-        #     print("Sets")
+        pass
+            

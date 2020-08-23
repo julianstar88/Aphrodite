@@ -55,8 +55,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.openRoutine()
 
         """show the app"""
-        # self.showMaximized()
-        self.show()
+        self.showMaximized()
+        # self.show()
+        
+        """update widget geometries"""
+        self.updateWindow()
 
     def __connectButtons(self):
         self.editAlternativesButton.clicked.connect(self.onEditAlternatives)
@@ -480,10 +483,15 @@ class MainWindow(QtWidgets.QMainWindow):
                 noteValues.append(note[3])
 
             self.setWindowTitle("Aphrodite: " + self.database().databaseName())
-            self.panel1 = GridPanel(generalLabels, generalValues, fontSize = 10, split = [1,5])
+            self.panel1 = GridPanel(
+                    generalLabels, 
+                    generalValues, 
+                    fontSize = None, 
+                    split = [1,5]
+                )
             self.panel2 = DynamicLinePanel(
                     noteLabels, noteValues,
-                    fontSize = 10,
+                    fontSize = None,
                     split = [1,5],
                     lineMinHeight = 55,
                     lineMaxHeight = 55
@@ -658,7 +666,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.evaluatorTab2.updatePanel()
         self.repaint()
         self.menu.repaint()
-        # self.tabWidget.repaint()
+        self.tabWidget.repaint()
 
 class GridPanel(cc.CustomWidget):
 
@@ -708,21 +716,8 @@ class GridPanel(cc.CustomWidget):
         for i,_ in enumerate(self.labels()):
             label = self.labels()[i]
             value = self.values()[i]
-
-            labelString = label
-            labelFont = QtGui.QFont()
-            labelFont.setBold(True)
-            labelFont.setPointSize(self.fontSize())
-            labelWidget = QtWidgets.QLabel(labelString)
-            labelWidget.setTextFormat(QtCore.Qt.RichText)
-            labelWidget.setFont(labelFont)
-
-            valueString = value
-            valueFont = QtGui.QFont()
-            valueFont.setPointSize(self.fontSize())
-            valueWidget = QtWidgets.QLabel(valueString)
-            valueWidget.setTextFormat(QtCore.Qt.RichText)
-            valueWidget.setFont(valueFont)
+            
+            labelWidget, valueWidget = self.panelLineContent(label, value)
 
             layout.addWidget(
                     labelWidget, i, 0, QtCore.Qt.AlignLeft
@@ -744,27 +739,55 @@ class GridPanel(cc.CustomWidget):
 
     def labels(self):
         return self._labels
+    
+    def panelLineContent(self, label, value):
+            labelString = label
+            labelFont = QtGui.QFont()
+            labelFont.setBold(True)
+            if self.fontSize():
+                labelFont.setPointSize(self.fontSize())
+                
+            labelWidget = QtWidgets.QLabel(labelString)
+            labelWidget.setTextFormat(QtCore.Qt.RichText)
+            labelWidget.setFont(labelFont)
+        
+            valueString = value
+            valueFont = QtGui.QFont()
+            if self.fontSize():
+                valueFont.setPointSize(self.fontSize())
+            
+            valueWidget = QtWidgets.QLabel(valueString)
+            valueWidget.setTextFormat(QtCore.Qt.RichText)
+            valueWidget.setFont(valueFont)
+            
+            return labelWidget, valueWidget
 
     def setFontSize(self, size):
-        if not isinstance(size, int):
+        if (not isinstance(size, int)) and (size is not None):
             raise TypeError(
-                    "MainInterface.Panel.setFontSize: input <{input_name}> does not match {type_name}".format(
+                    "input <{input_name}> does not match {type_name_1} or {type_name_2}".format(
                             input_name = str(size),
-                            type_name = int
+                            type_name_1 = int,
+                            type_name_2 = None
                         )
                 )
-        if size < 0:
-            raise ValueError(
-                    "MainInterface.Panel.setFontSize: input <{input_name}> has to be greater than zero".format(
-                            input_name = str(size)
-                        )
-                )
+        try:
+            if size < 0:
+                raise ValueError(
+                        "input <{input_name}> has to be greater than zero or {type_name}".format(
+                                input_name = str(size),
+                                type_name = None
+                            )
+                    )
+        except TypeError: # if size is eg. None
+            pass
+            
         self._fontSize = size
 
     def setLabels(self, labels):
         if not isinstance(labels, list):
             raise TypeError(
-                    "Panel.setLabels: input <{input_name}> does not match {type_name}".format(
+                    "input <{input_name}> does not match {type_name}".format(
                             input_name = str(labels),
                             type_name = list
                         )
@@ -843,20 +866,8 @@ class GridPanel(cc.CustomWidget):
             label = self.labels()[i]
             value = self.values()[i]
 
-            labelString = label
-            labelFont = QtGui.QFont()
-            labelFont.setBold(True)
-            labelFont.setPointSize(self.fontSize())
-            labelWidget = QtWidgets.QLabel(labelString)
-            labelWidget.setTextFormat(QtCore.Qt.RichText)
-            labelWidget.setFont(labelFont)
-
-            valueString = value
-            valueFont = QtGui.QFont()
-            valueFont.setPointSize(self.fontSize())
-            valueWidget = QtWidgets.QLabel(valueString)
-            valueWidget.setTextFormat(QtCore.Qt.RichText)
-            valueWidget.setFont(valueFont)
+            
+            labelWidget, valueWidget = self.panelLineContent(label, value)
 
             self.layout().addWidget(
                     labelWidget, i, 0, QtCore.Qt.AlignLeft
@@ -1033,19 +1044,25 @@ class DynamicLinePanel(cc.CustomWidget):
         super().resizeEvent(event)
 
     def setFontSize(self, size):
-        if not isinstance(size, int):
+        if (not isinstance(size, int)) and (size is not None):
             raise TypeError(
-                    "MainInterface.Panel.setFontSize: input <{input_name}> does not match {type_name}".format(
+                    "input <{input_name}> does not match {type_name_1} or {type_name_2}".format(
                             input_name = str(size),
-                            type_name = int
+                            type_name_1 = int,
+                            type_name_2 = None
                         )
                 )
-        if size < 0:
-            raise ValueError(
-                    "MainInterface.Panel.setFontSize: input <{input_name}> has to be greater than zero".format(
-                            input_name = str(size)
-                        )
-                )
+            
+        try:
+            if size < 0:
+                raise ValueError(
+                        "MainInterface.Panel.setFontSize: input <{input_name}> has to be greater than zero".format(
+                                input_name = str(size)
+                            )
+                    )
+        except TypeError: # if size is eg. None
+            pass
+        
         self._fontSize = size
 
     def setLabels(self, labels):
@@ -1222,20 +1239,24 @@ class RoutineTab(cc.CustomWidget):
 
 
         self.createContent()
+        self.routineModel().itemChanged.connect(self.displaySumOfSets)
+        self.alternativeModel().itemChanged.connect(self.displaySumOfSets)
 
-    def __harmonizeColumnWidths(self, *args):
+    def __harmonizeColumnWidths(self, *args):        
         newWidth = list()
         for table in args:
             header = table.horizontalHeader()
             width = list()
             for i in range(header.count()):
                 width.append(header.sectionSize(i))
-
-            if len(width) == 0:
-                return False
-
-            width = max(width)
+                
+            try:
+                width = max(width)    
+            except ValueError:
+                width = 0
+            
             newWidth.append(width)
+            
         newWidth = max(newWidth)
 
         for table in args:
@@ -1307,12 +1328,42 @@ class RoutineTab(cc.CustomWidget):
             self.layout().addWidget(self.routineScrollArea())
             self.layout().addWidget(self.alternativeScrollArea())
 
-
     def database(self):
         return self._database
+    
+    def displaySumOfSets(self, item, role, defaultPurpose):
+        
+        setLimit = 30
+        tipText = str()
+        
+        # exerciseSetItem will be used to display the sum of sets in the Tooltip
+        if not item.model().horizontalHeaderItem(1):
+            exerciseSetItem = QtGui.QStandardItem()
+            item.model().setHorizontalHeaderItem(1, exerciseSetItem)
+        
+        sumOfSets = self.sumOfSets(item.model())
+        
+        if sumOfSets <= setLimit:
+            color = "black"
+        else:
+            color = "firebrick"
+
+        tipText = """
+            <p style='text-align:center'>
+            Number of Sets: 
+            </p>
+            <p style='text-align:center'>
+            <b style='color:{color}'>{num}</b> / <b style='color:black'>{limit}</b>
+            </p>
+        """.format(num = sumOfSets, color = color, limit = setLimit)
+        item.model().horizontalHeaderItem(1).setToolTip(tipText)
 
     def layout(self):
         return self._layout
+    
+    def resizeEvent(self, event):
+        self.__harmonizeColumnWidths(self.alternativeView(), self.routineView())
+        super().resizeEvent(event)
 
     def routineHeaderLabels(self):
         return self._routineHeaderLabels
@@ -1447,13 +1498,28 @@ class RoutineTab(cc.CustomWidget):
         view.leftClicked.connect(self.updateRoutineTable)
         view.leftDoubleClicked.connect(self.updateRoutineTable)
         self._routineView = view
+        
+    def sumOfSets(self, model):
+        rows = model.rowCount()
+        sumOfSets = 0
+        
+        if rows > 0:
+            for i in range(rows):
+                sets = model.item(i, 1).userData()
+                try:
+                    sets = round(float(sets))
+                except:
+                    sets = 0
+                sumOfSets += sets
+            
+        return sumOfSets
 
     def updatePanel(self):
         routineModel = self.routineView().model()
         alternativeModel = self.alternativeView().model()
-
+        
         for n in range(routineModel.rowCount(), -1, -1):
-            routineModel.removeRow(n)
+            routineModel.removeRow(n)    
         routineModel.populateModel()
         self.routineView().updateView()
 
