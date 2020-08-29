@@ -6,8 +6,10 @@ Created on Thu May 14 14:58:37 2020
 """
 
 import re
+import os
 import pathlib2
 import datetime
+import shutil
 from MainModules import ConfigInterface, Database, Exporter, GraphicalEvaluator
 from UtilityModules import CustomModel
 from GuiModules import CustomTableView
@@ -470,7 +472,44 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.updateWindow()
                 
     def onSaveAs(self, *args):
-        print("save as...")
+        
+        # collect path to save copy
+        dialog = QtWidgets.QFileDialog()
+        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+        dialog.setNameFilter("database (*.db)")
+        dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+        # dialog.setOption(QtWidgets.QFileDialog.DontConfirmOverwrite)
+        
+        # set default directory
+        lastOpenedFileStr = self.configParser().last_opened_routine
+        if lastOpenedFileStr:
+            lastOpenedFile = pathlib2.Path(lastOpenedFileStr)
+            lastOpenedDir = lastOpenedFile.parent
+        else:
+            lastOpenedDir = pathlib2.Path(__file__).cwd() / pathlib2.Path("training_routines")
+        dialog.setDirectory(str(lastOpenedDir))
+        
+        # guess a default file name 
+        date = datetime.date.today()
+        strDate = date.strftime("%y%m%d")
+        fileNameProposal = "Training-{}".format(strDate)
+        files = [s for s in os.listdir(lastOpenedDir) if s.endswith(".db")]
+        nameCount = 1
+        for file in files:
+            if re.search(fileNameProposal, file):
+                nameCount += 1
+        if nameCount > 1:
+            fileNameProposal = "{old_proposal}({num})".format(
+                    old_proposal = fileNameProposal,
+                    num = nameCount
+                )
+        dialog.selectFile(fileNameProposal)
+        
+        # execute dialog 
+        if dialog.exec():
+            pass
+            newFile = pathlib2.Path(dialog.selectedFiles()[0])
+            shutil.copy2(lastOpenedFile, newFile)
 
     def openRoutine(self, *args):
         generalLabels = ["Name:", "Start:", "End:", "Trainingmode:"]
