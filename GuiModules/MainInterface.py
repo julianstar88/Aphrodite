@@ -102,6 +102,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.openRoutineAction = self.fileMenu.addAction(sheetIcon, "&Open Trainingroutine...")
         self.openLastClosedAction = self.fileMenu.addAction("O&pen last closed")
         self.fileMenu.addSeparator()
+        self.saveAsAction = self.fileMenu.addAction(folderIcon, "&Save As...")
         self.exportAction = self.fileMenu.addAction(exportIcon, "&Export Trainingroutine...")
         self.fileMenu.addSeparator()
         self.quitAction = self.fileMenu.addAction(quitIcon, "&Quit")
