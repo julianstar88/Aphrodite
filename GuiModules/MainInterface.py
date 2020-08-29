@@ -91,6 +91,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         """1. level menus"""
         folderIcon = QtGui.QIcon("files/icons/black_folder.png")
+        diskIcon = QtGui.QIcon("files/icons/black_disk.png")
         sheetIcon = QtGui.QIcon("files/icons/sheet.png")
         pencilIcon = QtGui.QIcon("files/icons/pencil.png")
         infoIcon = QtGui.QIcon("files/icons/info.png")
@@ -102,7 +103,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.openRoutineAction = self.fileMenu.addAction(sheetIcon, "&Open Trainingroutine...")
         self.openLastClosedAction = self.fileMenu.addAction("O&pen last closed")
         self.fileMenu.addSeparator()
-        self.saveAsAction = self.fileMenu.addAction(folderIcon, "&Save As...")
+        self.saveAsAction = self.fileMenu.addAction(diskIcon, "&Save As...")
+        self.fileMenu.addSeparator()
         self.exportAction = self.fileMenu.addAction(exportIcon, "&Export Trainingroutine...")
         self.fileMenu.addSeparator()
         self.quitAction = self.fileMenu.addAction(quitIcon, "&Quit")
@@ -118,6 +120,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.newRoutineAction.triggered.connect(self.onCreateNewRoutine)
         self.openRoutineAction.triggered.connect(self.onOpenTrainingroutine)
         self.openLastClosedAction.triggered.connect(self.onOpenLastClosed)
+        self.saveAsAction.triggered.connect(self.onSaveAs)
         self.exportAction.triggered.connect(self.onExportTrainingroutine)
         self.quitAction.triggered.connect(self.onDestroyed)
 
@@ -133,6 +136,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.editAlternativesAction.setEnabled(True)
             self.editNotesAction.setEnabled(True)
             self.exportAction.setEnabled(True)
+            self.saveAsAction.setEnabled(True)
             self.quitAction.setEnabled(True)
         else:
             self.quitAction.setEnabled(False)
@@ -140,6 +144,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.editAlternativesAction.setEnabled(False)
             self.editNotesAction.setEnabled(False)
             self.exportAction.setEnabled(False)
+            self.saveAsAction.setEnabled(False)
             self.quitAction.setEnabled(False)
 
     def alternativeModel(self):
@@ -463,6 +468,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.populateMainObjects("last_opened_routine")
                 self.openRoutine()
                 self.updateWindow()
+                
+    def onSaveAs(self, *args):
+        print("save as...")
 
     def openRoutine(self, *args):
         generalLabels = ["Name:", "Start:", "End:", "Trainingmode:"]
