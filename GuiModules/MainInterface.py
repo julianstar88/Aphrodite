@@ -992,7 +992,9 @@ class DynamicLinePanel(cc.CustomWidget):
                 labelString = ""
             labelFont = QtGui.QFont()
             labelFont.setBold(True)
-            labelFont.setPointSize(self.fontSize())
+            if self.fontSize():
+                labelFont.setPointSize(self.fontSize())
+                
             labelWidget = QtWidgets.QLabel(labelString)
             labelWidget.setTextFormat(QtCore.Qt.RichText)
             labelWidget.setMargin(11)
@@ -1007,7 +1009,9 @@ class DynamicLinePanel(cc.CustomWidget):
 
             valueString = value
             valueFont = QtGui.QFont()
-            valueFont.setPointSize(self.fontSize())
+            if self.fontSize():
+                valueFont.setPointSize(self.fontSize())
+                
             valueWidget = QtWidgets.QLabel(valueString)
             valueWidget.setWordWrap(True)
             valueWidget.setTextFormat(QtCore.Qt.RichText)
