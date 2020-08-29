@@ -6,8 +6,10 @@ Created on Thu May 14 14:58:37 2020
 """
 
 import re
+import os
 import pathlib2
 import datetime
+import shutil
 from MainModules import ConfigInterface, Database, Exporter, GraphicalEvaluator
 from UtilityModules import CustomModel
 from GuiModules import CustomTableView
@@ -91,6 +93,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         """1. level menus"""
         folderIcon = QtGui.QIcon("files/icons/black_folder.png")
+        diskIcon = QtGui.QIcon("files/icons/black_disk.png")
         sheetIcon = QtGui.QIcon("files/icons/sheet.png")
         pencilIcon = QtGui.QIcon("files/icons/pencil.png")
         infoIcon = QtGui.QIcon("files/icons/info.png")
@@ -101,6 +104,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.fileMenu.addSeparator()
         self.openRoutineAction = self.fileMenu.addAction(sheetIcon, "&Open Trainingroutine...")
         self.openLastClosedAction = self.fileMenu.addAction("O&pen last closed")
+        self.fileMenu.addSeparator()
+        self.saveAsAction = self.fileMenu.addAction(diskIcon, "&Save As...")
         self.fileMenu.addSeparator()
         self.exportAction = self.fileMenu.addAction(exportIcon, "&Export Trainingroutine...")
         self.fileMenu.addSeparator()
@@ -117,6 +122,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.newRoutineAction.triggered.connect(self.onCreateNewRoutine)
         self.openRoutineAction.triggered.connect(self.onOpenTrainingroutine)
         self.openLastClosedAction.triggered.connect(self.onOpenLastClosed)
+        self.saveAsAction.triggered.connect(self.onSaveAs)
         self.exportAction.triggered.connect(self.onExportTrainingroutine)
         self.quitAction.triggered.connect(self.onDestroyed)
 
@@ -132,6 +138,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.editAlternativesAction.setEnabled(True)
             self.editNotesAction.setEnabled(True)
             self.exportAction.setEnabled(True)
+            self.saveAsAction.setEnabled(True)
             self.quitAction.setEnabled(True)
         else:
             self.quitAction.setEnabled(False)
@@ -139,6 +146,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.editAlternativesAction.setEnabled(False)
             self.editNotesAction.setEnabled(False)
             self.exportAction.setEnabled(False)
+            self.saveAsAction.setEnabled(False)
             self.quitAction.setEnabled(False)
 
     def alternativeModel(self):
@@ -462,6 +470,46 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.populateMainObjects("last_opened_routine")
                 self.openRoutine()
                 self.updateWindow()
+                
+    def onSaveAs(self, *args):
+        
+        # collect path to save copy
+        dialog = QtWidgets.QFileDialog()
+        dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+        dialog.setNameFilter("database (*.db)")
+        dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+        # dialog.setOption(QtWidgets.QFileDialog.DontConfirmOverwrite)
+        
+        # set default directory
+        lastOpenedFileStr = self.configParser().last_opened_routine
+        if lastOpenedFileStr:
+            lastOpenedFile = pathlib2.Path(lastOpenedFileStr)
+            lastOpenedDir = lastOpenedFile.parent
+        else:
+            lastOpenedDir = pathlib2.Path(__file__).cwd() / pathlib2.Path("training_routines")
+        dialog.setDirectory(str(lastOpenedDir))
+        
+        # guess a default file name 
+        date = datetime.date.today()
+        strDate = date.strftime("%y%m%d")
+        fileNameProposal = "Training-{}".format(strDate)
+        files = [s for s in os.listdir(lastOpenedDir) if s.endswith(".db")]
+        nameCount = 1
+        for file in files:
+            if re.search(fileNameProposal, file):
+                nameCount += 1
+        if nameCount > 1:
+            fileNameProposal = "{old_proposal}({num})".format(
+                    old_proposal = fileNameProposal,
+                    num = nameCount
+                )
+        dialog.selectFile(fileNameProposal)
+        
+        # execute dialog 
+        if dialog.exec():
+            pass
+            newFile = pathlib2.Path(dialog.selectedFiles()[0])
+            shutil.copy2(lastOpenedFile, newFile)
 
     def openRoutine(self, *args):
         generalLabels = ["Name:", "Start:", "End:", "Trainingmode:"]
