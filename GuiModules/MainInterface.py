@@ -12,7 +12,7 @@ import datetime
 import shutil
 from MainModules import ConfigInterface, Database, Exporter, GraphicalEvaluator
 from UtilityModules import CustomModel
-from GuiModules import CustomTableView
+from GuiModules import CustomTableView, ProgressDialog
 import GuiModules.CustomGuiComponents as cc
 from PyQt5 import QtWidgets, QtCore, QtGui
 
@@ -59,7 +59,7 @@ class MainWindow(QtWidgets.QMainWindow):
         """show the app"""
         self.showMaximized()
         # self.show()
-        
+
         """update widget geometries"""
         self.updateWindow()
 
@@ -209,7 +209,7 @@ class MainWindow(QtWidgets.QMainWindow):
             <b>Aphrodite</b><br>
             v.x.x.x
             </p>
-        
+
             <p style='text-align:center'>
             <img style='text-align:center' src='files/icons/app_icons/About_Aphrodite.png'>
             </p>
@@ -357,6 +357,9 @@ class MainWindow(QtWidgets.QMainWindow):
         dialog.setNameFilter("Excel (*.xlsx)")
         dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
 
+        progress = ProgressDialog.ProgressWindow(self, message = "Export Trainingroutine...")
+        progress.hide()
+
         exportDirStr = self.configParser().export_routine_directory
         defaultName = self.database().databaseName()
         if exportDirStr:
@@ -408,6 +411,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.configParser().export_routine_directory = path
             self.configParser().writeConfigFile()
 
+            progress.show()
             self.exporter().setExportPath(str(path))
             self.exporter().setDatabase(
                     self.database().path() / (self.database().databaseName() + self.database().extension())
@@ -428,9 +432,11 @@ class MainWindow(QtWidgets.QMainWindow):
             self.exporter().saveRoutine()
             file = pathlib2.Path(self.exporter().exportPath()) / pathlib2.Path(self.exporter().routineName())
             self.exporter().finalizeLayout(file)
+            progress.deleteLater()
             return True
 
         return False
+
     def onOpenLastClosed(self, *args):
         # collect database name of last closed database
         lastClosedFileStr = self.configParser().last_closed_routine
@@ -470,16 +476,16 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.populateMainObjects("last_opened_routine")
                 self.openRoutine()
                 self.updateWindow()
-                
+
     def onSaveAs(self, *args):
-        
+
         # collect path to save copy
         dialog = QtWidgets.QFileDialog()
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
         dialog.setNameFilter("database (*.db)")
         dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
         # dialog.setOption(QtWidgets.QFileDialog.DontConfirmOverwrite)
-        
+
         # set default directory
         lastOpenedFileStr = self.configParser().last_opened_routine
         if lastOpenedFileStr:
@@ -488,8 +494,8 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             lastOpenedDir = pathlib2.Path(__file__).cwd() / pathlib2.Path("training_routines")
         dialog.setDirectory(str(lastOpenedDir))
-        
-        # guess a default file name 
+
+        # guess a default file name
         date = datetime.date.today()
         strDate = date.strftime("%y%m%d")
         fileNameProposal = "Training-{}".format(strDate)
@@ -504,8 +510,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     num = nameCount
                 )
         dialog.selectFile(fileNameProposal)
-        
-        # execute dialog 
+
+        # execute dialog
         if dialog.exec():
             pass
             newFile = pathlib2.Path(dialog.selectedFiles()[0])
@@ -532,9 +538,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
             self.setWindowTitle("Aphrodite: " + self.database().databaseName())
             self.panel1 = GridPanel(
-                    generalLabels, 
-                    generalValues, 
-                    fontSize = None, 
+                    generalLabels,
+                    generalValues,
+                    fontSize = None,
                     split = [1,5]
                 )
             self.panel2 = DynamicLinePanel(
@@ -709,26 +715,26 @@ class MainWindow(QtWidgets.QMainWindow):
             self.panel1.updatePanel()
         except AttributeError: # generalValues is not valid
             pass
-        
+
         try:
             self.panel2.setLabels(noteLabels)
             self.panel2.setValues(noteValues)
             self.panel2.updatePanel()
         except AttributeError: # notelabels and/ or noteValues are not valid
             pass
-        
+
         try:
             self.routineTab.updatePanel()
         except AttributeError: # no valid panels to update
             pass
-        
+
         try:
             self.evaluatorTab1.updatePanel()
             self.evaluatorTab2.updatePanel()
         except AttributeError: # no valid panels to update
             pass
-        
-        try: 
+
+        try:
             self.repaint()
             self.menu.repaint()
             self.tabWidget.repaint()
@@ -783,7 +789,7 @@ class GridPanel(cc.CustomWidget):
         for i,_ in enumerate(self.labels()):
             label = self.labels()[i]
             value = self.values()[i]
-            
+
             labelWidget, valueWidget = self.panelLineContent(label, value)
 
             layout.addWidget(
@@ -806,27 +812,27 @@ class GridPanel(cc.CustomWidget):
 
     def labels(self):
         return self._labels
-    
+
     def panelLineContent(self, label, value):
             labelString = label
             labelFont = QtGui.QFont()
             labelFont.setBold(True)
             if self.fontSize():
                 labelFont.setPointSize(self.fontSize())
-                
+
             labelWidget = QtWidgets.QLabel(labelString)
             labelWidget.setTextFormat(QtCore.Qt.RichText)
             labelWidget.setFont(labelFont)
-        
+
             valueString = value
             valueFont = QtGui.QFont()
             if self.fontSize():
                 valueFont.setPointSize(self.fontSize())
-            
+
             valueWidget = QtWidgets.QLabel(valueString)
             valueWidget.setTextFormat(QtCore.Qt.RichText)
             valueWidget.setFont(valueFont)
-            
+
             return labelWidget, valueWidget
 
     def setFontSize(self, size):
@@ -848,7 +854,7 @@ class GridPanel(cc.CustomWidget):
                     )
         except TypeError: # if size is eg. None
             pass
-            
+
         self._fontSize = size
 
     def setLabels(self, labels):
@@ -933,7 +939,7 @@ class GridPanel(cc.CustomWidget):
             label = self.labels()[i]
             value = self.values()[i]
 
-            
+
             labelWidget, valueWidget = self.panelLineContent(label, value)
 
             self.layout().addWidget(
@@ -1042,7 +1048,7 @@ class DynamicLinePanel(cc.CustomWidget):
             labelFont.setBold(True)
             if self.fontSize():
                 labelFont.setPointSize(self.fontSize())
-                
+
             labelWidget = QtWidgets.QLabel(labelString)
             labelWidget.setTextFormat(QtCore.Qt.RichText)
             labelWidget.setMargin(11)
@@ -1059,7 +1065,7 @@ class DynamicLinePanel(cc.CustomWidget):
             valueFont = QtGui.QFont()
             if self.fontSize():
                 valueFont.setPointSize(self.fontSize())
-                
+
             valueWidget = QtWidgets.QLabel(valueString)
             valueWidget.setWordWrap(True)
             valueWidget.setTextFormat(QtCore.Qt.RichText)
@@ -1123,7 +1129,7 @@ class DynamicLinePanel(cc.CustomWidget):
                             type_name_2 = None
                         )
                 )
-            
+
         try:
             if size < 0:
                 raise ValueError(
@@ -1133,7 +1139,7 @@ class DynamicLinePanel(cc.CustomWidget):
                     )
         except TypeError: # if size is eg. None
             pass
-        
+
         self._fontSize = size
 
     def setLabels(self, labels):
@@ -1313,21 +1319,21 @@ class RoutineTab(cc.CustomWidget):
         self.routineModel().itemChanged.connect(self.displaySumOfSets)
         self.alternativeModel().itemChanged.connect(self.displaySumOfSets)
 
-    def __harmonizeColumnWidths(self, *args):        
+    def __harmonizeColumnWidths(self, *args):
         newWidth = list()
         for table in args:
             header = table.horizontalHeader()
             width = list()
             for i in range(header.count()):
                 width.append(header.sectionSize(i))
-                
+
             try:
-                width = max(width)    
+                width = max(width)
             except ValueError:
                 width = 0
-            
+
             newWidth.append(width)
-            
+
         newWidth = max(newWidth)
 
         for table in args:
@@ -1401,19 +1407,19 @@ class RoutineTab(cc.CustomWidget):
 
     def database(self):
         return self._database
-    
+
     def displaySumOfSets(self, item, role, defaultPurpose):
-        
+
         setLimit = 30
         tipText = str()
-        
+
         # exerciseSetItem will be used to display the sum of sets in the Tooltip
         if not item.model().horizontalHeaderItem(1):
             exerciseSetItem = QtGui.QStandardItem()
             item.model().setHorizontalHeaderItem(1, exerciseSetItem)
-        
+
         sumOfSets = self.sumOfSets(item.model())
-        
+
         if sumOfSets <= setLimit:
             color = "black"
         else:
@@ -1421,7 +1427,7 @@ class RoutineTab(cc.CustomWidget):
 
         tipText = """
             <p style='text-align:center'>
-            Number of Sets: 
+            Number of Sets:
             </p>
             <p style='text-align:center'>
             <b style='color:{color}'>{num}</b> / <b style='color:black'>{limit}</b>
@@ -1431,7 +1437,7 @@ class RoutineTab(cc.CustomWidget):
 
     def layout(self):
         return self._layout
-    
+
     def resizeEvent(self, event):
         self.__harmonizeColumnWidths(self.alternativeView(), self.routineView())
         super().resizeEvent(event)
@@ -1569,11 +1575,11 @@ class RoutineTab(cc.CustomWidget):
         view.leftClicked.connect(self.updateRoutineTable)
         view.leftDoubleClicked.connect(self.updateRoutineTable)
         self._routineView = view
-        
+
     def sumOfSets(self, model):
         rows = model.rowCount()
         sumOfSets = 0
-        
+
         if rows > 0:
             for i in range(rows):
                 sets = model.item(i, 1).userData()
@@ -1582,15 +1588,15 @@ class RoutineTab(cc.CustomWidget):
                 except:
                     sets = 0
                 sumOfSets += sets
-            
+
         return sumOfSets
 
     def updatePanel(self):
         routineModel = self.routineView().model()
         alternativeModel = self.alternativeView().model()
-        
+
         for n in range(routineModel.rowCount(), -1, -1):
-            routineModel.removeRow(n)    
+            routineModel.removeRow(n)
         routineModel.populateModel()
         self.routineView().updateView()
 
