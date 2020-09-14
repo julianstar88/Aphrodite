@@ -221,7 +221,7 @@ class CustomDialogBase(QtWidgets.QDialog):
     def setCustomIcon(self, iconPath = None):
         if iconPath:
             self.setCustomIconPath(iconPath)
-            
+
         icons = [
                 ("Aphrodite8x8.png", (8, 8)),
                 ("Aphrodite20x20.png", (20, 20)),
@@ -314,6 +314,8 @@ class CustomComboBox(QtWidgets.QComboBox):
                         "Klimmzüge M",
                         "Kniebeugen F",
                         "Kniebeugen M",
+                        "Kreuzheben F",
+                        "Kreuzheben M",
                         "Rudern sitzend",
                         "Rudern vorgebeugt",
                         "Seitenheben KH",
@@ -401,7 +403,7 @@ class CustomCreateNewRoutineDialog(CustomDialogBase):
         self.acceptButton.setEnabled(False)
         self.rejectButton = QtWidgets.QPushButton("Cancel")
 
-        self.dirDialog = QtWidgets.QFileDialog(self) 
+        self.dirDialog = QtWidgets.QFileDialog(self)
         self.dirDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
 
 
@@ -1324,9 +1326,9 @@ class CustomEventFilter(QtCore.QObject):
     def eventFilter(self, obj, event):
         print(event.type())
         return False
-    
+
 class CustomIcon(QtGui.QIcon):
-    
+
     def __init__(self, *args, appIcons = None, iconPath = None):
         super().__init__(*args)
         self._iconPath = pathlib2.Path("files/icons/app_icons")
@@ -1349,72 +1351,72 @@ class CustomIcon(QtGui.QIcon):
                 (pathlib2.Path("Aphrodite128x128.png"), (128, 128)),
                 (pathlib2.Path("Aphrodite256x256.png"), (256, 256))
             ]
-        
+
         if appIcons:
             self.setAppIcons(appIcons)
-            
+
         if iconPath:
             self.setIconPath(iconPath)
-        
+
         for icon in self.appIcons():
             self.addFile(
-                str(self.iconPath / icon[0]), 
-                QtCore.QSize(icon[1][0], icon[1][1]), 
-                QtGui.QIcon.Normal, 
+                str(self.iconPath / icon[0]),
+                QtCore.QSize(icon[1][0], icon[1][1]),
+                QtGui.QIcon.Normal,
                 QtGui.QIcon.On
                 )
             self.addFile(
-                str(self.iconPath / icon[0]), 
-                QtCore.QSize(icon[1][0], icon[1][1]), 
-                QtGui.QIcon.Disabled, 
+                str(self.iconPath / icon[0]),
+                QtCore.QSize(icon[1][0], icon[1][1]),
+                QtGui.QIcon.Disabled,
                 QtGui.QIcon.On
                 )
             self.addFile(
-                str(self.iconPath / icon[0]), 
-                QtCore.QSize(icon[1][0], icon[1][1]), 
-                QtGui.QIcon.Active, 
+                str(self.iconPath / icon[0]),
+                QtCore.QSize(icon[1][0], icon[1][1]),
+                QtGui.QIcon.Active,
                 QtGui.QIcon.On
                 )
             self.addFile(
-                str(self.iconPath / icon[0]), 
-                QtCore.QSize(icon[1][0], icon[1][1]), 
-                QtGui.QIcon.Selected, 
+                str(self.iconPath / icon[0]),
+                QtCore.QSize(icon[1][0], icon[1][1]),
+                QtGui.QIcon.Selected,
                 QtGui.QIcon.On
                 )
             self.addFile(
-                str(self.iconPath / icon[0]), 
-                QtCore.QSize(icon[1][0], icon[1][1]), 
-                QtGui.QIcon.Normal, 
+                str(self.iconPath / icon[0]),
+                QtCore.QSize(icon[1][0], icon[1][1]),
+                QtGui.QIcon.Normal,
                 QtGui.QIcon.Off
                 )
             self.addFile(
-                str(self.iconPath / icon[0]), 
-                QtCore.QSize(icon[1][0], icon[1][1]), 
-                QtGui.QIcon.Disabled, 
+                str(self.iconPath / icon[0]),
+                QtCore.QSize(icon[1][0], icon[1][1]),
+                QtGui.QIcon.Disabled,
                 QtGui.QIcon.Off
                 )
             self.addFile(
-                str(self.iconPath / icon[0]), 
-                QtCore.QSize(icon[1][0], icon[1][1]), 
-                QtGui.QIcon.Active, 
+                str(self.iconPath / icon[0]),
+                QtCore.QSize(icon[1][0], icon[1][1]),
+                QtGui.QIcon.Active,
                 QtGui.QIcon.Off
                 )
             self.addFile(
-                str(self.iconPath / icon[0]), 
-                QtCore.QSize(icon[1][0], icon[1][1]), 
-                QtGui.QIcon.Selected, 
+                str(self.iconPath / icon[0]),
+                QtCore.QSize(icon[1][0], icon[1][1]),
+                QtGui.QIcon.Selected,
                 QtGui.QIcon.Off
                 )
-            
+
     def appIcons(self):
         return self._appIcons
-    
+
     def iconPath(self):
         return self._iconPath
-    
+
     def setAppIcons(self, icons):
         self._appIcons = icons
-    
+
     def setIconPath(self, path):
         path = pathlib2.Path(path)
         self.iconPath = path
