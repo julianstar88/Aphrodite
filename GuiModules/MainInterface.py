@@ -588,8 +588,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def populateMainObjects(self, attr):
         path = pathlib2.Path(self.configParser().readAttributes()[attr])
-        # path = pathlib2.Path(self.configParser().readAttributes()["last_opened_routine"])
-
         if self.database() is None:
             database = Database.database(path)
             self.setDatabase(database)
@@ -622,6 +620,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
             evaluator = GraphicalEvaluator.GraphicalEvaluator()
             self.setEvaluator(evaluator)
+
             return True
         else:
             return False
@@ -1501,7 +1500,9 @@ class RoutineTab(cc.CustomWidget):
                             type_name = CustomTableView.CustomModelView
                         )
                 )
-        view.keyPressed.connect(self.updateAlternativeTable)
+        view.keyReleased.connect(self.updateAlternativeTable)
+        view.leftClicked.connect(self.updateAlternativeTable)
+        view.leftDoubleClicked.connect(self.updateAlternativeTable)
         self._alternativeView = view
 
     def setDatabase(self, database):
@@ -1628,6 +1629,7 @@ class RoutineTab(cc.CustomWidget):
         for i in range(tableView.model().rowCount()):
             rowData = [tableView.model().item(i, col).userData() for col in range(tableView.model().columnCount())]
             modelData.append(rowData)
+
         self.database().deleteAllEntries("training_routine")
         self.database().addManyEntries("training_routine", modelData)
 

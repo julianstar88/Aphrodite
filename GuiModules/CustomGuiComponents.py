@@ -1697,7 +1697,6 @@ class CustomModelItem(QtGui.QStandardItem):
             self.setUserData(value)
             self.model().itemChanged.emit(self, role, defaultPurpose)
         super().setData(value, role)
-        self.model().itemChanged.emit(self, role, defaultPurpose)
 
     def setUserData(self, data):
         if not isinstance(data, str):
