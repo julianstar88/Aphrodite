@@ -47,10 +47,10 @@ class CustomSqlModel(QtGui.QStandardItemModel):
 
     def database(self):
         return self._database
-    
+
     def itemBackgroundColor(self):
         return self._itemBackgroundColor
-    
+
     def onItemChanged(self, item, role, defaultPurpose):
         if defaultPurpose:
             return
@@ -85,7 +85,7 @@ class CustomSqlModel(QtGui.QStandardItemModel):
 
     def setDatabase(self, database):
         self._database = database
-        
+
     def setItemBackgroundColor(self, color):
         self._itemBackgroundColor = color
 
@@ -123,4 +123,4 @@ class CustomSqlModel(QtGui.QStandardItemModel):
         return self._valueStartIndex
 
 if __name__ == "__main__":
-    model = CustomSqlModel()
+    pass
