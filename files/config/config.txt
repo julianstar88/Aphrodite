@@ -1,4 +1,4 @@
 new_routine_directory:C:\Users\Julian\Documents\Trainingspläne\Datenbanken
-last_opened_routine:C:\Users\Julian\Documents\Trainingspläne\Datenbanken\test.db
-last_closed_routine:C:\Users\Julian\Documents\Trainingspläne\Datenbanken\test.db
+last_opened_routine:C:\Users\Julian\Documents\Trainingspläne\Datenbanken\Training-200829.db
+last_closed_routine:C:\Users\Julian\Documents\Trainingspläne\Datenbanken\Training-200829.db
 export_routine_directory:C:\Users\Julian\Documents\Trainingspläne

@@ -561,6 +561,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.tabWidget.addTab(self.routineTab, "Trainingroutine")
             self.tabWidget.addTab(self.evaluatorTab1, "Evaluation: Trainingroutine")
             self.tabWidget.addTab(self.evaluatorTab2, "Evaluation: Trainingalternatives")
+            self.tabWidget.tabBarClicked.connect(self.evaluatorTab1.onTabBarClicked)
+            self.tabWidget.tabBarClicked.connect(self.evaluatorTab2.onTabBarClicked)
 
             self.buttonLayout = QtWidgets.QHBoxLayout()
             self.editAlternativesButton = QtWidgets.QPushButton("Edit Alternatives...")
@@ -619,6 +621,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self.setExporter(exporter)
 
             evaluator = GraphicalEvaluator.GraphicalEvaluator()
+            evaluator.setDatabase(
+                    self.database().path() / (self.database().databaseName() + self.database().extension())
+                )
             self.setEvaluator(evaluator)
 
             return True
@@ -694,7 +699,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 )
         self._routineModel = routineModel
 
-    def updateWindow(self):
+    def updateWindow(self, *args):
         if self.database().isValid():
             data = self.database().data("general_information")[0]
             generalValues = [data[0], data[1], self.__calculateEndData(data[1]), data[2]]
@@ -1412,6 +1417,11 @@ class RoutineTab(cc.CustomWidget):
         setLimit = 30
         tipText = str()
 
+        try:
+            item.model()
+        except RuntimeError:
+            return False
+
         # exerciseSetItem will be used to display the sum of sets in the Tooltip
         if not item.model().horizontalHeaderItem(1):
             exerciseSetItem = QtGui.QStandardItem()
@@ -1433,6 +1443,8 @@ class RoutineTab(cc.CustomWidget):
             </p>
         """.format(num = sumOfSets, color = color, limit = setLimit)
         item.model().horizontalHeaderItem(1).setToolTip(tipText)
+
+        return True
 
     def layout(self):
         return self._layout
@@ -1639,6 +1651,8 @@ class EvaluatorTab(cc.CustomWidget):
         super().__init__(*args)
         self._model = None
         self._evaluator = None
+        self._mainWindow = None
+        self._progressWindow = None
 
         self.setModel(model)
         self.setEvaluator(graphicalEvaluator)
@@ -1681,7 +1695,7 @@ class EvaluatorTab(cc.CustomWidget):
                 )
         self._model = model
 
-    def updatePanel(self):
+    def updatePanel(self, *args):
         if self.evaluator() and self.model():
             for i in range(self.evaluator().mainWidget().count()-1, -1, -1):
                 evaluatorTab = self.evaluator().mainWidget().widget(i)
@@ -1689,3 +1703,15 @@ class EvaluatorTab(cc.CustomWidget):
                 self.evaluator().mainWidget().removeTab(i)
             self.evaluator().createTabs(self.evaluator().dataFromModel())
             self.evaluator().plotData(self.evaluator().dataFromModel())
+
+    def onTabBarClicked(self, index):
+        if index <= 0:
+            return
+        progress = ProgressDialog.ProgressWindow(
+                self,
+                message = "update panel..."
+            )
+        self.updatePanel()
+        progress.deleteLater()
+
+

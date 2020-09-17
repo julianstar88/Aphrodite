@@ -593,11 +593,13 @@ class EvaluatorTab(QtWidgets.QWidget):
         else:
             self._data = None
 
-        self.canvas = None
         self.layout = QtWidgets.QVBoxLayout(self)
         self.fig, self.ax = plt.subplots()
         self.fig.tight_layout()
-        self.ax.grid(which = "major")
+        self.ax.grid(which = "both")
+
+        self.canvas = FigureCanvas(self.fig)
+        self.layout.addWidget(self.canvas)
 
     def __readData(self, data):
         validator = ModelInputValidation()
@@ -613,18 +615,23 @@ class EvaluatorTab(QtWidgets.QWidget):
         if data:
             self.setData(data)
 
-        self.canvas = FigureCanvas(self.fig)
-        self.layout.addWidget(self.canvas)
-
         x = np.linspace(1,6,6)
         y = self.data()
 
         if replacePlot:
             self.ax.clear()
-        self.ax.plot(x,y)
+            self.ax.grid(which = "both")
 
-        labels = ["Week " + str(i) for i in range(0,7,1)]
+        self.ax.plot(
+                x, y,
+                linestyle = "-",
+                marker = None,
+                color = [0.70, 0.13, 0.13]
+            )
+
+        labels = ["Week " + str(i) for i in range(1,7)]
         self.ax.set_xticklabels(labels)
+        self.ax.set_xlim(left = 1, right = 6)
 
     def setData(self, data):
         if not isinstance(data, tuple) and not isinstance(data, list):
@@ -644,41 +651,37 @@ class EvaluatorTab(QtWidgets.QWidget):
 
         self._data = self.__readData(data[4:-1])
 
+class ModuleTest(QtWidgets.QMainWindow):
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.main = QtWidgets.QWidget(self)
+        self.setCentralWidget(self.main)
+        self.setGeometry(100,100,800,500)
+        self.setWindowTitle("Graphical Evaluator Test")
+
+        # database = pathlib2.Path("examples/Qt_ModelView/database/test_database_2.db")
+        database = pathlib2.Path("files/test_files/test_database_2.db")
+        parentDir = pathlib2.Path().cwd().parent
+        model = CustomSqlModel(
+            database = parentDir / database,
+            table = "training_routine",
+            tableStartIndex = 0,
+            valueStartIndex = 5
+        )
+        model.populateModel()
+
+        self.evaluator = GraphicalEvaluator()
+
+        self.evaluator.setModel(model)
+        self.evaluator.setDatabase(str(parentDir / database))
+        self.evaluator.connectEvaluator(self.main)
+        self.evaluator.initiateQWidgets()
+        self.evaluator.createTabs(self.evaluator.dataFromDatabase())
+        self.evaluator.plotData(self.evaluator.dataFromDatabase())
+
+        self.show()
 
 if __name__ == "__main__":
-
-    class MainWindow(QtWidgets.QMainWindow):
-        def __init__(self, *args):
-            super().__init__(*args)
-            self.main = QtWidgets.QWidget(self)
-            self.setCentralWidget(self.main)
-            self.setGeometry(100,100,800,500)
-            self.setWindowTitle("Graphical Evaluator Test")
-
-            # database = pathlib2.Path("examples/Qt_ModelView/database/test_database_2.db")
-            database = pathlib2.Path("files/test_files/test_database_2.db")
-            parentDir = pathlib2.Path().cwd().parent
-            model = CustomSqlModel(
-                database = parentDir / database,
-                table = "training_routine",
-                tableStartIndex = 0,
-                valueStartIndex = 5
-            )
-            model.populateModel()
-
-            self.evaluator = GraphicalEvaluator()
-
-            self.evaluator.setModel(model)
-            self.evaluator.setDatabase(str(parentDir / database))
-            self.evaluator.connectEvaluator(self.main)
-            self.evaluator.initiateQWidgets()
-            self.evaluator.createTabs(self.evaluator.dataFromDatabase())
-            self.evaluator.plotData(self.evaluator.dataFromDatabase())
-
-            self.show()
-
     qapp = QtWidgets.QApplication(sys.argv)
-
-    app = MainWindow()
-
+    app = ModuleTest()
     sys.exit(qapp.exec_())
