@@ -4,13 +4,23 @@ Created on Thu Apr 30 18:11:28 2020
 
 @author: Julian
 """
-import matplotlib.pyplot as plt
-import numpy as np
+import re
 
-x = np.linspace(1, 6, 6)
-y = [1, 2, None, None, None, None]
-mask = [bool(not val) for val in y]
-ym = np.ma.masked_array(y, mask = mask)
+value = "15 Whlg. frei"
+# value = "1/2/3"
+# value = "this is a string without any number in it"
 
-plt.plot(x, ym, "-r")
-plt.xlim(1, 6)
+
+match = re.findall(r"\b\d+\b", value)
+out = [float(val) for val in match]
+if out:
+    print(True)
+else:
+    print(False)
+
+# for testVal in match:
+#     try:
+#         float(testVal)
+#         print(True)
+#     except ValueError:
+#         print(False)

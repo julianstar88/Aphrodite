@@ -5,7 +5,6 @@ Created on Sat May  2 15:50:27 2020
 @author: Julian
 """
 import re
-import ast
 import sys
 import os
 import pathlib2
@@ -14,34 +13,47 @@ class ModelInputValidation():
 
     def checkValue(self, value):
         """
-        values have to adhere to the following pattern:
+        only checks the input parameter <value> if there is any number in it
 
-            "value1/value2/.../valueN"
+        Parameters
+        ----------
+        value : strng
+            a sting to be tested.
 
-            or
+        Returns
+        -------
+        bool
+            True: if there is any number in <value>.
+            False: if no number is in <value>
 
-            "value"
         """
-
-        match = re.split("/", value)
-        if not match:
+        match = re.findall(r"\b\d+\b", value)
+        out = [float(val) for val in match]
+        if out:
+            return True
+        else:
             return False
 
-        for testVal in match:
-            try:
-                ast.literal_eval(testVal)
-                return True
-            except (ValueError, SyntaxError):
-                return False
-
     def readValue(self, value):
-        if self.checkValue(value):
-            match = re.split("/", value)
-            output = []
-            for value in match:
-                valid = eval(value)
-                output.append(valid)
-            return output
+        """
+        reads the number in any input string <value> and returns these numbers
+        as a list of floats
+
+        Parameters
+        ----------
+        value : string
+            a string to be searched for numbers.
+
+        Returns
+        -------
+        list
+            list of found numbers represented as floats.
+
+        """
+        match = re.findall(r"\b\d+\b", value)
+        out = [float(val) for val in match]
+        if out:
+            return out
         else:
             return [None]
 
