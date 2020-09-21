@@ -11,11 +11,8 @@ import pathlib2
 
 class ModelInputValidation():
 
-    # _searchPattern = r"\b\d+\b"
-    # _searchPattern = r"\b(\d+|\d+.\d+)\b"
-    # _searchPattern = r"\b(\d+.*\d*)\b"
-    _searchPattern = r"\b(\d+.{0,1}\d*)\b"
-
+    _searchPattern = r"(\d+\.{0,1}\d*)"
+    _readPattern = r"([\+\-]{0,1}\d+\.{0,1}\d*)"
     def checkValue(self, value):
         """
         only checks the input parameter <value> if there is any number in it
@@ -55,12 +52,42 @@ class ModelInputValidation():
             list of found numbers represented as floats.
 
         """
-        match = re.findall(type(self)._searchPattern, value)
+        match = re.findall(type(self)._readPattern, value)
         out = [float(val) for val in match]
         if out:
             return out
         else:
             return [None]
+
+    def readValue2(self, value):
+        """
+        reads the number in any input string <value> and returns these numbers
+        as a list of floats.
+
+        Difference to readValue:
+            if there is a token found like "+42" or "-42".
+            it returns this value as it is
+
+        Parameters
+        ----------
+        value : string
+            a string to be searched for numbers.
+
+        Returns
+        -------
+        list
+            list of found numbers represented as floats.
+
+        """
+        match = re.findall(type(self)._readPattern, value)
+        out = list()
+        for val in match:
+            plus = re.search("[\+\-]", val)
+            if plus:
+                out.append("{}".format(val))
+            else:
+                out.append(float(val))
+        return out
 
 class EnvironmentBase():
 
@@ -314,6 +341,7 @@ class EnvironmentFreezer(EnvironmentBase):
 if __name__ == "__main__":
 
     # test the model input validation
-    t = "1.2 is not 123.123 and differs also from 42"
+    t = """"1.2 is not 123.123 and differs also from 42.
+    And a plus should also be detected, like +0"""
     evaluator = ModelInputValidation()
     valid = evaluator.readValue(t)

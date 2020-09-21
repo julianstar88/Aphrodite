@@ -607,7 +607,7 @@ class Exporter():
                 # (prevent excel from throwing a warning for writing numbers
                 # as text)
                 if validator.checkValue(val):
-                    val = validator.readValue(val)[0]
+                    val = validator.readValue2(val)[0]
 
                 ws.cell(
                         row = self.__routineStartRow + n,
@@ -638,7 +638,7 @@ class Exporter():
                 # (prevent excel from throwing a warning for writing numbers
                 # as text)
                 if validator.checkValue(val):
-                    val = validator.readValue(val)[0]
+                    val = validator.readValue2(val)[0]
 
                 ws.cell(
                         row = self.__alternativeStartRow + n,
