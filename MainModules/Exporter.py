@@ -129,6 +129,7 @@ class Exporter():
         >>> exporter.saveRoutine()
 
     """
+
     def __init__(self,
                  database = None,
                  exportPath = None,
@@ -169,7 +170,7 @@ class Exporter():
             self.setName(name)
         if (routineName):
             self.setRoutineName(routineName)
-        if (isinstance(startDate, tuple)) and (len(starDate) == 3):
+        if (isinstance(startDate, tuple)) and (len(startDate) == 3):
             self.setTrainingPeriode(
                     startDate[0],
                     startDate[1],
@@ -410,7 +411,6 @@ class Exporter():
         ws = wb.worksheets[1]
 
         for i in range(len(routineData)):
-            row = self.__routineStartRow + i
             rowID = i + 1
 
             l = list()
@@ -452,6 +452,7 @@ class Exporter():
 
         wb.Save()
         app.Quit()
+        return True
 
 
     def name(self):

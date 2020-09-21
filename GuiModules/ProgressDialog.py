@@ -98,24 +98,6 @@ class ProgressWindow(QtWidgets.QWidget):
     def animateColor(self):
         return self._animateColor
 
-    def hide(self, show):
-        """
-        hide or show the ProgressWindow
-
-        Parameters
-        ----------
-        show : boolean
-            true: show window.
-            false: hide window
-
-        Returns
-        -------
-        None.
-
-        """
-        value = bool(show)
-        self.setVisible(value)
-
     def paintEvent(self, event):
         self.setupPosition()
         return super().paintEvent(event)

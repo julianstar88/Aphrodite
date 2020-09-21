@@ -357,9 +357,6 @@ class MainWindow(QtWidgets.QMainWindow):
         dialog.setNameFilter("Excel (*.xlsx)")
         dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
 
-        progress = ProgressDialog.ProgressWindow(self, message = "Export Trainingroutine...")
-        progress.hide()
-
         exportDirStr = self.configParser().export_routine_directory
         defaultName = self.database().databaseName()
         if exportDirStr:
@@ -411,7 +408,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.configParser().export_routine_directory = path
             self.configParser().writeConfigFile()
 
-            progress.show()
             self.exporter().setExportPath(str(path))
             self.exporter().setDatabase(
                     self.database().path() / (self.database().databaseName() + self.database().extension())
@@ -429,10 +425,11 @@ class MainWindow(QtWidgets.QMainWindow):
                     alternativeData,
                     noteData
                 )
+
             self.exporter().saveRoutine()
             file = pathlib2.Path(self.exporter().exportPath()) / pathlib2.Path(self.exporter().routineName())
             self.exporter().finalizeLayout(file)
-            progress.deleteLater()
+
             return True
 
         return False
