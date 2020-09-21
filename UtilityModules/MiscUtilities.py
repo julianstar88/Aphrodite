@@ -11,6 +11,11 @@ import pathlib2
 
 class ModelInputValidation():
 
+    # _searchPattern = r"\b\d+\b"
+    # _searchPattern = r"\b(\d+|\d+.\d+)\b"
+    # _searchPattern = r"\b(\d+.*\d*)\b"
+    _searchPattern = r"\b(\d+.{0,1}\d*)\b"
+
     def checkValue(self, value):
         """
         only checks the input parameter <value> if there is any number in it
@@ -27,7 +32,7 @@ class ModelInputValidation():
             False: if no number is in <value>
 
         """
-        match = re.findall(r"\b\d+\b", value)
+        match = re.findall(type(self)._searchPattern, value)
         out = [float(val) for val in match]
         if out:
             return True
@@ -50,7 +55,7 @@ class ModelInputValidation():
             list of found numbers represented as floats.
 
         """
-        match = re.findall(r"\b\d+\b", value)
+        match = re.findall(type(self)._searchPattern, value)
         out = [float(val) for val in match]
         if out:
             return out
@@ -307,19 +312,8 @@ class EnvironmentFreezer(EnvironmentBase):
                 file.write(line + "\n")
 
 if __name__ == "__main__":
-    wdir = pathlib2.Path(__file__).cwd().parent
-    fileName = "env_python.txt"
-    freezer = EnvironmentFreezer(
-            path = wdir,
-            fileName = fileName
-        )
-    comparer = EnvironmentComparer(
-            path = wdir,
-            diffFileName = "diffs.txt"
-        )
 
-    # freezer.env2File()
-    file1 = wdir / "env_ipython.txt"
-    file2 = wdir / "env_python.txt"
-    # commonKeys= comparer.commonKeys(file1, file2, True)
-    comparer.compareEnvs(file1, file2, True)
+    # test the model input validation
+    t = "1.2 is not 123.123 and differs also from 42"
+    evaluator = ModelInputValidation()
+    valid = evaluator.readValue(t)

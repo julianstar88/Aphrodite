@@ -573,8 +573,10 @@ class Exporter():
                 horizontal = "left"
             )
 
-        # set routine data
+        """set routine data"""
         inputValues = [routineData[i][0] for i in range(len(routineData))]
+
+        # exercies names
         for i, val in enumerate(inputValues):
             rowID = i + 1
             ws["A" + str(self.__routineStartRow + i)] = val
@@ -594,7 +596,7 @@ class Exporter():
 
             ws["A" + str(self.__routineStartRow + i)] = val + alternatives + notes
 
-
+        # exercise values
         for n, row in enumerate(routineData):
             row = row[1:-1]
             del row[2]
@@ -613,19 +615,19 @@ class Exporter():
                         value = val
                     )
 
-        # set alternative data
+        """set alternative data"""
         self.__alternativeStartRow = self.__routineStartRow + len(routineData) + 3
-
         ws.cell(self.__alternativeStartRow, 1, value = "Alternativen:").font = openpyxl.styles.Font(
             b = True
         )
-
         self.__alternativeStartRow += 1
-
         inputValues = [alternativeData[i][1:4] for i in range(len(alternativeData))]
+
+        # alternative exercise names
         for i, val in enumerate(inputValues):
             ws["A" + str(self.__alternativeStartRow + i)] = val[0] + ") " + val[2]
 
+        # alternative exercise values
         for n, row in enumerate(alternativeData):
             row = row[4:-1]
             del row[2]
@@ -644,17 +646,19 @@ class Exporter():
                         value = val
                     )
 
-        # set note data
+        """set note data"""
         self.__noteStartRow = len(list(ws.rows)) + 1
         ws.cell(self.__noteStartRow, 1, value = "Notes:").font = openpyxl.styles.Font(
             b = True
         )
         self.__noteStartRow += 1
 
+        # note name
         inputValues = [noteData[i][1] for i in range(len(noteData))]
         for i, val in enumerate(inputValues):
             ws["A" + str(self.__noteStartRow + i)] = val + ")"
 
+        # note value
         inputValues = [noteData[i][3] for i in range(len(noteData))]
         for i, val in enumerate(inputValues):
             ws.merge_cells(exporterUtils.generateRangeExpression(
