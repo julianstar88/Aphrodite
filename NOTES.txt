@@ -1,0 +1,13 @@
+## Notes for the COM-system
+Server Side COM:
+use win32com.server.register.UseCommanLine(...) to register a COM-Server in
+the windows registry
+
+Client Side COM:
+use comtypes.client.CreateObject(...) to Create a COM-Object form a registerd
+COM-Server
+
+## Notes for matplotlib
+in matplotlib 3.3.1 is a bug which leads to an UserWarning if one uses the 
+method "ax.set_xticklabels()". The Workaround is to downgrade the version to 
+matplotlib 3.2.2

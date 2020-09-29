@@ -1,0 +1,25 @@
+import "oaidl.idl";
+import "ocidl.idl";
+
+[
+    uuid(B5F013C2-7C67-4C40-B8FA-9A47AC10CB2B),
+    dual,
+    oleautomation
+]
+interface ExcelCloseEventInterface : IDispatch {
+    HRESULT HandleCloseEvent();
+}
+
+[
+    uuid(DC44CB62-12AB-4AC2-AA2F-A90B5956176A)
+]
+library COMEventHandlerLib {
+    importlib("stdole32.tlb");
+
+    [
+        uuid(912C50BA-1801-4C81-B6BF-8BD2BF515316)
+    ]
+    coclass ExcelEventHandler{
+        [default] interface ExcelCloseEventInterface;
+    }
+}

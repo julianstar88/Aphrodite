@@ -21,11 +21,11 @@ def run():
     matplotlib.use("agg")
     configFileName = "config.txt"
     configPath = pathlib2.Path(
-            "C:/Users/Julian/Documents/Python/Projekte/Aphrodite/Aphrodite/files/config"
+            "C:/Users/Surface/Documents/Python/Projekte/Aphrodite/Aphrodite/files/config"
         )
     currentPath = pathlib2.Path(__file__).cwd()
     defaultPath = pathlib2.Path(
-            "C:/Users/Julian/Documents/Python/Projekte/Aphrodite/Aphrodite"
+            "C:/Users/Surface/Documents/Python/Projekte/Aphrodite/Aphrodite"
         )
     os.chdir(str(defaultPath))
 

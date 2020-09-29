@@ -13,7 +13,9 @@ import comtypes.client as com
 from PyQt5 import QtGui
 
 import MainModules.Database as db
+
 import UtilityModules.ExporterUtilityModules as exporterUtils
+import UtilityModules.COMEventHandler as ComHandler
 from UtilityModules.CustomModel import CustomSqlModel
 from UtilityModules.MiscUtilities import ModelInputValidation
 
@@ -403,6 +405,7 @@ class Exporter():
         routineData, alternativeData, noteData = self.dataFromDatabase()
         file = pathlib2.Path(file)
         app = com.CreateObject("Excel.Application")
+        com.GetEvents(app, ComHandler.ExcelEventHandler().WorkbookBeforeClose())
 
         # for debugging purposes can this property set to True
         app.Visible = False
