@@ -6,6 +6,7 @@ Created on Mon Apr 13 20:54:40 2020
 """
 import xlsxwriter
 from Utility_Function_Library.converter import ColorConverter
+from Aphrodite.UtilityModules.MiscUtilities import ModelInputValidation
 
 def templateLayout(wb, endRow):
 
@@ -491,9 +492,10 @@ def templateLayout(wb, endRow):
     
     return ws, [headerStartRow, tableBodyStartRow]
 
-def populateTemplate(exporter):
+def populateTemplate(exporter, routineData, alternativeData, noteData):
     wb = exporter.workBook()
     ws = exporter.workSheet()
+    validator = ModelInputValidation()
     
     borderColor = "black"
     backgroundColor1 = "gray"
@@ -562,6 +564,218 @@ def populateTemplate(exporter):
         )
     ws.merge_range(cellRange, exporter.trainingMode(), cellFormat)
     
+    """set routine data"""
+    inputValues = [routineData[i][0] for i in range(len(routineData))]
+    
+    # exercise names
+    for i, val in enumerate(inputValues):
+        rowID = i + 1
+        
+        l = list()
+        for alternative in alternativeData:
+            if rowID == alternative[0]:
+                l.append(alternative[1])
+        alternatives = "%s" * len(l)
+        alternatives = alternatives % tuple(l)
+        
+        l = list()
+        for note in noteData:
+            if rowID == note[0]:
+                l.append(note[1])
+        notes = "%s" * len(l)
+        notes = notes % tuple(l)
+        
+        f = {
+                "align": "left",
+                "valign": "vcenter",
+                "bg_color": backgroundColor1,
+                "border_color": borderColor
+            }
+        if i == 0:
+            f["top"] = borderStyleThick
+            f["left"] = borderStyleThick
+            f["bottom"] = borderStyleThinn
+            f["right"] = borderStyleThinn
+        if (i > 0) and (i < len(routineData) - 1):
+            f["top"] = borderStyleThinn
+            f["left"] = borderStyleThick
+            f["bottom"] = borderStyleThinn
+            f["right"] = borderStyleThinn
+        if i == len(routineData) - 1:
+            f["top"] = borderStyleThinn
+            f["left"] = borderStyleThick
+            f["bottom"] = borderStyleThinn
+            f["right"] = borderStyleThinn
+        
+        superFormat = wb.add_format({"font_script": 1})
+        subFormat = wb.add_format({"font_script": 2})
+        cellFormat = wb.add_format(f)
+        value = [val]
+        if alternatives:
+            value.append(superFormat)
+            value.append(alternatives)
+        if notes:
+            value.append(subFormat)
+            value.append(notes)
+        
+        ws.merge_range(
+                exporter.routineStartRow + i, 
+                0, 
+                exporter.routineStartRow + i, 
+                1, 
+                None, 
+                cellFormat
+            )
+        
+        if len(value) == 1:
+            ws.write(
+                    exporter.routineStartRow + i,
+                    0,
+                    *value,
+                    cellFormat
+                )
+        else:
+            ws.write_rich_string(
+                    exporter.routineStartRow + i, 
+                    0, 
+                    *value,
+                    cellFormat
+                )
+    
+    # excercise values
+    for n, row in enumerate(routineData):
+        row = row[1:-1]
+        del row[2]
+        
+        for m, val in enumerate(row):
+            # if values are readalbe as numeric values in  a
+            # 'ModelInputValidation' manner, convert them into integer
+            # (prevent excel from throwing a warning for writing numers as 
+            # string)
+            if validator.checkValue(val):
+                val = validator.readValue2(val)[0]
+            
+            f = {
+                    "align": "left",
+                    "valign": "vcenter",
+                    "border_color": borderColor
+                }
+            if n == 0:
+                if m <= 1:
+                    f["border"] = borderStyleThinn
+                    f["top"] = borderStyleThick
+                    f["bg_color"] = backgroundColor1
+                if (m > 1) and (m < len(row) - 1):
+                    f["border"] = borderStyleThinn
+                    f["top"] = borderStyleThick
+                    f["bg_color"] = backgroundColor2
+                if m == len(row) - 1:
+                    f["border"] = borderStyleThinn
+                    f["top"] = borderStyleThick
+                    f["right"] = borderStyleThick
+                    f["bg_color"] = backgroundColor2
+            else:
+                if m <= 1:
+                    f["border"] = borderStyleThinn
+                    f["bg_color"] = backgroundColor1
+                if (m > 1) and (m < len(row) - 1):
+                    f["border"] = borderStyleThinn
+                    f["bg_color"] = backgroundColor2
+                if m == len(row) - 1:
+                    f["border"] = borderStyleThinn
+                    f["right"] = borderStyleThick
+                    f["bg_color"] = backgroundColor2
+            cellFormat = wb.add_format(f)
+            ws.write(
+                    exporter.routineStartRow + n,
+                    2 + m,
+                    val,
+                    cellFormat
+                )
+            
+    """set alternative data"""
+    exporter.alternativeStartRow = exporter.routineStartRow + len(routineData) + 3
+    
+    cellFormat = wb.add_format(
+            {
+                "align": "left",
+                "valign": "vcenter",
+                "top": borderStyleThinn,
+                "left": borderStyleThick,
+                "bottom": borderStyleThinn,
+                "right": borderStyleThinn,
+                "border_color": borderColor,
+                "bg_color": backgroundColor1,
+                "bold": True
+            }
+        )
+    ws.write(
+            exporter.alternativeStartRow,
+            0,
+            "Alternativen:",
+            cellFormat
+        )
+    
+    exporter.alternativeStartRow += 1
+    
+    # alternative exercise names
+    for i, val in enumerate(alternativeData):
+        value = val[1] + ") " + val[3]
+        cellFormat = wb.add_format(
+                {
+                    "align": "left",
+                    "valign": "vcenter",
+                    "border": borderStyleThinn,
+                    "left": borderStyleThick,
+                    "border_color": borderColor,
+                    "bg_color": backgroundColor1
+                }
+            )
+        ws.write(
+                exporter.alternativeStartRow + i,
+                0,
+                value,
+                cellFormat
+            )
+    
+    # alternative exercise values
+    for n, row in enumerate(alternativeData):
+        row = row[4:-1]
+        del row[2]
+        
+        for m, val in enumerate(row):
+            # if values are readable as numeric values in a 
+            # 'ModelInputValidation' manner, convert them into integer
+            # (prevent excel from throwing a warning for writing numbers
+            # as string)
+            if validator.checkValue(val):
+                val = validator.readValue2(val)[0]
+            
+            f = {
+                    "align": "left",
+                    "valign": "vcenter",
+                    "border_color": borderColor
+                }
+            if m <= 1:
+                f["border"] = borderStyleThinn
+                f["bg_color"] = backgroundColor1
+            if (m > 1) and (m < len(row) - 1):
+                f["border"] = borderStyleThinn
+                f["bg_color"] = backgroundColor2
+            if m == len(row) - 1:
+                f["border"] = borderStyleThinn
+                f["right"] = borderStyleThick
+                f["bg_color"] = backgroundColor2
+            cellFormat = wb.add_format(f)
+            ws.write(
+                    exporter.alternativeStartRow + n,
+                    2 + m,
+                    val,
+                    cellFormat
+                )
+            
+    """set note data"""
+    
 if __name__ == "__main__":
 
     wb = xlsxwriter.Workbook(r"ExporterUtil_test.xlsx")
@@ -569,6 +783,3 @@ if __name__ == "__main__":
     templateLayout(wb, 40)
     
     wb.close()
-
-
-

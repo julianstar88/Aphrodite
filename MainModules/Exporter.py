@@ -16,7 +16,6 @@ from PyQt5 import QtGui
 import Aphrodite.MainModules.Database as db
 import Aphrodite.UtilityModules.ExporterUtilityModules as exporterUtils
 from Aphrodite.UtilityModules.CustomModel import CustomSqlModel
-from Aphrodite.UtilityModules.MiscUtilities import ModelInputValidation
 
 
 class Exporter():
@@ -555,81 +554,7 @@ class Exporter():
                     "tried to access an invalid workbook. set a valid xlsxwirter.Workbook-object as workbook, before populating a trainingroutine "
                 )
 
-        validator = ModelInputValidation()
-        exporterUtils.populateTemplate(self)
-
-        # """set routine data"""
-        # inputValues = [routineData[i][0] for i in range(len(routineData))]
-
-        # # exercies names
-        # for i, val in enumerate(inputValues):
-        #     rowID = i + 1
-        #     ws["A" + str(self.routineStartRow + i)] = val
-        #     l = list()
-        #     for alternative in alternativeData:
-        #         if rowID == alternative[0]:
-        #             l.append(alternative[1])
-        #     alternatives = "%s)"*len(l)
-        #     alternatives = alternatives % tuple(l)
-
-        #     l = list()
-        #     for note in noteData:
-        #         if rowID == note[0]:
-        #             l.append(note[1])
-        #     notes = "%s)"*len(l)
-        #     notes = notes % tuple(l)
-
-        #     ws["A" + str(self.routineStartRow + i)] = val + alternatives + notes
-
-        # # exercise values
-        # for n, row in enumerate(routineData):
-        #     row = row[1:-1]
-        #     del row[2]
-        #     for m, val in enumerate(row):
-
-        #         # if values are readable as numeric values in a
-        #         # 'ModelInputValidation' manner, convert them into integer
-        #         # (prevent excel from throwing a warning for writing numbers
-        #         # as text)
-        #         if validator.checkValue(val):
-        #             val = validator.readValue2(val)[0]
-
-        #         ws.cell(
-        #                 row = self.routineStartRow + n,
-        #                 column = 3 + m,
-        #                 value = val
-        #             )
-
-        # """set alternative data"""
-        # self.alternativeStartRow = self.routineStartRow + len(routineData) + 3
-        # ws.cell(self.alternativeStartRow, 1, value = "Alternativen:").font = openpyxl.styles.Font(
-        #     b = True
-        # )
-        # self.alternativeStartRow += 1
-        # inputValues = [alternativeData[i][1:4] for i in range(len(alternativeData))]
-
-        # # alternative exercise names
-        # for i, val in enumerate(inputValues):
-        #     ws["A" + str(self.alternativeStartRow + i)] = val[0] + ") " + val[2]
-
-        # # alternative exercise values
-        # for n, row in enumerate(alternativeData):
-        #     row = row[4:-1]
-        #     del row[2]
-        #     for m, val in enumerate(row):
-
-        #         # if values are readable as numeric values in a
-        #         # 'ModelInputValidation' manner, convert them into integer
-        #         # (prevent excel from throwing a warning for writing numbers
-        #         # as text)
-        #         if validator.checkValue(val):
-        #             val = validator.readValue2(val)[0]
-
-        #         ws.cell(
-        #                 row = self.alternativeStartRow + n,
-        #                 column = 3 + m,
-        #                 value = val
-        #             )
+        exporterUtils.populateTemplate(self, routineData, alternativeData, noteData)
 
         # """set note data"""
         # self.noteStartRow = len(list(ws.rows)) + 1
@@ -1222,7 +1147,7 @@ class Exporter():
         return self._workSheet
 
 if __name__ == "__main__":
-    file = pathlib2.Path("C:/Users/Surface/Documents/Python/Projekte/Aphrodite/Aphrodite/files/test_files/test_database_2.db")
+    file = pathlib2.Path(r"C:\Users\Surface\Documents\Trainingspläne\Datenbanken\Training-200829.db")
     print("file: {}".format(file))
     print("Existing: {}".format(file.is_file()))
     
