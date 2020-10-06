@@ -10,10 +10,11 @@ import sys
 import datetime
 import re
 import pathlib2
-from UtilityModules.GraphicUtilityModules import CreateCanvas, CreateQPixmap
-from MainModules.Database import database
 
 from PyQt5 import QtWidgets, QtCore, QtGui
+
+from Aphrodite.UtilityModules.GraphicUtilityModules import CreateCanvas, CreateQPixmap
+from Aphrodite.MainModules.Database import database
 
 class CustomAddAlternativeDialog(QtWidgets.QDialog):
 

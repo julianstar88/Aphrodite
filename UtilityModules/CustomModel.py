@@ -6,8 +6,10 @@ Created on Tue Mar 17 23:47:14 2020
 """
 import sqlite3
 import pathlib2
-from GuiModules.CustomGuiComponents import CustomModelItem
 from PyQt5 import QtGui, QtCore
+
+from Aphrodite.GuiModules.CustomGuiComponents import CustomModelItem
+
 
 class CustomSqlModel(QtGui.QStandardItemModel):
 

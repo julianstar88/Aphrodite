@@ -49,7 +49,8 @@ def templateLayout(workbook, endRow):
     
     headerRows = 6
     tableHeaderRows = 1
-    tableBodyRows = endRow - (headerRows + tableHeaderRows) 
+    tableBodyStartRow = headerRows + tableHeaderRows
+    tableBodyRows = endRow - tableBodyStartRow
     maxCols = 10
     borderColor = "black"
     backgroundColor1 = "gray"
@@ -487,6 +488,9 @@ def templateLayout(workbook, endRow):
                             }
                         )
                     ws.write(n, m, None, bottom_format)
+    
+    """finally return the start row of the tablebody to exporter"""
+    return tableBodyStartRow
     
 if __name__ == "__main__":
 

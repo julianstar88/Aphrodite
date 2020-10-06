@@ -6,18 +6,17 @@ Created on Tue Mar  3 22:30:14 2020
 """
 import datetime
 import pathlib2
-import openpyxl
+# import openpyxl
+import xlsxwriter
 import numpy as np
 import tempfile
 import comtypes.client as com
 from PyQt5 import QtGui
 
-import MainModules.Database as db
-
-import UtilityModules.ExporterUtilityModules as exporterUtils
-import UtilityModules.COMEventHandler as ComHandler
-from UtilityModules.CustomModel import CustomSqlModel
-from UtilityModules.MiscUtilities import ModelInputValidation
+import Aphrodite.MainModules.Database as db
+import Aphrodite.UtilityModules.ExporterUtilityModules as exporterUtils
+from Aphrodite.UtilityModules.CustomModel import CustomSqlModel
+from Aphrodite.UtilityModules.MiscUtilities import ModelInputValidation
 
 
 class Exporter():
@@ -691,10 +690,12 @@ class Exporter():
             intermediate workbook ojbect.
 
         """
+        # path = self.exportPath() / 
+        workbook = xlsxwriter.Workbook()
 
-        workBook = exporterUtils.TamplateLayout(rows)
-        self.setWorkBook(workBook)
-        return workBook
+        # workBook = exporterUtils.TamplateLayout(rows)
+        # self.setWorkBook(workBook)
+        # return workBook
 
     def routineModel(self):
         """
@@ -854,7 +855,7 @@ class Exporter():
             raise ValueError(
                     "invalid input for argument 'databasePath'"
                 )
-        self._database = str(path)
+        self._database = path
         self._databaseName = path.stem
         self._databasePath = path.parent
 
@@ -883,19 +884,21 @@ class Exporter():
 
         """
 
-        path = pathlib2.Path(exportPath)
-        if not type(exportPath) == str:
+        
+        if (not isinstance(exportPath, str)) and (not isinstance(exportPath, pathlib2.Path)):
             raise TypeError(
-                    "input for argument 'exportPath' does not match {type_name}".format(
-                            input_name = path,
-                            type_name = type("str")
+                    "input for argument 'exportPath' does not match {type_name} or {type_name_2}".format(
+                            input_name = exportPath,
+                            type_name = pathlib2.Path,
+                            type_name_2 = str
                         )
                 )
+        path = pathlib2.Path(exportPath)
         if not path.is_dir():
             raise ValueError(
                     "input for argument 'exportPath' does not refer to an existing directory"
                 )
-        if len(exportPath) == 0:
+        if len(str(path)) == 0:
             raise ValueError(
                     "invalid input for argument 'exportPath'"
                 )
@@ -1198,4 +1201,14 @@ class Exporter():
         return self._workBook
 
 if __name__ == "__main__":
-    pass
+    file = pathlib2.Path("C:/Users/Surface/Documents/Python/Projekte/Aphrodite/Aphrodite/files/test_files/test_database_2.db")
+    print("file: {}".format(file))
+    print("Existing: {}".format(file.is_file()))
+    
+    exporter = Exporter()
+    exporter.setDatabase(file)
+    exporter.setExportPath("C:/Users/Surface/Documents/Python/Projekte/Aphrodite/Aphrodite/files/test_files")
+    
+    print("Export-Path: {}".format(exporter.exportPath()))
+    print("Export-Name: {}".format(exporter.databaseName()))
+    print("Full Database-Name: {}".format(exporter.database().name))
