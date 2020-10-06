@@ -686,16 +686,16 @@ class Exporter():
 
         Returns
         -------
-        workBook : openpyxl.Workbook
+        workBook : xlsxwriter.Workbook-object
             intermediate workbook ojbect.
 
         """
-        # path = self.exportPath() / 
-        workbook = xlsxwriter.Workbook()
+        path = self.exportPath() / pathlib2.Path(self.databaseName() + ".xlsx")
+        workbook = xlsxwriter.Workbook(path)
 
-        # workBook = exporterUtils.TamplateLayout(rows)
-        # self.setWorkBook(workBook)
-        # return workBook
+        self.__routineStartRow = exporterUtils.templateLayout(workbook, rows)
+        self.setWorkBook(workbook)
+        return workbook
 
     def routineModel(self):
         """
@@ -1180,7 +1180,7 @@ class Exporter():
 
         """
 
-        if not type(workBook) == openpyxl.Workbook:
+        if not type(workBook) == xlsxwriter.Workbook:
             raise TypeError(
                     "input for 'workBook' must be an instance of the 'openpyxl.Workbook' module"
                 )
@@ -1212,3 +1212,7 @@ if __name__ == "__main__":
     print("Export-Path: {}".format(exporter.exportPath()))
     print("Export-Name: {}".format(exporter.databaseName()))
     print("Full Database-Name: {}".format(exporter.database().name))
+    
+    wb = exporter.routineLayout()
+    print(wb)
+    wb.close()
