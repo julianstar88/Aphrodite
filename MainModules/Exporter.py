@@ -152,6 +152,7 @@ class Exporter():
         self._trainingPeriode = list()
         self._trainingMode = None
         self._workBook = None
+        self._workSheet = None
         self._routineModel = None
         self._alternativeModel = None
         self._noteModel = None
@@ -159,9 +160,10 @@ class Exporter():
         # purly private properties without getter or setter.
         # this properties are uesed to finalize the layout (set superscripts
         # and subscripts) after saving the epxort file.
-        self.__routineStartRow = int()
-        self.__alternativeStartRow = int()
-        self.__noteStartRow = int()
+        self.headerStartRow = int()
+        self.routineStartRow = int()
+        self.alternativeStartRow = int()
+        self.noteStartRow = int()
 
         if (database):
             self.setDatabase(database)
@@ -338,7 +340,7 @@ class Exporter():
             self.setNoteModel(noteModel)
 
         if (not isinstance(self.routineModel(), CustomSqlModel)) and \
-            (not isinstance(self.routineModel(), QtGui.QStandarItemModel)):
+            (not isinstance(self.routineModel(), QtGui.QStandardItemModel)):
             raise TypeError(
                     "before fetching data from a model, a valid model has to be set for 'routineModel'"
                 )
@@ -437,7 +439,7 @@ class Exporter():
                     notes = notes
                 )
 
-            cell = ws.Cells[self.__routineStartRow + i, 1]
+            cell = ws.Cells[self.routineStartRow + i, 1]
             cell.Value[:] = newValue
 
             # set superscript
@@ -510,12 +512,11 @@ class Exporter():
         Raises
         ------
         TypeError
-             will be raised if the input is not type list or type tuple, or the
-             'workBook' property does not hold a valid 'openpyxl.Workbook' object
-
-        ValueError
-            will be raised, if the dimension of the 'numpy.array' representation
-            of the input arguments does not match (n, m)
+             - will be raised if the input is not type list or type tuple, or the
+               'workBook' property does not hold a valid 'xlsxwriter.Workbook' object
+             
+             - will be raised, if the input for 'routineData', 'alternativeDate' and
+               'noteDate' is not of type 'list' or 'tuple'
 
         Returns
         -------
@@ -549,127 +550,109 @@ class Exporter():
                         )
                 )
 
-        if not isinstance(self.workBook(), openpyxl.Workbook):
+        if not isinstance(self.workBook(), xlsxwriter.Workbook):
             raise TypeError(
-                    "tried to access an invalid workbook. set a valid openpyxl.Workbook-object as workbook, before populating a trainingroutine "
+                    "tried to access an invalid workbook. set a valid xlsxwirter.Workbook-object as workbook, before populating a trainingroutine "
                 )
 
-        ws = self.workBook().active
         validator = ModelInputValidation()
+        exporterUtils.populateTemplate(self)
 
-        # set header data
-        ws["A3"] = self.name()
-        ws["F3"] = self.trainingPeriode()[0]
-        ws["F4"] = self.trainingPeriode()[1]
-        ws["H3"] = self.trainingMode()
+        # """set routine data"""
+        # inputValues = [routineData[i][0] for i in range(len(routineData))]
 
-        self.__routineStartRow = 7
-        exporterUtils.setAlignment(
-                ws,
-                exporterUtils.generateRangeExpression(
-                        startRow = self.__routineStartRow,
-                        endRow = len(list(ws.rows)),
-                        startColumn = "C",
-                        endColumn = "J"
-                    ),
-                horizontal = "left"
-            )
+        # # exercies names
+        # for i, val in enumerate(inputValues):
+        #     rowID = i + 1
+        #     ws["A" + str(self.routineStartRow + i)] = val
+        #     l = list()
+        #     for alternative in alternativeData:
+        #         if rowID == alternative[0]:
+        #             l.append(alternative[1])
+        #     alternatives = "%s)"*len(l)
+        #     alternatives = alternatives % tuple(l)
 
-        """set routine data"""
-        inputValues = [routineData[i][0] for i in range(len(routineData))]
+        #     l = list()
+        #     for note in noteData:
+        #         if rowID == note[0]:
+        #             l.append(note[1])
+        #     notes = "%s)"*len(l)
+        #     notes = notes % tuple(l)
 
-        # exercies names
-        for i, val in enumerate(inputValues):
-            rowID = i + 1
-            ws["A" + str(self.__routineStartRow + i)] = val
-            l = list()
-            for alternative in alternativeData:
-                if rowID == alternative[0]:
-                    l.append(alternative[1])
-            alternatives = "%s)"*len(l)
-            alternatives = alternatives % tuple(l)
+        #     ws["A" + str(self.routineStartRow + i)] = val + alternatives + notes
 
-            l = list()
-            for note in noteData:
-                if rowID == note[0]:
-                    l.append(note[1])
-            notes = "%s)"*len(l)
-            notes = notes % tuple(l)
+        # # exercise values
+        # for n, row in enumerate(routineData):
+        #     row = row[1:-1]
+        #     del row[2]
+        #     for m, val in enumerate(row):
 
-            ws["A" + str(self.__routineStartRow + i)] = val + alternatives + notes
+        #         # if values are readable as numeric values in a
+        #         # 'ModelInputValidation' manner, convert them into integer
+        #         # (prevent excel from throwing a warning for writing numbers
+        #         # as text)
+        #         if validator.checkValue(val):
+        #             val = validator.readValue2(val)[0]
 
-        # exercise values
-        for n, row in enumerate(routineData):
-            row = row[1:-1]
-            del row[2]
-            for m, val in enumerate(row):
+        #         ws.cell(
+        #                 row = self.routineStartRow + n,
+        #                 column = 3 + m,
+        #                 value = val
+        #             )
 
-                # if values are readable as numeric values in a
-                # 'ModelInputValidation' manner, convert them into integer
-                # (prevent excel from throwing a warning for writing numbers
-                # as text)
-                if validator.checkValue(val):
-                    val = validator.readValue2(val)[0]
+        # """set alternative data"""
+        # self.alternativeStartRow = self.routineStartRow + len(routineData) + 3
+        # ws.cell(self.alternativeStartRow, 1, value = "Alternativen:").font = openpyxl.styles.Font(
+        #     b = True
+        # )
+        # self.alternativeStartRow += 1
+        # inputValues = [alternativeData[i][1:4] for i in range(len(alternativeData))]
 
-                ws.cell(
-                        row = self.__routineStartRow + n,
-                        column = 3 + m,
-                        value = val
-                    )
+        # # alternative exercise names
+        # for i, val in enumerate(inputValues):
+        #     ws["A" + str(self.alternativeStartRow + i)] = val[0] + ") " + val[2]
 
-        """set alternative data"""
-        self.__alternativeStartRow = self.__routineStartRow + len(routineData) + 3
-        ws.cell(self.__alternativeStartRow, 1, value = "Alternativen:").font = openpyxl.styles.Font(
-            b = True
-        )
-        self.__alternativeStartRow += 1
-        inputValues = [alternativeData[i][1:4] for i in range(len(alternativeData))]
+        # # alternative exercise values
+        # for n, row in enumerate(alternativeData):
+        #     row = row[4:-1]
+        #     del row[2]
+        #     for m, val in enumerate(row):
 
-        # alternative exercise names
-        for i, val in enumerate(inputValues):
-            ws["A" + str(self.__alternativeStartRow + i)] = val[0] + ") " + val[2]
+        #         # if values are readable as numeric values in a
+        #         # 'ModelInputValidation' manner, convert them into integer
+        #         # (prevent excel from throwing a warning for writing numbers
+        #         # as text)
+        #         if validator.checkValue(val):
+        #             val = validator.readValue2(val)[0]
 
-        # alternative exercise values
-        for n, row in enumerate(alternativeData):
-            row = row[4:-1]
-            del row[2]
-            for m, val in enumerate(row):
+        #         ws.cell(
+        #                 row = self.alternativeStartRow + n,
+        #                 column = 3 + m,
+        #                 value = val
+        #             )
 
-                # if values are readable as numeric values in a
-                # 'ModelInputValidation' manner, convert them into integer
-                # (prevent excel from throwing a warning for writing numbers
-                # as text)
-                if validator.checkValue(val):
-                    val = validator.readValue2(val)[0]
+        # """set note data"""
+        # self.noteStartRow = len(list(ws.rows)) + 1
+        # ws.cell(self.noteStartRow, 1, value = "Notes:").font = openpyxl.styles.Font(
+        #     b = True
+        # )
+        # self.noteStartRow += 1
 
-                ws.cell(
-                        row = self.__alternativeStartRow + n,
-                        column = 3 + m,
-                        value = val
-                    )
+        # # note name
+        # inputValues = [noteData[i][1] for i in range(len(noteData))]
+        # for i, val in enumerate(inputValues):
+        #     ws["A" + str(self.noteStartRow + i)] = val + ")"
 
-        """set note data"""
-        self.__noteStartRow = len(list(ws.rows)) + 1
-        ws.cell(self.__noteStartRow, 1, value = "Notes:").font = openpyxl.styles.Font(
-            b = True
-        )
-        self.__noteStartRow += 1
-
-        # note name
-        inputValues = [noteData[i][1] for i in range(len(noteData))]
-        for i, val in enumerate(inputValues):
-            ws["A" + str(self.__noteStartRow + i)] = val + ")"
-
-        # note value
-        inputValues = [noteData[i][3] for i in range(len(noteData))]
-        for i, val in enumerate(inputValues):
-            ws.merge_cells(exporterUtils.generateRangeExpression(
-                    self.__noteStartRow + i,
-                    self.__noteStartRow + i,
-                    "B",
-                    "J"
-                ))
-            ws["B" + str(self.__noteStartRow + i)] = val
+        # # note value
+        # inputValues = [noteData[i][3] for i in range(len(noteData))]
+        # for i, val in enumerate(inputValues):
+        #     ws.merge_cells(exporterUtils.generateRangeExpression(
+        #             self.noteStartRow + i,
+        #             self.noteStartRow + i,
+        #             "B",
+        #             "J"
+        #         ))
+        #     ws["B" + str(self.noteStartRow + i)] = val
 
     def routineLayout(self, rows = 40):
         """
@@ -693,9 +676,12 @@ class Exporter():
         path = self.exportPath() / pathlib2.Path(self.databaseName() + ".xlsx")
         workbook = xlsxwriter.Workbook(path)
 
-        self.__routineStartRow = exporterUtils.templateLayout(workbook, rows)
+        worksheet, startRows = exporterUtils.templateLayout(workbook, rows)
+        self.headerStartRow = startRows[0]
+        self.routineStartRow = startRows[1]
         self.setWorkBook(workbook)
-        return workbook
+        self.setWorkSheet(worksheet)
+        return workbook, worksheet
 
     def routineModel(self):
         """
@@ -1159,13 +1145,13 @@ class Exporter():
     def setWorkBook(self, workBook):
         """
         setter method for the 'workBook'-property. this property is normally
-        not meant to be set manually, because it will be set by 'setDatabase'.
+        not meant to be set manually, because it will be set by <routineLayout>.
         However, for convinience of special cases it is possible to modify the
-        value of the 'workBook' later on
+        value of 'workBook' later on
 
         Parameters
         ----------
-        workBook : openpyxl.Workbook
+        workBook : xlsxwriter.Workbook
             workbook objects will used as intermediate to create the exportfile.
 
         Raises
@@ -1181,9 +1167,36 @@ class Exporter():
 
         if not type(workBook) == xlsxwriter.Workbook:
             raise TypeError(
-                    "input for 'workBook' must be an instance of the 'openpyxl.Workbook' module"
+                    "input for 'workBook' must be an instance of the 'xlsxwriter.Workbook' module"
                 )
         self._workBook = workBook
+        
+    def setWorkSheet(self, worksheet):
+        """
+        setter method for the 'workSheet'-property. this property is going to be
+        set automatically by invoking the <routineLayout> method.
+        However, for convinience of special cases it is possible to modify the
+        value of 'workSheet' later on
+        Parameters
+        ----------
+        worksheet : xlsxwriter.worksheet.Worksheet
+
+        Raises
+        ------
+        TypeError
+            
+            - will be raised, if the input for 'worksheet' is not type <xlsxwriter.worksheet.Worksheet>
+
+        Returns
+        -------
+        None.
+
+        """
+        if not isinstance(worksheet, xlsxwriter.worksheet.Worksheet):
+            raise TypeError(
+                    "input for 'workBook' must be an instance of the 'xlsxwriter.worksheet.Worksheet' module"
+                )
+        self._workSheet = worksheet
 
     def workBook(self):
         """
@@ -1192,12 +1205,21 @@ class Exporter():
 
         Returns
         -------
-        openpyxl.Workbook
-            the 'workBook'-property.
-
+        xlsxwriter.Workbook
         """
 
         return self._workBook
+    
+    def workSheet(self):
+        """
+        getter method for the 'worksheet'-property. the worksheet is related 
+        to the workBook property.
+
+        Returns
+        -------
+        <xlsxwriter.worksheet.Worksheet>
+        """
+        return self._workSheet
 
 if __name__ == "__main__":
     file = pathlib2.Path("C:/Users/Surface/Documents/Python/Projekte/Aphrodite/Aphrodite/files/test_files/test_database_2.db")
@@ -1207,11 +1229,19 @@ if __name__ == "__main__":
     exporter = Exporter()
     exporter.setDatabase(file)
     exporter.setExportPath("C:/Users/Surface/Documents/Python/Projekte/Aphrodite/Aphrodite/files/test_files")
+    exporter.setName("Julian Blaser")
+    exporter.setTrainingMode("mittleres Krafttraining")
+    exporter.setTrainingPeriode(2020, 10, 6)
     
     print("Export-Path: {}".format(exporter.exportPath()))
     print("Export-Name: {}".format(exporter.databaseName()))
     print("Full Database-Name: {}".format(exporter.database().name))
     
-    wb = exporter.routineLayout()
-    print(wb)
-    wb.close()
+    exporter.routineLayout()
+    print("Workbook: {}".format(exporter.workBook()))
+    print("Worksheet: {}".format(exporter.workSheet()))
+    
+    routineData, alternativeData, noteData = exporter.dataFromDatabase()
+    exporter.populateRoutine(routineData, alternativeData, noteData)
+    
+    exporter.workBook().close()

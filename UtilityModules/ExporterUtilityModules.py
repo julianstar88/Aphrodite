@@ -7,7 +7,7 @@ Created on Mon Apr 13 20:54:40 2020
 import xlsxwriter
 from Utility_Function_Library.converter import ColorConverter
 
-def templateLayout(workbook, endRow):
+def templateLayout(wb, endRow):
 
     if endRow < 6:
         raise ValueError(
@@ -22,10 +22,10 @@ def templateLayout(workbook, endRow):
                     type_name = type(123)
                 )
             )
-    if not isinstance(workbook, xlsxwriter.Workbook):
+    if not isinstance(wb, xlsxwriter.Workbook):
         raise TypeError(
                 "input to type <{input_type_name}> does not match {type_name}".format(
-                        input_type_name = type(workbook),
+                        input_type_name = type(wb),
                         type_name = xlsxwriter.Workbook
                     )
             )
@@ -36,7 +36,6 @@ def templateLayout(workbook, endRow):
     converter.colorType = "RGB"
 
     """customize worksheet"""
-    wb = workbook
     ws = wb.add_worksheet("Trainingsplan")
     ws.set_paper(9) # setup A4 format
     ws.set_margins(
@@ -48,6 +47,7 @@ def templateLayout(workbook, endRow):
     ws.center_horizontally()
     
     headerRows = 6
+    headerStartRow = 0
     tableHeaderRows = 1
     tableBodyStartRow = headerRows + tableHeaderRows
     tableBodyRows = endRow - tableBodyStartRow
@@ -61,7 +61,7 @@ def templateLayout(workbook, endRow):
     """header"""
     
     # header border line with style 2 (thick)
-    start = 0
+    start = headerStartRow
     for n in range(start, start + headerRows):
         for m in range(maxCols):
             background_format = wb.add_format(
@@ -489,8 +489,78 @@ def templateLayout(workbook, endRow):
                         )
                     ws.write(n, m, None, bottom_format)
     
-    """finally return the start row of the tablebody to exporter"""
-    return tableBodyStartRow
+    return ws, [headerStartRow, tableBodyStartRow]
+
+def populateTemplate(exporter):
+    wb = exporter.workBook()
+    ws = exporter.workSheet()
+    
+    borderColor = "black"
+    backgroundColor1 = "gray"
+    backgroundColor2 = "white"
+    borderStyleThinn = 1
+    borderStyleThick = 2
+
+    
+    """set header data"""
+    cellRange = "A{}:B{}".format(
+            exporter.headerStartRow + 3,
+            exporter.headerStartRow + 3
+        )
+    cellFormat = wb.add_format(
+            {
+                "align": "left",
+                "valign": "vcenter",
+                "top": borderStyleThick,
+                "left": borderStyleThick,
+                "border_color": borderColor,
+                "bg_color": backgroundColor2
+            }
+        )
+    ws.merge_range(cellRange, exporter.name(), cellFormat)
+    
+    cellRange = "F{}:G{}".format(
+            exporter.headerStartRow + 3,
+            exporter.headerStartRow + 3
+        )
+    cellFormat = wb.add_format(
+            {
+                "align": "right",
+                "valign": "vcenter",
+                "top": borderStyleThick,
+                "border_color": borderColor,
+                "bg_color": backgroundColor2
+            }
+        )
+    ws.merge_range(cellRange, exporter.trainingPeriode()[0], cellFormat)
+    
+    cellRange = "F{}:G{}".format(
+            exporter.headerStartRow + 4,
+            exporter.headerStartRow + 4
+        )
+    cellFormat = wb.add_format(
+            {
+                "align": "right",
+                "valign": "vcenter",
+                "bg_color": backgroundColor2
+            }
+        )
+    ws.merge_range(cellRange, exporter.trainingPeriode()[1], cellFormat)
+    
+    cellRange = "H{}:J{}".format(
+            exporter.headerStartRow + 3,
+            exporter.headerStartRow + 3
+        )
+    cellFormat = wb.add_format(
+            {
+                "align": "right",
+                "valign": "vcenter",
+                "right": borderStyleThick,
+                "border_color": borderColor,
+                "bg_color": backgroundColor2
+            }
+        )
+    ws.merge_range(cellRange, exporter.trainingMode(), cellFormat)
     
 if __name__ == "__main__":
 

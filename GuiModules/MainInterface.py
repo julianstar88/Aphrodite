@@ -13,10 +13,7 @@ import shutil
 from PyQt5 import QtWidgets, QtCore, QtGui
 
 from MainModules import ConfigInterface, Database, Exporter, GraphicalEvaluator
-
 from UtilityModules import CustomModel
-import UtilityModules.COMEventHandler as com
-
 from GuiModules import CustomTableView, ProgressDialog
 import GuiModules.CustomGuiComponents as cc
 
@@ -356,12 +353,6 @@ class MainWindow(QtWidgets.QMainWindow):
             return False
 
     def onExportTrainingroutine(self):
-
-        # COM event handling
-        handler = com.ExcelEventHandler()
-        handler.excelClosed.connect(
-                lambda: print("closed...")
-            )
 
         # collect export path
         dialog = QtWidgets.QFileDialog()
