@@ -803,7 +803,7 @@ class Exporter():
         """
         if (not isinstance(model, QtGui.QStandardItemModel)) and (not isinstance(model, CustomSqlModel)):
             raise TypeError(
-                    "input <{input_name}> does not match {input_name_1} or {input_name_2}".format(
+                    "input <{input_name}> does not match {type_name_1} or {type_name_2}".format(
                             input_name = str(model),
                             type_name_1 = QtGui.QStandardItemModel,
                             type_name_2 = CustomSqlModel
@@ -888,7 +888,6 @@ class Exporter():
         if (not isinstance(exportPath, str)) and (not isinstance(exportPath, pathlib2.Path)):
             raise TypeError(
                     "input for argument 'exportPath' does not match {type_name} or {type_name_2}".format(
-                            input_name = exportPath,
                             type_name = pathlib2.Path,
                             type_name_2 = str
                         )
@@ -989,7 +988,7 @@ class Exporter():
         """
         if (not isinstance(model, QtGui.QStandardItemModel)) and (not isinstance(model, CustomSqlModel)):
             raise TypeError(
-                    "input <{input_name}> does not match {input_name_1} or {input_name_2}".format(
+                    "input <{input_name}> does not match {type_name_1} or {type_name_2}".format(
                             input_name = str(model),
                             type_name_1 = QtGui.QStandardItemModel,
                             type_name_2 = CustomSqlModel
