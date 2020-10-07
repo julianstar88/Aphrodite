@@ -6,11 +6,7 @@ Created on Tue Mar  3 22:30:14 2020
 """
 import datetime
 import pathlib2
-# import openpyxl
 import xlsxwriter
-import numpy as np
-import tempfile
-import comtypes.client as com
 from PyQt5 import QtGui
 
 import Aphrodite.MainModules.Database as db
