@@ -38,7 +38,19 @@ class Exporter():
         - setter: setExportPath(directory-path)
 
     - model:
-        a refenrence to a valid CustomSqlModel
+        a refenrence to a valid CustomSqlModel representing the three parts of
+        a trainingroutine:
+            - the trainingroutine itself (routineModel)
+            - the trainingalternatives (alternativeModel)
+            - the trainingnotes (noteModel)
+        to use <dataFromModel> all three models have to be set via thier setter
+        methods:
+            - setRoutineModel()
+            - setAlternativeModel()
+            - setNoteModel()
+        Note: its easier to use <dataFromDatabase>, therefore only a valid 
+        database (representing a trainingroutine) has to be set via
+        <setDatabase>
 
         - default: None
         - getter: model()
@@ -89,40 +101,26 @@ class Exporter():
     -----
 
     1. create the exporter object:
-
         >>> exporter = Exporter()
 
     2. set suitable properties:
-
-        >>> exporter.setDatabase(...)
         >>> exporter.setExportPath(...)
         >>> exporter.setName(...)
         >>> exporter.setRoutineName(...)
         >>> exporter.setTrainingPeriode(...)
         >>> exporter.setTrainingMode(...)
+        
+    Database Approach:
+        >>> exporter.setDatabase(...)
 
+    Model Approach not recommended (use the database approach instead):
         >>> exporter.setRoutineModel(...)
         >>> exporter.setAlternativeModel(...)
         >>> exporter.setNoteModel(...)
 
 
-    3. layout the exportfile:
-
-        >>> exporter.routineLayout()
-
-    4. populate the exportfile with exercises, sets and repetitions
-
-        either with data from Database:
-
-        >>> exporter.populateRoutine(exporter.dataFromDatabase(...))
-
-        or, if routineModel, alternativeModel and noteModel have been set
-
-        >>> exporter.populateRoutine(exporter.dataFromModel(...))
-
-    5. save the workBook to create the exportfile
-
-        >>> exporter.saveRoutine()
+    3. export the trainingroutine to a .xlsx-file
+        >>> exporter.export()
 
     """
 
@@ -433,28 +431,24 @@ class Exporter():
 
     def export(self):
         """
-        by invoking this method, the workbook in the 'workBook' property gets
-        populated with data from routineData, alternativeData and noteData.
-        These arguments are typically set by 'dataFromDatabase' or
-        'dataFromModel'
+        export a database representing a trainingroutine to a .xlsx-file.
+        
+        if the data should be recieved from the database itself, make sure that
+        this database has been set via Exporter.setDatabase.
+        
+        if the data should be recieved from a certain datamodel representing a 
+        database, make sure this datamodel has been set via setter method of all
+        three datamodels:
+            - setAlternativeModel
+            - setRoutineModel
+            - setNoteModel
+            
+        The common case is just to set a adequat database via <setDatabase> and
+        use <dataFromDatabase> further on.
 
         Note:
-        make sure, that 'routineLayout' has been invoked prior.
-
-        Note:
-        if no proper values either for the database-property or the
+        if no proper values either for the database-property nor the
         workBook-property have been set, a ValueError will be raised
-
-        Parameters
-        ----------
-        routineData: list
-            a list with values representing the trainingroutine
-
-        alternativeData: list
-            a list with values representing the trainingalternatives
-
-        noteData: list
-            a list with values representing the trainingnotes
 
         Raises
         ------
