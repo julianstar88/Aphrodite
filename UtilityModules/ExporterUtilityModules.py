@@ -7,7 +7,6 @@ Created on Mon Apr 13 20:54:40 2020
 import xlsxwriter
 from Utility_Function_Library.converter import ColorConverter
 from Aphrodite.UtilityModules.MiscUtilities import ModelInputValidation
-from Aphrodite.MainModules.Exporter import Exporter
 
 def templateLayout(exporter):
         
