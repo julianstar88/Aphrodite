@@ -7,7 +7,7 @@ Created on Mon Apr 13 20:54:40 2020
 from Utility_Function_Library.converter import ColorConverter
 from Aphrodite.UtilityModules.MiscUtilities import ModelInputValidation
 
-def templateLayout(exporter):
+def layoutTemplate(exporter):
         
     """property configuration"""
     wb = exporter.workBook()

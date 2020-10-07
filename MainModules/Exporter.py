@@ -474,7 +474,7 @@ class Exporter():
         self.setWorkBook(workbook)
         
         """ layout the export file"""
-        worksheet, layoutInformation = exporterUtils.templateLayout(self)
+        worksheet, layoutInformation = exporterUtils.layoutTemplate(self)
         props = {
             "headerStartRow": layoutInformation["headerStartRow"],
             "routineStartRow": layoutInformation["routineStartRow"],
