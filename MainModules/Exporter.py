@@ -472,10 +472,12 @@ class Exporter():
 
         """
             
+        """ set the export procedure properties"""
         path = self.exportPath() / pathlib2.Path(self.databaseName() + ".xlsx")
         workbook = xlsxwriter.Workbook(path)
         self.setWorkBook(workbook)
         
+        """ layout the export file"""
         worksheet, layoutInformation = exporterUtils.templateLayout(self)
         props = {
             "headerStartRow": layoutInformation["headerStartRow"],
@@ -486,7 +488,11 @@ class Exporter():
         self.setLayoutProperties(props)
         self.setWorkSheet(worksheet)
 
+        """populate the export file with training-data"""
         exporterUtils.populateTemplate(self)
+        
+        """export the file"""
+        self.workBook().close()
 
     def routineModel(self):
         """
@@ -541,38 +547,6 @@ class Exporter():
         """
 
         return self._trainingPeriode
-
-    def saveRoutine(self):
-        """
-        save the intermediate workbook 'workBook' and create the final export-
-        file (.xlsx-file). the exportfile will be saved to the 'exportPath',
-        with the name 'routineName'. to prevent unexpected behavior, one should
-        obey the recommended procedure in the class-documentation.
-
-        Raises
-        ------
-        TypeError
-            will be raised, if either 'exportPath' or 'routineName' are
-            invalid.
-
-        Returns
-        -------
-        None.
-
-        """
-
-
-        if not self.exportPath():
-            raise TypeError (
-                    "try to export a trainingroutine to an invalid path. set a valid export path before saving a trainingroutine"
-                )
-
-        if not self.routineName():
-            raise TypeError(
-                    "try to export a trainingroutine with invalid routine name. set a valid routine name before saving a trainingroutine"
-                )
-        path = pathlib2.Path(self.exportPath()) / pathlib2.Path(self.routineName())
-        self.workBook().save(str(path))
 
     def setAlternativeModel(self, model):
         """
@@ -1052,10 +1026,6 @@ if __name__ == "__main__":
     print("Export-Name: {}".format(exporter.databaseName()))
     print("Full Database-Name: {}".format(exporter.database().name))
     
-    exporter.populateRoutine()
+    exporter.export()
     print("Workbook: {}".format(exporter.workBook()))
     print("Worksheet: {}".format(exporter.workSheet()))
-    
-    
-    
-    exporter.workBook().close()
