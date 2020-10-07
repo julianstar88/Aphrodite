@@ -4,7 +4,6 @@ Created on Mon Apr 13 20:54:40 2020
 
 @author: Julian
 """
-import xlsxwriter
 from Utility_Function_Library.converter import ColorConverter
 from Aphrodite.UtilityModules.MiscUtilities import ModelInputValidation
 
@@ -836,11 +835,3 @@ def populateTemplate(exporter):
                 val,
                 cellFormat
             )
-    
-if __name__ == "__main__":
-
-    wb = xlsxwriter.Workbook(r"ExporterUtil_test.xlsx")
-    
-    templateLayout(wb, 40)
-    
-    wb.close()
