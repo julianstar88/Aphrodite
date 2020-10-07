@@ -422,16 +422,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     int(match.group("y")), int(match.group("m")), int(match.group("d"))
                 )
             self.exporter().routineLayout()
-            routineData, alternativeData, noteData = self.exporter().dataFromDatabase()
-            self.exporter().populateRoutine(
-                    routineData,
-                    alternativeData,
-                    noteData
-                )
-
+            self.exporter().populateRoutine()
             self.exporter().saveRoutine()
-            file = pathlib2.Path(self.exporter().exportPath()) / pathlib2.Path(self.exporter().routineName())
-            self.exporter().finalizeLayout(file)
 
             return True
 

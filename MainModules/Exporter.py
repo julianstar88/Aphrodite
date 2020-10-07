@@ -155,14 +155,13 @@ class Exporter():
         self._routineModel = None
         self._alternativeModel = None
         self._noteModel = None
-
-        # purly private properties without getter or setter.
-        # this properties are uesed to finalize the layout (set superscripts
-        # and subscripts) after saving the epxort file.
-        self.headerStartRow = int()
-        self.routineStartRow = int()
-        self.alternativeStartRow = int()
-        self.noteStartRow = int()
+        self._layoutProperties = {
+                "headerStartRow": 0,
+                "routineStartRow": int(),
+                "alternativeStartRow": int(),
+                "layoutMaxRows": 40,
+                "layoutMaxCols": 10
+            }
 
         if (database):
             self.setDatabase(database)
@@ -457,6 +456,16 @@ class Exporter():
         app.Quit()
         return True
 
+    def layoutProperties(self):
+        """
+        returns the layout properties of the export .xlsx-file. 
+
+        Returns
+        -------
+        dict
+
+        """
+        return self._layoutProperties
 
     def name(self):
         """
@@ -483,7 +492,7 @@ class Exporter():
         """
         return self._noteModel
 
-    def populateRoutine(self, routineData, alternativeData, noteData):
+    def populateRoutine(self):
         """
         by invoking this method, the workbook in the 'workBook' property gets
         populated with data from routineData, alternativeData and noteData.
@@ -513,73 +522,21 @@ class Exporter():
         TypeError
              - will be raised if the input is not type list or type tuple, or the
                'workBook' property does not hold a valid 'xlsxwriter.Workbook' object
-             
-             - will be raised, if the input for 'routineData', 'alternativeDate' and
-               'noteDate' is not of type 'list' or 'tuple'
 
         Returns
         -------
         None.
 
         """
-        if not isinstance(routineData, tuple) and not isinstance(routineData, list):
-            raise TypeError(
-                    "input <{input_type}> does not match {expected_type_1} or {expected_type_2} for argument 'routineData'".format(
-                            input_type = type(routineData),
-                            expected_type_1 = tuple,
-                            expected_type_2 = list
-                        )
-                )
-
-        if not isinstance(alternativeData, tuple) and not isinstance(alternativeData, list):
-            raise TypeError(
-                    "input <{input_type}> does not match {expected_type_1} or {expected_type_2} for argument 'alternativeData'".format(
-                            input_type = type(alternativeData),
-                            expected_type_1 = tuple,
-                            expected_type_2 = list
-                        )
-                )
-
-        if not isinstance(noteData, tuple) and not isinstance(noteData, list):
-            raise TypeError(
-                    "input <{input_type}> does not match {expected_type_1} or {expected_type_2} for argument 'noteData'".format(
-                            input_type = type(noteData),
-                            expected_type_1 = tuple,
-                            expected_type_2 = list
-                        )
-                )
 
         if not isinstance(self.workBook(), xlsxwriter.Workbook):
             raise TypeError(
                     "tried to access an invalid workbook. set a valid xlsxwirter.Workbook-object as workbook, before populating a trainingroutine "
                 )
 
-        exporterUtils.populateTemplate(self, routineData, alternativeData, noteData)
+        exporterUtils.populateTemplate(self)
 
-        # """set note data"""
-        # self.noteStartRow = len(list(ws.rows)) + 1
-        # ws.cell(self.noteStartRow, 1, value = "Notes:").font = openpyxl.styles.Font(
-        #     b = True
-        # )
-        # self.noteStartRow += 1
-
-        # # note name
-        # inputValues = [noteData[i][1] for i in range(len(noteData))]
-        # for i, val in enumerate(inputValues):
-        #     ws["A" + str(self.noteStartRow + i)] = val + ")"
-
-        # # note value
-        # inputValues = [noteData[i][3] for i in range(len(noteData))]
-        # for i, val in enumerate(inputValues):
-        #     ws.merge_cells(exporterUtils.generateRangeExpression(
-        #             self.noteStartRow + i,
-        #             self.noteStartRow + i,
-        #             "B",
-        #             "J"
-        #         ))
-        #     ws["B" + str(self.noteStartRow + i)] = val
-
-    def routineLayout(self, rows = 40):
+    def routineLayout(self):
         """
         by invoking this method, the layout for the trainingroutine
         in the exportfile will be created. its also writing the intermediate
@@ -600,12 +557,18 @@ class Exporter():
         """
         path = self.exportPath() / pathlib2.Path(self.databaseName() + ".xlsx")
         workbook = xlsxwriter.Workbook(path)
-
-        worksheet, startRows = exporterUtils.templateLayout(workbook, rows)
-        self.headerStartRow = startRows[0]
-        self.routineStartRow = startRows[1]
         self.setWorkBook(workbook)
+        
+        worksheet, layoutInformation = exporterUtils.templateLayout(self)
+        props = {
+            "headerStartRow": layoutInformation["headerStartRow"],
+            "routineStartRow": layoutInformation["routineStartRow"],
+            "layoutMaxRows": layoutInformation["layoutMaxRows"],
+            "layoutMaxCols": layoutInformation["layoutMaxCols"]
+        }
+        self.setLayoutProperties(props)
         self.setWorkSheet(worksheet)
+        
         return workbook, worksheet
 
     def routineModel(self):
@@ -813,6 +776,17 @@ class Exporter():
                     "invalid input for argument 'exportPath'"
                 )
         self._exportPath = str(path)
+        
+    def setLayoutProperties(self, props):
+        if not isinstance(props, dict):
+            raise TypeError(
+                    "input for argument 'props' does not match {type_name}".format(
+                            type_name = dict
+                        )
+                )
+        for key in props:
+            if key in self._layoutProperties:
+                self._layoutProperties[key] = props[key]
 
     def setModel(self, model):
         """
@@ -1166,7 +1140,6 @@ if __name__ == "__main__":
     print("Workbook: {}".format(exporter.workBook()))
     print("Worksheet: {}".format(exporter.workSheet()))
     
-    routineData, alternativeData, noteData = exporter.dataFromDatabase()
-    exporter.populateRoutine(routineData, alternativeData, noteData)
+    exporter.populateRoutine()
     
     exporter.workBook().close()

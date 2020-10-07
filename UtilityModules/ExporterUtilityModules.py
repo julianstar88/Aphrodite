@@ -7,29 +7,25 @@ Created on Mon Apr 13 20:54:40 2020
 import xlsxwriter
 from Utility_Function_Library.converter import ColorConverter
 from Aphrodite.UtilityModules.MiscUtilities import ModelInputValidation
+from Aphrodite.MainModules.Exporter import Exporter
 
-def templateLayout(wb, endRow):
-
-    if endRow < 6:
-        raise ValueError(
-                "input of {num} is too small. The 'endRow' argument must be greater or equal than 6".format(
-                    num = endRow
-                )
-            )
-    if type(endRow) != int:
-        raise TypeError(
-                "input of type {input_type_name} does not match the required type {type_name}".format(
-                    input_type_name = type(endRow),
-                    type_name = type(123)
-                )
-            )
-    if not isinstance(wb, xlsxwriter.Workbook):
-        raise TypeError(
-                "input to type <{input_type_name}> does not match {type_name}".format(
-                        input_type_name = type(wb),
-                        type_name = xlsxwriter.Workbook
-                    )
-            )
+def templateLayout(exporter):
+        
+    """property configuration"""
+    wb = exporter.workBook()
+    props = exporter.layoutProperties()
+    headerRows = 6
+    headerStartRow = props["headerStartRow"]
+    tableHeaderRows = 1
+    endRow = props["layoutMaxRows"]
+    tableBodyStartRow = headerRows + tableHeaderRows
+    tableBodyRows = endRow - tableBodyStartRow
+    maxCols = props["layoutMaxCols"]
+    borderColor = "black"
+    backgroundColor1 = "gray"
+    backgroundColor2 = "white"
+    borderStyleThinn = 1
+    borderStyleThick = 2
         
     """ create a colorconverter"""
     converter = ColorConverter()
@@ -46,18 +42,6 @@ def templateLayout(wb, endRow):
             bottom = 0.75
         )
     ws.center_horizontally()
-    
-    headerRows = 6
-    headerStartRow = 0
-    tableHeaderRows = 1
-    tableBodyStartRow = headerRows + tableHeaderRows
-    tableBodyRows = endRow - tableBodyStartRow
-    maxCols = 10
-    borderColor = "black"
-    backgroundColor1 = "gray"
-    backgroundColor2 = "white"
-    borderStyleThinn = 1
-    borderStyleThick = 2
 
     """header"""
     
@@ -489,14 +473,30 @@ def templateLayout(wb, endRow):
                             }
                         )
                     ws.write(n, m, None, bottom_format)
+                    
+    layoutInformation = {
+            "headerStartRow": headerStartRow,
+            "routineStartRow": tableBodyStartRow,
+            "layoutMaxRows": endRow,
+            "layoutMaxCols": maxCols
+        }
     
-    return ws, [headerStartRow, tableBodyStartRow]
+    return ws, layoutInformation
 
-def populateTemplate(exporter, routineData, alternativeData, noteData):
+def populateTemplate(exporter):
+    
+    """property configuration"""
     wb = exporter.workBook()
     ws = exporter.workSheet()
+    routineData, alternativeData, noteData = exporter.dataFromDatabase()
     validator = ModelInputValidation()
     
+    props = exporter.layoutProperties()
+    headerStartRow = props["headerStartRow"]
+    routineStartRow = props["routineStartRow"]
+    alternativeStartRow = props["alternativeStartRow"]
+    layoutMaxRows = props["layoutMaxRows"]
+    layoutMaxCols = props["layoutMaxCols"]
     borderColor = "black"
     backgroundColor1 = "gray"
     backgroundColor2 = "white"
@@ -506,8 +506,8 @@ def populateTemplate(exporter, routineData, alternativeData, noteData):
     
     """set header data"""
     cellRange = "A{}:B{}".format(
-            exporter.headerStartRow + 3,
-            exporter.headerStartRow + 3
+            headerStartRow + 3,
+            headerStartRow + 3
         )
     cellFormat = wb.add_format(
             {
@@ -522,8 +522,8 @@ def populateTemplate(exporter, routineData, alternativeData, noteData):
     ws.merge_range(cellRange, exporter.name(), cellFormat)
     
     cellRange = "F{}:G{}".format(
-            exporter.headerStartRow + 3,
-            exporter.headerStartRow + 3
+            headerStartRow + 3,
+            headerStartRow + 3
         )
     cellFormat = wb.add_format(
             {
@@ -537,8 +537,8 @@ def populateTemplate(exporter, routineData, alternativeData, noteData):
     ws.merge_range(cellRange, exporter.trainingPeriode()[0], cellFormat)
     
     cellRange = "F{}:G{}".format(
-            exporter.headerStartRow + 4,
-            exporter.headerStartRow + 4
+            headerStartRow + 4,
+            headerStartRow + 4
         )
     cellFormat = wb.add_format(
             {
@@ -550,8 +550,8 @@ def populateTemplate(exporter, routineData, alternativeData, noteData):
     ws.merge_range(cellRange, exporter.trainingPeriode()[1], cellFormat)
     
     cellRange = "H{}:J{}".format(
-            exporter.headerStartRow + 3,
-            exporter.headerStartRow + 3
+            headerStartRow + 3,
+            headerStartRow + 3
         )
     cellFormat = wb.add_format(
             {
@@ -619,9 +619,9 @@ def populateTemplate(exporter, routineData, alternativeData, noteData):
             value.append(notes)
         
         ws.merge_range(
-                exporter.routineStartRow + i, 
+                routineStartRow + i, 
                 0, 
-                exporter.routineStartRow + i, 
+                routineStartRow + i, 
                 1, 
                 None, 
                 cellFormat
@@ -629,14 +629,14 @@ def populateTemplate(exporter, routineData, alternativeData, noteData):
         
         if len(value) == 1:
             ws.write(
-                    exporter.routineStartRow + i,
+                    routineStartRow + i,
                     0,
                     *value,
                     cellFormat
                 )
         else:
             ws.write_rich_string(
-                    exporter.routineStartRow + i, 
+                    routineStartRow + i, 
                     0, 
                     *value,
                     cellFormat
@@ -687,14 +687,14 @@ def populateTemplate(exporter, routineData, alternativeData, noteData):
                     f["bg_color"] = backgroundColor2
             cellFormat = wb.add_format(f)
             ws.write(
-                    exporter.routineStartRow + n,
+                    routineStartRow + n,
                     2 + m,
                     val,
                     cellFormat
                 )
             
     """set alternative data"""
-    exporter.alternativeStartRow = exporter.routineStartRow + len(routineData) + 3
+    alternativeStartRow = routineStartRow + len(routineData) + 3
     
     cellFormat = wb.add_format(
             {
@@ -710,13 +710,13 @@ def populateTemplate(exporter, routineData, alternativeData, noteData):
             }
         )
     ws.write(
-            exporter.alternativeStartRow,
+            alternativeStartRow,
             0,
             "Alternativen:",
             cellFormat
         )
     
-    exporter.alternativeStartRow += 1
+    alternativeStartRow += 1
     
     # alternative exercise names
     for i, val in enumerate(alternativeData):
@@ -732,7 +732,7 @@ def populateTemplate(exporter, routineData, alternativeData, noteData):
                 }
             )
         ws.write(
-                exporter.alternativeStartRow + i,
+                alternativeStartRow + i,
                 0,
                 value,
                 cellFormat
@@ -768,13 +768,75 @@ def populateTemplate(exporter, routineData, alternativeData, noteData):
                 f["bg_color"] = backgroundColor2
             cellFormat = wb.add_format(f)
             ws.write(
-                    exporter.alternativeStartRow + n,
+                    alternativeStartRow + n,
                     2 + m,
                     val,
                     cellFormat
                 )
             
     """set note data"""
+    cellFormat = wb.add_format(
+            {
+                "align": "left",
+                "valign": "vcenter",
+                "top": borderStyleThick,
+                "border_color": borderColor,
+                "bg_color": backgroundColor2,
+                "bold": True
+            }
+        )
+    ws.write(
+            layoutMaxRows,
+            0,
+            "Notizen:",
+            cellFormat
+        )
+    ws.merge_range(
+        layoutMaxRows,
+        1,
+        layoutMaxRows,
+        layoutMaxCols - 1,
+        None,
+        cellFormat
+        )
+    layoutMaxRows += 1
+    
+    # note labels
+    inputValues = [noteData[i][1] for i in range(len(noteData))]
+    for i, val in enumerate(inputValues):
+        value = val + ")"
+        cellFormat = wb.add_format(
+                {
+                    "align": "left",
+                    "valign": "vcenter",
+                    "bg_color": backgroundColor2
+                }
+            )
+        ws.write(
+                layoutMaxRows + i,
+                0,
+                value,
+                cellFormat 
+            )
+    
+    # note values
+    inputValues = [noteData[i][3] for i in range(len(noteData))]
+    for i, val in enumerate(inputValues):
+        cellFormat = wb.add_format(
+                {
+                    "align": "left",
+                    "valign": "vcenter",
+                    "bg_color": backgroundColor2
+                }
+            )
+        ws.merge_range(
+                layoutMaxRows + i,
+                1,
+                layoutMaxRows + i,
+                layoutMaxCols - 1,
+                val,
+                cellFormat
+            )
     
 if __name__ == "__main__":
 
