@@ -435,7 +435,7 @@ class Exporter():
         """
         return self._noteModel
 
-    def populateRoutine(self):
+    def export(self):
         """
         by invoking this method, the workbook in the 'workBook' property gets
         populated with data from routineData, alternativeData and noteData.
@@ -471,33 +471,7 @@ class Exporter():
         None.
 
         """
-
-        if not isinstance(self.workBook(), xlsxwriter.Workbook):
-            raise TypeError(
-                    "tried to access an invalid workbook. set a valid xlsxwirter.Workbook-object as workbook, before populating a trainingroutine "
-                )
-
-        exporterUtils.populateTemplate(self)
-
-    def routineLayout(self):
-        """
-        by invoking this method, the layout for the trainingroutine
-        in the exportfile will be created. its also writing the intermediate
-        workbook file to the 'workBook'-property. for convinience, the created
-        intermediade workbook will be returned to the user.
-
-        Parameters
-        ----------
-        rows : int, optional
-            determines, how many rows in the exportfile will be available.
-            The default is 40.
-
-        Returns
-        -------
-        workBook : xlsxwriter.Workbook-object
-            intermediate workbook ojbect.
-
-        """
+            
         path = self.exportPath() / pathlib2.Path(self.databaseName() + ".xlsx")
         workbook = xlsxwriter.Workbook(path)
         self.setWorkBook(workbook)
@@ -511,8 +485,8 @@ class Exporter():
         }
         self.setLayoutProperties(props)
         self.setWorkSheet(worksheet)
-        
-        return workbook, worksheet
+
+        exporterUtils.populateTemplate(self)
 
     def routineModel(self):
         """
@@ -1074,15 +1048,14 @@ if __name__ == "__main__":
     exporter.setName("Julian Blaser")
     exporter.setTrainingMode("mittleres Krafttraining")
     exporter.setTrainingPeriode(2020, 10, 6)
-    
     print("Export-Path: {}".format(exporter.exportPath()))
     print("Export-Name: {}".format(exporter.databaseName()))
     print("Full Database-Name: {}".format(exporter.database().name))
     
-    exporter.routineLayout()
+    exporter.populateRoutine()
     print("Workbook: {}".format(exporter.workBook()))
     print("Worksheet: {}".format(exporter.workSheet()))
     
-    exporter.populateRoutine()
+    
     
     exporter.workBook().close()
