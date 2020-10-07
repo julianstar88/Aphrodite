@@ -399,63 +399,6 @@ class Exporter():
 
         return self._exportPath
 
-    def finalizeLayout(self, file):
-
-        routineData, alternativeData, noteData = self.dataFromDatabase()
-        file = pathlib2.Path(file)
-        app = com.CreateObject("Excel.Application")
-        com.GetEvents(app, ComHandler.ExcelEventHandler().WorkbookBeforeClose())
-
-        # for debugging purposes can this property set to True
-        app.Visible = False
-
-        wb = app.Workbooks.Open(str(file))
-        ws = wb.worksheets[1]
-
-        for i in range(len(routineData)):
-            rowID = i + 1
-
-            l = list()
-            for alternative in alternativeData:
-                if rowID == alternative[0]:
-                    l.append(alternative[1])
-            alternatives = "%s"*len(l)
-            alternatives = alternatives % tuple(l)
-
-            l = list()
-            for note in noteData:
-                if rowID == note[0]:
-                    l.append(note[1])
-            notes = "%s"*len(l)
-            notes = notes % tuple(l)
-
-            base = routineData[i][0]
-
-            newValue = "{baseName}{alternatives}{notes}".format(
-                    baseName = base,
-                    alternatives = alternatives,
-                    notes = notes
-                )
-
-            cell = ws.Cells[self.routineStartRow + i, 1]
-            cell.Value[:] = newValue
-
-            # set superscript
-            pos = len(base) + 1
-            length = len(alternatives)
-            if length > 0:
-                cell.Characters[pos, length].Font.Superscript = True
-
-            # set subscript
-            pos = len(base) + len(alternatives) + 1
-            length = len(notes)
-            if length > 0:
-                cell.Characters[pos, length].Font.Subscript = True
-
-        wb.Save()
-        app.Quit()
-        return True
-
     def layoutProperties(self):
         """
         returns the layout properties of the export .xlsx-file. 
