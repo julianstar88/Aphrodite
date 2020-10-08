@@ -13,10 +13,7 @@ import shutil
 from PyQt5 import QtWidgets, QtCore, QtGui
 
 from MainModules import ConfigInterface, Database, Exporter, GraphicalEvaluator
-
 from UtilityModules import CustomModel
-import UtilityModules.COMEventHandler as com
-
 from GuiModules import CustomTableView, ProgressDialog
 import GuiModules.CustomGuiComponents as cc
 
@@ -357,13 +354,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def onExportTrainingroutine(self):
 
-        # COM event handling
-        handler = com.ExcelEventHandler()
-        handler.excelClosed.connect(
-                lambda: print("closed...")
-            )
-
         # collect export path
+        progress = ProgressDialog.ProgressWindow(self)
+        progress.hide()
         dialog = QtWidgets.QFileDialog()
         dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
         dialog.setNameFilter("Excel (*.xlsx)")
@@ -419,7 +412,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
             self.configParser().export_routine_directory = path
             self.configParser().writeConfigFile()
-
+            
+            progress.show()
             self.exporter().setExportPath(str(path))
             self.exporter().setDatabase(
                     self.database().path() / (self.database().databaseName() + self.database().extension())
@@ -430,17 +424,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.exporter().setTrainingPeriode(
                     int(match.group("y")), int(match.group("m")), int(match.group("d"))
                 )
-            self.exporter().routineLayout()
-            routineData, alternativeData, noteData = self.exporter().dataFromDatabase()
-            self.exporter().populateRoutine(
-                    routineData,
-                    alternativeData,
-                    noteData
-                )
-
-            self.exporter().saveRoutine()
-            file = pathlib2.Path(self.exporter().exportPath()) / pathlib2.Path(self.exporter().routineName())
-            self.exporter().finalizeLayout(file)
+            self.exporter().export()
+            progress.deleteLater()
 
             return True
 
