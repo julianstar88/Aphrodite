@@ -6,7 +6,7 @@ Created on Wed Feb 19 13:53:18 2020
 """
 
 import sqlite3 as lite
-import pathlib2
+import pathlib
 import sys
 import inspect
 import string
@@ -22,7 +22,7 @@ class database():
     avaliable data in a table). to add an new row or an bulk of rows to a table
     one can simply use the method addEntry or addManyEntries respectively. in
     this sense one can use deleteEntry or deleteManyEntries/deleteAllEntries
-    do delete one row ora bulk of rows/all rows.
+    to delete one row or a bulk of rows/all rows.
 
     Properties
     ----------
@@ -231,7 +231,7 @@ class database():
 
     def __checkPath(self):
         if self.path() is None:
-            self.setPath(pathlib2.Path().cwd())
+            self.setPath(pathlib.Path().cwd())
 
     def __displayException(self, exceptionType, value, traceBack):
         string = "Traceback: {traceback} \n Exception Type: {etype} \n Value: {value}".format(
@@ -1059,7 +1059,7 @@ class database():
     def setDatabaseName(self, databaseName):
         """
         set the name of the db-file, which serves as data-source. if the name
-        has a pathlib2.Path().stem and a pathlib2.Path().suffix, the
+        has a pathlib.Path().stem and a pathlib.Path().suffix, the
         'extension' property will be set accordingly, if the suffix is in
         'allowedExtensions'
 
@@ -1073,7 +1073,7 @@ class database():
         TypeError
             will be raised, if 'databaseName' is not str-type.
         ValueError
-            if a pathlib2.Path().suffix exists, and is not in 'allowedExtensions'.
+            if a pathlib.Path().suffix exists, and is not in 'allowedExtensions'.
 
         Returns
         -------
@@ -1094,7 +1094,7 @@ class database():
         #             "only databaseNames without file-extensions are allowed"
         #         )
 
-        name = pathlib2.Path(databaseName)
+        name = pathlib.Path(databaseName)
 
         if len(name.suffix) != 0:
             self.__databaseName = name.stem
@@ -1220,15 +1220,15 @@ class database():
         None.
 
         """
-        if not isinstance(path, str) and not isinstance(path, pathlib2.Path):
+        if not isinstance(path, str) and not isinstance(path, pathlib.Path):
             raise ValueError(
                     "input <{input_name}> for argument 'path' of 'setPath' does not match {type_name_1} or {type_name_2}".format(
                             input_name = str(path),
                             type_name_1 = str,
-                            type_name_2 = pathlib2.Path()
+                            type_name_2 = pathlib.Path()
                         )
                 )
-        pathObj = pathlib2.Path(path)
+        pathObj = pathlib.Path(path)
 
         if pathObj.is_file():
             path = pathObj.parent
@@ -1286,7 +1286,7 @@ if __name__ == '__main__':
     pass
 
     """
-    path = pathlib2.Path("C:/Users/Julian/Documents/Python/Projekte/Aphrodite/files/test_files")
+    path = pathlib.Path("C:/Users/Julian/Documents/Python/Projekte/Aphrodite/files/test_files")
     databaseName = "test_convenient_methods"
     database = database()
     database.setDatabaseName(databaseName)
@@ -1296,7 +1296,7 @@ if __name__ == '__main__':
 
     """
     # create database
-    path = pathlib2.Path("C:/Users/Julian/Documents/Python/Projekte/Aphrodite/examples/Qt_ModelView/database")
+    path = pathlib.Path("C:/Users/Julian/Documents/Python/Projekte/Aphrodite/examples/Qt_ModelView/database")
     dbName = "test_database_2"
     db = database()
     db.setPath(path)

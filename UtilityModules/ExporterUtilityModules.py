@@ -5,7 +5,7 @@ Created on Mon Apr 13 20:54:40 2020
 @author: Julian
 """
 from Utility_Function_Library.converter import ColorConverter
-from Aphrodite.UtilityModules.MiscUtilities import ModelInputValidation
+from UtilityModules.MiscUtilities import ModelInputValidation
 
 def layoutTemplate(exporter):
         

@@ -6,15 +6,17 @@ Created on Wed Jul 15 19:48:17 2020
 """
 
 import unittest
-import pathlib2
+import pathlib
 
-from MainModules import ConfigInterface
+import MainModules.ConfigInterface as ConfigInterface
+from UtilityModules.MiscUtilities import GetProjectRoot
 
 class ConfigInterfaceProperties(unittest.TestCase):
 
     def setUp(self):
         self.configParser = ConfigInterface.ConfigParser()
-        self.configFile = pathlib2.Path("test_files/test_config.txt")
+        self.projectRoot = GetProjectRoot()
+        self.configFile = self.projectRoot / pathlib.Path("unit_tests/test_files/test_config.txt")
 
     def test_configFileName_getter(self):
         self.assertIsNone(
@@ -90,8 +92,9 @@ class ConfigInterfaceProperties(unittest.TestCase):
 class ConfigInterfaceMethods(unittest.TestCase):
 
     def setUp(self):
-        self.testFile = pathlib2.Path("test_files/test_config.txt")
-        self.outputFile = pathlib2.Path("test_files/output.txt")
+        self.projectRoot = GetProjectRoot()
+        self.testFile = self. projectRoot / pathlib.Path("unit_tests/test_files/test_config.txt")
+        self.outputFile = self.projectRoot / pathlib.Path("unit_tests/test_files/output.txt")
         self.configParser = ConfigInterface.ConfigParser()
 
     def test_addAttributes(self):

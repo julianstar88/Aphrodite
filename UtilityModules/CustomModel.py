@@ -5,10 +5,10 @@ Created on Tue Mar 17 23:47:14 2020
 @author: Julian
 """
 import sqlite3
-import pathlib2
+import pathlib
 from PyQt5 import QtGui, QtCore
 
-from Aphrodite.GuiModules.CustomGuiComponents import CustomModelItem
+from GuiModules.CustomGuiComponents import CustomModelItem
 
 
 class CustomSqlModel(QtGui.QStandardItemModel):
@@ -59,7 +59,7 @@ class CustomSqlModel(QtGui.QStandardItemModel):
         pass
 
     def populateModel(self):
-        # path = pathlib2.Path(self.database())
+        # path = pathlib.Path(self.database())
         # if not path.is_file():
         #     return
         # con = sqlite3.connect(path)

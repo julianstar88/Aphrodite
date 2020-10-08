@@ -6,7 +6,7 @@ Created on Wed May 27 16:59:00 2020
 """
 # third party imports
 import sys
-import pathlib2
+import pathlib
 import os
 import matplotlib
 from PyQt5 import QtWidgets, QtCore
@@ -20,11 +20,11 @@ def run():
     """settings"""
     matplotlib.use("agg")
     configFileName = "config.txt"
-    configPath = pathlib2.Path(
+    configPath = pathlib.Path(
             "C:/Users/Surface/Documents/Python/Projekte/Aphrodite/Aphrodite/files/config"
         )
-    currentPath = pathlib2.Path(__file__).cwd()
-    defaultPath = pathlib2.Path(
+    currentPath = pathlib.Path(__file__).cwd()
+    defaultPath = pathlib.Path(
             "C:/Users/Surface/Documents/Python/Projekte/Aphrodite/Aphrodite"
         )
     os.chdir(str(defaultPath))

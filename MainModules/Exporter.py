@@ -5,13 +5,13 @@ Created on Tue Mar  3 22:30:14 2020
 @author: Julian
 """
 import datetime
-import pathlib2
+import pathlib
 import xlsxwriter
 from PyQt5 import QtGui
 
-import Aphrodite.MainModules.Database as db
-import Aphrodite.UtilityModules.ExporterUtilityModules as exporterUtils
-from Aphrodite.UtilityModules.CustomModel import CustomSqlModel
+import MainModules.Database as db
+import UtilityModules.ExporterUtilityModules as exporterUtils
+from UtilityModules.CustomModel import CustomSqlModel
 
 
 class Exporter():
@@ -213,7 +213,7 @@ class Exporter():
         """
         holds the name of the database. this property is written by
         'setDatabase'. it is the equivalent of invoking
-        'pathlib2.Path(database).stem'
+        'pathlib.Path(database).stem'
 
         Returns
         -------
@@ -227,7 +227,7 @@ class Exporter():
     def databasePath(self):
         """
         holds the directory of 'databaseName'. this property is written by
-        'setDatabase'. it is the equivalent of invoking str(pathlib2.Path(database).parent)
+        'setDatabase'. it is the equivalent of invoking str(pathlib.Path(database).parent)
 
         Returns
         -------
@@ -463,7 +463,7 @@ class Exporter():
         """
             
         """ set the export procedure properties"""
-        path = self.exportPath() / pathlib2.Path(self.databaseName() + ".xlsx")
+        path = self.exportPath() / pathlib.Path(self.databaseName() + ".xlsx")
         workbook = xlsxwriter.Workbook(path)
         self.setWorkBook(workbook)
         
@@ -573,7 +573,7 @@ class Exporter():
 
         Parameters
         ----------
-        databasePath : str; pathlib2.Path()
+        databasePath : str; pathlib.Path()
             this parameter must point to a valid db-file
             (typically a trainingroutine).
 
@@ -592,14 +592,14 @@ class Exporter():
 
         """
 
-        if not isinstance(databasePath, str) and not isinstance(databasePath, pathlib2.Path):
+        if not isinstance(databasePath, str) and not isinstance(databasePath, pathlib.Path):
             raise TypeError(
                     "input <{input_value}> for argument 'databasePath' does not match {type_name}".format(
                             input_value = databasePath,
                             type_name = type("str")
                         )
                 )
-        path = pathlib2.Path(databasePath)
+        path = pathlib.Path(databasePath)
         if not path.exists():
             raise ValueError(
                     "Database does not exist: {input_name}".format(
@@ -620,7 +620,7 @@ class Exporter():
 
         Parameters
         ----------
-        exportPath : str, pathlib2.Path
+        exportPath : str, pathlib.Path
             exportPath must point to a directory, where the exportfile
             will be stored.
 
@@ -640,19 +640,19 @@ class Exporter():
         """
 
         
-        if (not isinstance(exportPath, str)) and (not isinstance(exportPath, pathlib2.Path)):
+        if (not isinstance(exportPath, str)) and (not isinstance(exportPath, pathlib.Path)):
             raise TypeError(
                     "input for argument 'exportPath' does not match {type_name} or {type_name_2}".format(
-                            type_name = pathlib2.Path,
+                            type_name = pathlib.Path,
                             type_name_2 = str
                         )
                 )
-        path = pathlib2.Path(exportPath)
+        path = pathlib.Path(exportPath)
         if not path.is_dir():
             raise ValueError(
                     "input for argument 'exportPath' does not refer to an existing directory"
                 )
-        if len(str(path)) == 0:
+        if path == pathlib.Path():
             raise ValueError(
                     "invalid input for argument 'exportPath'"
                 )
@@ -1002,7 +1002,7 @@ class Exporter():
         return self._workSheet
 
 if __name__ == "__main__":
-    file = pathlib2.Path(r"C:\Users\Surface\Documents\Trainingspläne\Datenbanken\Training-200829.db")
+    file = pathlib.Path(r"C:\Users\Surface\Documents\Trainingspläne\Datenbanken\Training-200829.db")
     print("file: {}".format(file))
     print("Existing: {}".format(file.is_file()))
     

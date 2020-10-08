@@ -7,7 +7,7 @@ Created on Sat May  2 15:50:27 2020
 import re
 import sys
 import os
-import pathlib2
+import pathlib
 
 class ModelInputValidation():
 
@@ -98,7 +98,7 @@ class EnvironmentBase():
         if path:
             self.setPath(path)
         else:
-            self.setPath(pathlib2.Path(__file__).cwd())
+            self.setPath(pathlib.Path(__file__).cwd())
         self.setFileName(fileName)
 
     def file(self):
@@ -123,7 +123,7 @@ class EnvironmentBase():
         return True
 
     def setPath(self, path):
-        path = pathlib2.Path(path)
+        path = pathlib.Path(path)
         if path.is_dir():
             self._path = path
             return True
@@ -337,6 +337,9 @@ class EnvironmentFreezer(EnvironmentBase):
         with open(self.file(), "w") as file:
             for line in sys.path:
                 file.write(line + "\n")
+                
+def GetProjectRoot():
+    return pathlib.Path(__file__).parents[1]
 
 if __name__ == "__main__":
 

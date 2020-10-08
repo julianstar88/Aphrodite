@@ -9,12 +9,12 @@ import string
 import sys
 import datetime
 import re
-import pathlib2
+import pathlib
 
 from PyQt5 import QtWidgets, QtCore, QtGui
 
-from Aphrodite.UtilityModules.GraphicUtilityModules import CreateCanvas, CreateQPixmap
-from Aphrodite.MainModules.Database import database
+from UtilityModules.GraphicUtilityModules import CreateCanvas, CreateQPixmap
+from MainModules.Database import database
 
 class CustomAddAlternativeDialog(QtWidgets.QDialog):
 
@@ -242,9 +242,9 @@ class CustomDialogBase(QtWidgets.QDialog):
                 ("Aphrodite128x128.png", (128, 128)),
                 ("Aphrodite256x256.png", (256, 256))
             ]
-        qIcon = QtGui.QIcon(str(self.customIconPath() / pathlib2.Path("Aphrodite96x96.png")))
+        qIcon = QtGui.QIcon(str(self.customIconPath() / pathlib.Path("Aphrodite96x96.png")))
         for icon in icons:
-            file = self.customIconPath() / pathlib2.Path(icon[0])
+            file = self.customIconPath() / pathlib.Path(icon[0])
             qIcon.addFile(str(file), QtCore.QSize(icon[1][0], icon[1][1]), QtGui.QIcon.Normal, QtGui.QIcon.On)
             qIcon.addFile(str(file), QtCore.QSize(icon[1][0], icon[1][1]), QtGui.QIcon.Disabled, QtGui.QIcon.On)
             qIcon.addFile(str(file), QtCore.QSize(icon[1][0], icon[1][1]), QtGui.QIcon.Active, QtGui.QIcon.On)
@@ -256,15 +256,15 @@ class CustomDialogBase(QtWidgets.QDialog):
         self.setWindowIcon(qIcon)
 
     def setCustomIconPath(self, path):
-        if (not isinstance(path, str)) and (not isinstance(path, pathlib2.Path)):
+        if (not isinstance(path, str)) and (not isinstance(path, pathlib.Path)):
             raise TypeError(
                     "input <{input_name}> does not match {type_name_1} or {type_name_2}".format(
                             input_name = str(path),
                             type_name_1 = str,
-                            type_name_2 = pathlib2.Path
+                            type_name_2 = pathlib.Path
                         )
                 )
-        path = pathlib2.Path(path)
+        path = pathlib.Path(path)
         if not path.is_dir():
             raise ValueError(
                     "<{path_name}> does not point to an existing directory".format(
@@ -463,9 +463,9 @@ class CustomCreateNewRoutineDialog(CustomDialogBase):
     def defaultDirectory(self, *args):
         path = self.configParser().readAttributes()["new_routine_directory"]
         if path:
-            pathObj = pathlib2.Path(path)
+            pathObj = pathlib.Path(path)
         else:
-            pathObj = pathlib2.Path().cwd() / "training_routines"
+            pathObj = pathlib.Path().cwd() / "training_routines"
         return pathObj
 
     def onAccepted(self):
@@ -483,7 +483,7 @@ class CustomCreateNewRoutineDialog(CustomDialogBase):
         generalData.append(trainingMode)
         self.setToCommit("general_information", generalData)
 
-        savePath = pathlib2.Path(self.pathEdit.text())
+        savePath = pathlib.Path(self.pathEdit.text())
         self.setToCommit("new_routine_directory", str(savePath))
 
     def onChooseDirectory(self, *args):
@@ -1332,25 +1332,25 @@ class CustomIcon(QtGui.QIcon):
 
     def __init__(self, *args, appIcons = None, iconPath = None):
         super().__init__(*args)
-        self._iconPath = pathlib2.Path("files/icons/app_icons")
+        self._iconPath = pathlib.Path("files/icons/app_icons")
         self._appIcons = [
-                (pathlib2.Path("Aphrodite8x8.png"), (8, 8)),
-                (pathlib2.Path("Aphrodite20x20.png"), (20, 20)),
-                (pathlib2.Path("Aphrodite16x16.png"), (16, 16)),
-                (pathlib2.Path("Aphordite24x24.png"), (24, 24)),
-                (pathlib2.Path("Aphrodite32x32.png"), (32, 32)),
-                (pathlib2.Path("Aphrodite40x40.png"), (40, 40)),
-                (pathlib2.Path("Aphrodite48x48.png"), (48, 48)),
-                (pathlib2.Path("Aphrodite56x56.png"), (56, 56)),
-                (pathlib2.Path("Aphrodite62x62.png"), (62, 62)),
-                (pathlib2.Path("Aphrodite64x64.png"), (64, 64)),
-                (pathlib2.Path("Aphrodite70x70.png"), (70, 70)),
-                (pathlib2.Path("Aphrodite78x78.png"), (78, 78)),
-                (pathlib2.Path("Aphrodite86x86.png"), (86, 86)),
-                (pathlib2.Path("Aphrodite94x94.png"), (94, 94)),
-                (pathlib2.Path("Aphrodite96x96.png"), (96, 96)),
-                (pathlib2.Path("Aphrodite128x128.png"), (128, 128)),
-                (pathlib2.Path("Aphrodite256x256.png"), (256, 256))
+                (pathlib.Path("Aphrodite8x8.png"), (8, 8)),
+                (pathlib.Path("Aphrodite20x20.png"), (20, 20)),
+                (pathlib.Path("Aphrodite16x16.png"), (16, 16)),
+                (pathlib.Path("Aphordite24x24.png"), (24, 24)),
+                (pathlib.Path("Aphrodite32x32.png"), (32, 32)),
+                (pathlib.Path("Aphrodite40x40.png"), (40, 40)),
+                (pathlib.Path("Aphrodite48x48.png"), (48, 48)),
+                (pathlib.Path("Aphrodite56x56.png"), (56, 56)),
+                (pathlib.Path("Aphrodite62x62.png"), (62, 62)),
+                (pathlib.Path("Aphrodite64x64.png"), (64, 64)),
+                (pathlib.Path("Aphrodite70x70.png"), (70, 70)),
+                (pathlib.Path("Aphrodite78x78.png"), (78, 78)),
+                (pathlib.Path("Aphrodite86x86.png"), (86, 86)),
+                (pathlib.Path("Aphrodite94x94.png"), (94, 94)),
+                (pathlib.Path("Aphrodite96x96.png"), (96, 96)),
+                (pathlib.Path("Aphrodite128x128.png"), (128, 128)),
+                (pathlib.Path("Aphrodite256x256.png"), (256, 256))
             ]
 
         if appIcons:
@@ -1419,7 +1419,7 @@ class CustomIcon(QtGui.QIcon):
         self._appIcons = icons
 
     def setIconPath(self, path):
-        path = pathlib2.Path(path)
+        path = pathlib.Path(path)
         self.iconPath = path
 
 class CustomLabel(QtWidgets.QLabel):
@@ -1480,15 +1480,15 @@ class CustomMessageBox(QtWidgets.QMessageBox):
             self.setWindowIcon(CustomIcon(iconPath = str(self.customIconPath())))
 
     def setCustomIconPath(self, path):
-        if (not isinstance(path, str)) and (not isinstance(path, pathlib2.Path)):
+        if (not isinstance(path, str)) and (not isinstance(path, pathlib.Path)):
             raise TypeError(
                     "input <{input_name}> does not match {type_name_1} or {type_name_2}".format(
                             input_name = str(path),
                             type_name_1 = str,
-                            type_name_2 = pathlib2.Path()
+                            type_name_2 = pathlib.Path()
                         )
                 )
-        path = pathlib2.Path(path)
+        path = pathlib.Path(path)
         if not path.is_dir():
             raise ValueError(
                     "<{path_name}> does not point to an existing directory".format(

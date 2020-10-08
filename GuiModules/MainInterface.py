@@ -7,7 +7,7 @@ Created on Thu May 14 14:58:37 2020
 
 import re
 import os
-import pathlib2
+import pathlib
 import datetime
 import shutil
 from PyQt5 import QtWidgets, QtCore, QtGui
@@ -259,7 +259,7 @@ class MainWindow(QtWidgets.QMainWindow):
             general_information = dialog.toCommit()["general_information"]
             new_routine_directory = dialog.toCommit()["new_routine_directory"]
 
-            file = pathlib2.Path(new_routine_directory) / pathlib2.Path(databaseName + self.database().extension())
+            file = pathlib.Path(new_routine_directory) / pathlib.Path(databaseName + self.database().extension())
 
             if file.is_file():
                 message = "The file '{filename}' already exists. Do you want to replace it?".format(
@@ -365,15 +365,15 @@ class MainWindow(QtWidgets.QMainWindow):
         exportDirStr = self.configParser().export_routine_directory
         defaultName = self.database().databaseName()
         if exportDirStr:
-            exportDir = pathlib2.Path(exportDirStr)
+            exportDir = pathlib.Path(exportDirStr)
         else:
-            exportDir = pathlib2.Path(__file__).cwd() / pathlib2.Path("training_routines")
+            exportDir = pathlib.Path(__file__).cwd() / pathlib.Path("training_routines")
 
         dialog.setDirectory(str(exportDir))
         dialog.selectFile(defaultName)
 
         if dialog.exec():
-            file = pathlib2.Path(dialog.selectedFiles()[0])
+            file = pathlib.Path(dialog.selectedFiles()[0])
             data = self.database().data("general_information")
             path = file.parent
             routineName = file.name
@@ -451,15 +451,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
         lastOpenedFileStr = self.configParser().last_opened_routine
         if lastOpenedFileStr:
-            lastOpenedFile = pathlib2.Path(lastOpenedFileStr)
+            lastOpenedFile = pathlib.Path(lastOpenedFileStr)
             lastOpenedDir = lastOpenedFile.parent
             dialog.selectFile(lastOpenedFile.name)
         else:
-            lastOpenedDir = pathlib2.Path(__file__).cwd() / pathlib2.Path("training_routines")
+            lastOpenedDir = pathlib.Path(__file__).cwd() / pathlib.Path("training_routines")
 
         dialog.setDirectory(str(lastOpenedDir))
         if (dialog.exec()):
-            file = pathlib2.Path(dialog.selectedFiles()[0])
+            file = pathlib.Path(dialog.selectedFiles()[0])
             if (file.is_file()):
                 self.closeRoutine()
                 self.configParser().last_opened_routine = str(file)
@@ -483,10 +483,10 @@ class MainWindow(QtWidgets.QMainWindow):
         # set default directory
         lastOpenedFileStr = self.configParser().last_opened_routine
         if lastOpenedFileStr:
-            lastOpenedFile = pathlib2.Path(lastOpenedFileStr)
+            lastOpenedFile = pathlib.Path(lastOpenedFileStr)
             lastOpenedDir = lastOpenedFile.parent
         else:
-            lastOpenedDir = pathlib2.Path(__file__).cwd() / pathlib2.Path("training_routines")
+            lastOpenedDir = pathlib.Path(__file__).cwd() / pathlib.Path("training_routines")
         dialog.setDirectory(str(lastOpenedDir))
 
         # guess a default file name
@@ -508,7 +508,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # execute dialog
         if dialog.exec():
             pass
-            newFile = pathlib2.Path(dialog.selectedFiles()[0])
+            newFile = pathlib.Path(dialog.selectedFiles()[0])
             shutil.copy2(lastOpenedFile, newFile)
 
     def openRoutine(self, *args):
@@ -583,7 +583,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.setWindowTitle("Aphrodite")
 
     def populateMainObjects(self, attr):
-        path = pathlib2.Path(self.configParser().readAttributes()[attr])
+        path = pathlib.Path(self.configParser().readAttributes()[attr])
         if self.database() is None:
             database = Database.database(path)
             self.setDatabase(database)
@@ -654,7 +654,7 @@ class MainWindow(QtWidgets.QMainWindow):
             raise TypeError(
                     "input <{input_name}> for 'database' does not match {type_name_1} or {type_name_2}".format(
                             input_name = str(database),
-                            type_name_1 = pathlib2.Path,
+                            type_name_1 = pathlib.Path,
                             type_name_2 = None
                         )
                 )

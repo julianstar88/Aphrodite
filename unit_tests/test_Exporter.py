@@ -8,14 +8,16 @@ Created on Thu Apr 16 14:37:34 2020
 import unittest
 import datetime
 import openpyxl
+import xlsxwriter
 import os
-import pathlib2
+import pathlib
 import numpy as np
+from PyQt5.QtGui import QStandardItemModel
+
+import MainModules.Database as db
 from MainModules.Exporter import Exporter
 from UtilityModules.CustomModel import CustomSqlModel
-from PyQt5.QtGui import QStandardItemModel
-import MainModules.Database as db
-
+from UtilityModules.MiscUtilities import GetProjectRoot
 
 class ExporterProperties(unittest.TestCase):
 
@@ -31,9 +33,11 @@ class ExporterProperties(unittest.TestCase):
                 "randomParent/randomPath/randomFile",
                 ""
             ]
-        self.database = pathlib2.Path("test_files/test_database_2.db")
-        self.currentDir = pathlib2.Path().cwd()
-        self.parentDir = pathlib2.Path().cwd().parent
+        self.projectRoot = GetProjectRoot()
+        self.file = pathlib.Path("unit_tests/test_files/test_database_2.db")
+        self.database = self.projectRoot / self.file
+        self.currentDir = pathlib.Path().cwd()
+        self.parentDir = pathlib.Path().cwd().parent
         self.exporter = Exporter()
 
     def test_instance(self):
@@ -64,6 +68,19 @@ class ExporterProperties(unittest.TestCase):
     def test_databasePath_getter(self):
         self.assertEqual(
                 self.exporter.databasePath(), None
+            )
+        
+    def test_layoutProperties_getter(self):
+        props = {
+                "headerStartRow": 0,
+                "routineStartRow": int(),
+                "alternativeStartRow": int(),
+                "layoutMaxRows": 40,
+                "layoutMaxCols": 10
+            }
+        
+        self.assertEqual(
+                self.exporter.layoutProperties(), props
             )
 
     def test_name_getter(self):
@@ -99,6 +116,11 @@ class ExporterProperties(unittest.TestCase):
     def test_workBook_getter(self):
         self.assertEqual(
                 self.exporter.workBook(), None
+            )
+        
+    def test_workSheet_getter(self):
+        self.assertEqual(
+                self.exporter.workSheet(), None
             )
 
     def test_alternativeModel_setter(self):
@@ -137,7 +159,7 @@ class ExporterProperties(unittest.TestCase):
     def test_database_setter(self):
         self.exporter.setDatabase(self.database)
         self.assertEqual(
-                self.exporter.database(), str(self.database)
+                self.exporter.database(), self.database
             )
         for val in self.raiseTypeErrors:
             with self.subTest(val = val):
@@ -147,7 +169,7 @@ class ExporterProperties(unittest.TestCase):
                 self.assertRaises(ValueError, self.exporter.setDatabase, val)
 
     def test_exportPath_setter(self):
-        self.exporter.setExportPath(str(self.currentDir))
+        self.exporter.setExportPath(self.currentDir)
         self.assertEqual(
                 self.exporter.exportPath(), str(self.currentDir)
             )
@@ -160,6 +182,29 @@ class ExporterProperties(unittest.TestCase):
             with self.subTest(val = val):
                 self.assertRaises(
                         ValueError, self.exporter.setExportPath, val
+                    )
+                
+    def test_layoutProperties_setter(self):
+        props = {
+                "headerStartRow": 0,
+                "routineStartRow": 1,
+                "alternativeStartRow": 2,
+                "layoutMaxRows": 3,
+                "layoutMaxCols": 4
+            }
+        
+        raiseTypeErrors = self.raiseTypeErrors
+        del raiseTypeErrors[4]
+        raiseTypeErrors.append("")
+        
+        self.exporter.setLayoutProperties(props)
+        self.assertEqual(
+                self.exporter.layoutProperties(), props
+            )
+        for val in raiseTypeErrors:
+            with self.subTest(val = val):
+                self.assertRaises(
+                        TypeError, self.exporter.setLayoutProperties, val
                     )
 
     def test_noteModel_setter(self):
@@ -257,7 +302,7 @@ class ExporterProperties(unittest.TestCase):
     def test_workBook_setter(self):
         raiseTypeErrors = self.raiseTypeErrors
         raiseTypeErrors.append("")
-        wb = self.exporter.routineLayout()
+        wb = xlsxwriter.Workbook()
 
         self.exporter.setWorkBook(wb)
         self.assertEqual(
@@ -268,7 +313,22 @@ class ExporterProperties(unittest.TestCase):
                 self.assertRaises(
                         TypeError, self.exporter.setWorkBook, val
                     )
-
+                
+    def test_workSheet_setter(self):
+        wb = xlsxwriter.Workbook()
+        ws = wb.add_worksheet()
+        
+        self.exporter.setWorkSheet(ws)
+        self.assertEqual(
+                self.exporter.workSheet(), ws
+            )
+        
+        for val in self.raiseTypeErrors:
+            with self.subTest(val = val):
+                self.assertRaises(
+                        TypeError, self.exporter.workSheet(), val
+                    )
+        
     def tearDown(self):
         pass
 
@@ -286,9 +346,11 @@ class TrainingRoutineLayout(unittest.TestCase):
                 "randomParent/randomPath/randomFile",
                 ""
             ]
-        self.database = pathlib2.Path("test_files/test_database_2.db")
-        self.currentDir = pathlib2.Path().cwd()
-        self.parentDir = pathlib2.Path().cwd().parent
+        self.projectRoot = GetProjectRoot()
+        self.file = pathlib.Path("unit_tests/test_files/test_database_2.db")
+        self.database = self.projectRoot / self.file
+        self.currentDir = pathlib.Path().cwd()
+        self.parentDir = pathlib.Path().cwd().parent
         self.databaseName = self.database.stem
         self.routineName = "temp_test_routine.xlsx"
         self.name = "Aphrodite"
@@ -331,14 +393,15 @@ class TrainingRoutineLayout(unittest.TestCase):
         self.exporter.setRoutineName(self.routineName)
         self.exporter.setTrainingMode(self.trainingMode)
         self.exporter.setTrainingPeriode(2020, 11, 11)
-        self.exporter.setExportPath(str(self.currentDir))
+        self.exporter.setExportPath(self.currentDir)
+        self.exporter.export()
 
     def test_workbook_validity(self):
         wb = self.exporter.routineLayout(self.rowCountValues[1])
         self.assertIsInstance(wb, openpyxl.Workbook)
 
     def test_dataFromDatabase(self):
-        routineData, alternativeData, noteData = self.exporter.dataFromDatabase(str(self.database))
+        routineData, alternativeData, noteData = self.exporter.dataFromDatabase(self.database)
 
         # test routine data
         self.assertEqual(
@@ -621,23 +684,23 @@ class TrainingRoutineLayout(unittest.TestCase):
                         cell.value, val
                     )
 
-    def test_saveRoutine(self):
-        path = self.currentDir / pathlib2.Path(self.routineName)
-        self.exporter.routineLayout()
-        self.exporter.saveRoutine()
-        self.assertTrue(path.is_file())
-
     def tearDown(self):
-        databasePath = self.currentDir / pathlib2.Path(self.databaseName + ".db")
-        routinePath = self.currentDir / pathlib2.Path(self.routineName)
+        databasePath = self.currentDir / pathlib.Path(self.databaseName + ".db")
+        routinePath = self.currentDir / pathlib.Path(self.routineName)
+        exportFilePath = pathlib.Path(self.exporter.exportPath()) / pathlib.Path(self.exporter.routineName())
 
         try:
-            os.remove(str(databasePath))
+            databasePath.unlink()
         except FileNotFoundError:
             pass
 
         try:
-            os.remove(str(routinePath))
+            routinePath.unlink()
+        except FileNotFoundError:
+            pass
+        
+        try:
+            exportFilePath.unlink()
         except FileNotFoundError:
             pass
 

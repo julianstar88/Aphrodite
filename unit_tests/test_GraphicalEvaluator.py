@@ -5,13 +5,14 @@ Created on Tue Apr 28 14:02:17 2020
 @author: Julian
 """
 import unittest
-import pathlib2
+import pathlib
 import os
 import sys
 import Aphrodite.MainModules.Database as db
 from PyQt5 import QtWidgets
 from MainModules.GraphicalEvaluator import GraphicalEvaluator
 from UtilityModules.CustomModel import CustomSqlModel
+from UtilityModules.MiscUtilities import GetProjectRoot
 
 class GraphicalEvaluatorProperties(unittest.TestCase):
 
@@ -52,9 +53,9 @@ class GraphicalEvaluatorProperties(unittest.TestCase):
             )
 
     def test_database_setter(self):
-        databaseParentPath = pathlib2.Path().cwd()
+        databaseParentPath = pathlib.Path().cwd()
         databaseName = "temp_test_database"
-        self.databasePath = databaseParentPath / pathlib2.Path(databaseName + ".db")
+        self.databasePath = databaseParentPath / pathlib.Path(databaseName + ".db")
         database = db.database(str(databaseParentPath))
         database.createDatabase(databaseName)
         self.evaluator.setDatabase(str(self.databasePath))
@@ -125,8 +126,10 @@ class EvaluatorLayout(unittest.TestCase):
                 (1,2,3),
             ]
 
-        self.database = pathlib2.Path("test_files/test_database_2.db")
-        self.parentDir = pathlib2.Path().cwd().parent
+        self.projectRoot = GetProjectRoot()
+        self.file = pathlib.Path("unit_tests/test_files/test_database_2.db")
+        self.database = self.projectRoot / self.file
+        self.parentDir = pathlib.Path().cwd().parent
         self.evaluator = GraphicalEvaluator()
         self.evaluator.setDatabase(self.database)
 

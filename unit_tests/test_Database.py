@@ -5,22 +5,23 @@ Created on Thu May  7 16:29:27 2020
 @author: Julian
 """
 import unittest
-import pathlib2
+import pathlib
 import sqlite3 as lite
 import numpy as np
 import MainModules.Database as db
+from UtilityModules.MiscUtilities import GetProjectRoot
 
 class DatabaseProperties(unittest.TestCase):
 
     def setUp(self):
-        self.currentDir = pathlib2.Path().cwd()
+        self.currentDir = pathlib.Path().cwd()
         self.databaseName = "temp_test_database"
         self.databaseFile = self.currentDir / (self.databaseName + ".db")
         self.database = db.database()
 
     def test_path_getter(self):
         self.assertEqual(
-                self.database.path(), pathlib2.Path().cwd()
+                self.database.path(), pathlib.Path().cwd()
             )
 
     def test_extension_getter(self):
@@ -92,18 +93,14 @@ class DatabaseProperties(unittest.TestCase):
                     )
 
     def test_tables_setter(self):
-        file = pathlib2.Path("test_files/test_database_2.db")
-
-        # TODO this is obsolete, one can work with relative paths instead of
-        # absolute ones
-        # parentDir = pathlib2.Path().cwd().parent
-        # path = parentDir / file
+        root = GetProjectRoot()
+        file = pathlib.Path("unit_tests/test_files/test_database_2.db")
 
         # the setter will be invoked implicit by using the setPath method
         # by instantiating db.database(path)
-        database = db.database(file)
+        database = db.database(root / file)
 
-        con = lite.connect(file)
+        con = lite.connect(root / file)
         with con:
             c = con.cursor()
             c.execute("SELECT name FROM sqlite_master WHERE type='table';")
@@ -124,22 +121,16 @@ class DatabaseProperties(unittest.TestCase):
 class DatabaseMethods(unittest.TestCase):
 
     def setUp(self):
-        self.currentDir = pathlib2.Path().cwd()
+        self.currentDir = pathlib.Path().cwd()
         self.databaseName = "temp_test_database"
         self.tableName = "test_table"
         self.database = db.database(self.currentDir)
         self.databaseFile = self.currentDir / (self.databaseName + self.database.extension())
 
     def test_data(self):
-        # TODO this is obsolete. one can work with relative paths instead of
-        # createing absolute ones
-        #
-        # file = pathlib2.Path("files/test_files/test_database_2.db")
-        # parentDir = pathlib2.Path().cwd().parent
-        # path = parentDir / file
-        # database = db.database(path)
-        file = pathlib2.Path("test_files/test_database_2.db")
-        database = db.database(file)
+        root = GetProjectRoot()
+        file = pathlib.Path("unit_tests/test_files/test_database_2.db")
+        database = db.database(root / file)
         tableName = "training_routine"
         data = database.data(tableName)
         array = np.array(data)
@@ -320,7 +311,7 @@ class DatabaseMethods(unittest.TestCase):
 class ConvenientMethods(unittest.TestCase):
 
     def setUp(self):
-        self.path = pathlib2.Path().cwd()
+        self.path = pathlib.Path().cwd()
         self.databaseName = "test_convenient_methods"
         self.database = db.database()
         self.database.setDatabaseName(self.databaseName)

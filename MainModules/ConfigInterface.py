@@ -4,7 +4,7 @@ Created on Tue May 26 22:02:27 2020
 
 @author: Julian
 """
-import pathlib2
+import pathlib
 import re
 import copy
 
@@ -86,18 +86,18 @@ class ConfigParser():
         return True
 
     def setConfigDir(self, wdir):
-        if not isinstance(wdir, pathlib2.Path) and not isinstance(wdir, str):
+        if not isinstance(wdir, pathlib.Path) and not isinstance(wdir, str):
             raise TypeError(
                     "input <{input_name}> for 'setConfigDir' does not match {type_name_1} or {type_name_2}".format(
                             input_name = str(wdir),
-                            type_name_1 = pathlib2.Path,
+                            type_name_1 = pathlib.Path,
                             type_name_2 = str
                         )
                 )
-        path = pathlib2.Path(wdir)
+        path = pathlib.Path(wdir)
         if (not path.is_dir()) and (not path.is_file()):
             raise ValueError(
-                    "input <{input_name}> does not point to an existing directory or file".format(
+                    "input <{input_name}> for 'wdir' does not point to an existing directory".format(
                             input_name = str(path)
                         )
                 )
@@ -108,15 +108,15 @@ class ConfigParser():
             self.setConfigFileName(path.name)
 
     def setConfigFileName(self, fileName):
-        # if not isinstance(file, pathlib2.Path) and not isinstance(file, str):
+        # if not isinstance(file, pathlib.Path) and not isinstance(file, str):
         #     raise TypeError(
         #             "input <{input_name}> for 'setConfigFile' does not match {type_name_1} or {type_name_2}".format(
         #                     input_name = str(file),
-        #                     type_name_1 = pathlib2.Path,
+        #                     type_name_1 = pathlib.Path,
         #                     type_name_2 = str
         #                 )
         #         )
-        # path = pathlib2.Path(file)
+        # path = pathlib.Path(file)
         # if not path.is_file():
         #     raise ValueError(
         #             "input <{input_name}> does not point to an existing file".format(
@@ -148,7 +148,7 @@ class ConfigParser():
                         )
                 )
 
-        if (not isinstance(self.configDir(), pathlib2.Path)):
+        if (not isinstance(self.configDir(), pathlib.Path)):
             raise TypeError(
                     "the value <{value_name}> for 'configDir' is not valid".format(
                             value_name = str(self.configDir())
@@ -183,8 +183,8 @@ class ConfigParser():
 
 if __name__ == "__main__":
 
-    file = pathlib2.Path("files/config/config.txt")
-    parentDir = pathlib2.Path().cwd().parent
+    file = pathlib.Path("files/config/config.txt")
+    parentDir = pathlib.Path().cwd().parent
     path = parentDir / file
     parser = ConfigParser()
     parser.readConfigFile(path)

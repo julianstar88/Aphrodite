@@ -5,7 +5,7 @@ Created on Tue Mar  3 22:30:42 2020
 @author: Julian
 """
 import sys
-import pathlib2
+import pathlib
 import numpy as np
 import matplotlib.pyplot as plt
 import MainModules.Database as db
@@ -275,7 +275,7 @@ class GraphicalEvaluator():
             raise TypeError(
                     "before fetching data from a database, set a path to a valid database-file"
                 )
-        pathObj = pathlib2.Path(self.database())
+        pathObj = pathlib.Path(self.database())
         databaseName = pathObj.stem
         databaseObj = db.database(pathObj.parent)
         data = databaseObj.data(tableName, databaseName)
@@ -479,20 +479,20 @@ class GraphicalEvaluator():
         None.
 
         """
-        if not isinstance(database, str) and not isinstance(database, pathlib2.Path):
+        if not isinstance(database, str) and not isinstance(database, pathlib.Path):
             raise TypeError(
                     "input <{input_name}> for 'setDatabase' does not match {type_name_1} or {type_name_2}".format(
                             input_name = str(database),
-                            type_name_1 = pathlib2.Path,
+                            type_name_1 = pathlib.Path,
                             type_name_2 = str
                         )
                 )
 
-        pathObj = pathlib2.Path(database)
+        pathObj = pathlib.Path(database)
 
         if not pathObj.is_file() or pathObj.match(".db"):
             raise ValueError(
-                    "input <{input_name}> for 'setDatabase' does not point to an existing database".format(
+                    "input <{input_name}> for 'database' does not point to an existing database".format(
                             input_name = str(database)
                         )
                 )
@@ -659,9 +659,9 @@ class ModuleTest(QtWidgets.QMainWindow):
         self.setGeometry(100,100,800,500)
         self.setWindowTitle("Graphical Evaluator Test")
 
-        # database = pathlib2.Path("examples/Qt_ModelView/database/test_database_2.db")
-        database = pathlib2.Path("files/test_files/test_database_2.db")
-        parentDir = pathlib2.Path().cwd().parent
+        # database = pathlib.Path("examples/Qt_ModelView/database/test_database_2.db")
+        database = pathlib.Path("files/test_files/test_database_2.db")
+        parentDir = pathlib.Path().cwd().parent
         model = CustomSqlModel(
             database = parentDir / database,
             table = "training_routine",

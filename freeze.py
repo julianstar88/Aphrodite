@@ -6,11 +6,11 @@ Created on Fri Jul  3 14:19:01 2020
 """
 import PyInstaller.__main__
 import sys
-import pathlib2
+import pathlib
 
 sys.setrecursionlimit(5000)
-iconPath = pathlib2.Path("files/icons")
-iconName = pathlib2.Path("Aphrodite.ico")
+iconPath = pathlib.Path("files/icons")
+iconName = pathlib.Path("Aphrodite.ico")
 PyInstaller.__main__.run([
         "--name=%s" % "Aphrodite",
         "--onedir",

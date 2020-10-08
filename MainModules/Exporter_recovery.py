@@ -5,7 +5,7 @@ Created on Tue Mar  3 22:30:14 2020
 @author: Julian
 """
 import datetime
-import pathlib2
+import pathlib
 import openpyxl
 import numpy as np
 import tempfile
@@ -220,7 +220,7 @@ class Exporter():
         """
         holds the name of the database. this property is written by
         'setDatabase'. it is the equivalent of invoking
-        'pathlib2.Path(database).stem'
+        'pathlib.Path(database).stem'
 
         Returns
         -------
@@ -234,7 +234,7 @@ class Exporter():
     def databasePath(self):
         """
         holds the directory of 'databaseName'. this property is written by
-        'setDatabase'. it is the equivalent of invoking str(pathlib2.Path(database).parent)
+        'setDatabase'. it is the equivalent of invoking str(pathlib.Path(database).parent)
 
         Returns
         -------
@@ -403,7 +403,7 @@ class Exporter():
     def finalizeLayout(self, file):
 
         routineData, alternativeData, noteData = self.dataFromDatabase()
-        file = pathlib2.Path(file)
+        file = pathlib.Path(file)
         app = com.CreateObject("Excel.Application")
         com.GetEvents(app, ComHandler.ExcelEventHandler().WorkbookBeforeClose())
 
@@ -779,7 +779,7 @@ class Exporter():
             raise TypeError(
                     "try to export a trainingroutine with invalid routine name. set a valid routine name before saving a trainingroutine"
                 )
-        path = pathlib2.Path(self.exportPath()) / pathlib2.Path(self.routineName())
+        path = pathlib.Path(self.exportPath()) / pathlib.Path(self.routineName())
         self.workBook().save(str(path))
 
     def setAlternativeModel(self, model):
@@ -817,7 +817,7 @@ class Exporter():
 
         Parameters
         ----------
-        databasePath : str; pathlib2.Path()
+        databasePath : str; pathlib.Path()
             this parameter must point to a valid db-file
             (typically a trainingroutine).
 
@@ -836,14 +836,14 @@ class Exporter():
 
         """
 
-        if not isinstance(databasePath, str) and not isinstance(databasePath, pathlib2.Path):
+        if not isinstance(databasePath, str) and not isinstance(databasePath, pathlib.Path):
             raise TypeError(
                     "input <{input_value}> for argument 'databasePath' does not match {type_name}".format(
                             input_value = databasePath,
                             type_name = type("str")
                         )
                 )
-        path = pathlib2.Path(databasePath)
+        path = pathlib.Path(databasePath)
         if not path.exists():
             raise ValueError(
                     "Database does not exist: {input_name}".format(
@@ -864,7 +864,7 @@ class Exporter():
 
         Parameters
         ----------
-        exportPath : str, pathlib2.Path
+        exportPath : str, pathlib.Path
             exportPath must point to a directory, where the exportfile
             will be stored.
 
@@ -883,7 +883,7 @@ class Exporter():
 
         """
 
-        path = pathlib2.Path(exportPath)
+        path = pathlib.Path(exportPath)
         if not type(exportPath) == str:
             raise TypeError(
                     "input for argument 'exportPath' does not match {type_name}".format(
