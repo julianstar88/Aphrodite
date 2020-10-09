@@ -4,6 +4,7 @@ Created on Tue Mar  3 22:30:14 2020
 
 @author: Julian
 """
+import re
 import datetime
 import pathlib
 import xlsxwriter
@@ -48,7 +49,7 @@ class Exporter():
             - setRoutineModel()
             - setAlternativeModel()
             - setNoteModel()
-        Note: its easier to use <dataFromDatabase>, therefore only a valid 
+        Note: its easier to use <dataFromDatabase>, therefore only a valid
         database (representing a trainingroutine) has to be set via
         <setDatabase>
 
@@ -109,7 +110,7 @@ class Exporter():
         >>> exporter.setRoutineName(...)
         >>> exporter.setTrainingPeriode(...)
         >>> exporter.setTrainingMode(...)
-        
+
     Database Approach:
         >>> exporter.setDatabase(...)
 
@@ -395,7 +396,7 @@ class Exporter():
 
     def layoutProperties(self):
         """
-        returns the layout properties of the export .xlsx-file. 
+        returns the layout properties of the export .xlsx-file.
 
         Returns
         -------
@@ -432,17 +433,17 @@ class Exporter():
     def export(self):
         """
         export a database representing a trainingroutine to a .xlsx-file.
-        
+
         if the data should be recieved from the database itself, make sure that
         this database has been set via Exporter.setDatabase.
-        
-        if the data should be recieved from a certain datamodel representing a 
+
+        if the data should be recieved from a certain datamodel representing a
         database, make sure this datamodel has been set via setter method of all
         three datamodels:
             - setAlternativeModel
             - setRoutineModel
             - setNoteModel
-            
+
         The common case is just to set a adequat database via <setDatabase> and
         use <dataFromDatabase> further on.
 
@@ -461,12 +462,12 @@ class Exporter():
         None.
 
         """
-            
+
         """ set the export procedure properties"""
-        path = self.exportPath() / pathlib.Path(self.databaseName() + ".xlsx")
+        path = self.exportPath() / pathlib.Path(self.routineName())
         workbook = xlsxwriter.Workbook(path)
         self.setWorkBook(workbook)
-        
+
         """ layout the export file"""
         worksheet, layoutInformation = exporterUtils.layoutTemplate(self)
         props = {
@@ -479,8 +480,12 @@ class Exporter():
         self.setWorkSheet(worksheet)
 
         """populate the export file with training-data"""
-        exporterUtils.populateTemplate(self)
-        
+        layoutInformation = exporterUtils.populateTemplate(self)
+        props = {
+                "alternativeStartRow": layoutInformation["alternativeStartRow"]
+            }
+        self.setLayoutProperties(props)
+
         """export the file"""
         self.workBook().close()
 
@@ -606,13 +611,14 @@ class Exporter():
                             input_name = str(path)
                         )
                 )
-        if str(path) == ".":
+        if path == pathlib.Path():
             raise ValueError(
                     "invalid input for argument 'databasePath'"
                 )
         self._database = path
         self._databaseName = path.stem
         self._databasePath = path.parent
+        self.setRoutineName(path.stem + ".xlsx")
 
     def setExportPath(self, exportPath):
         """
@@ -639,7 +645,7 @@ class Exporter():
 
         """
 
-        
+
         if (not isinstance(exportPath, str)) and (not isinstance(exportPath, pathlib.Path)):
             raise TypeError(
                     "input for argument 'exportPath' does not match {type_name} or {type_name_2}".format(
@@ -656,8 +662,8 @@ class Exporter():
             raise ValueError(
                     "invalid input for argument 'exportPath'"
                 )
-        self._exportPath = str(path)
-        
+        self._exportPath = path
+
     def setLayoutProperties(self, props):
         if not isinstance(props, dict):
             raise TypeError(
@@ -803,9 +809,9 @@ class Exporter():
         Raises
         ------
         TypeError
-            will be raised.
+            will be raised if 'routineName' is not string type.
         ValueError
-            DESCRIPTION.
+            will be raised if 'routineName' is an empty string.
 
         Returns
         -------
@@ -813,17 +819,26 @@ class Exporter():
 
         """
 
-        if not type(routineName) == str:
+        if not isinstance(routineName, str):
             raise TypeError(
                 "input argument {name} does not match {type_name}".format(
                         name = routineName,
-                        type_name = type("str")
+                        type_name = str
                     )
                 )
-        elif len(routineName) == 0:
+        if len(routineName) == 0:
             raise ValueError("empty input for the attribute 'routineName'")
-        else:
+
+        match = re.search(r"(?P<baseName>\w+).*\w*", routineName)
+        if match:
+            routineName = match.group("baseName") + ".xlsx"
             self._routineName = routineName
+        else:
+            if self.databaseName():
+                routineName = self.databaseName() + ".xlsx"
+                self._routineName = routineName
+            else:
+                self._routineName = None
 
     def setTrainingMode(self, trainingMode):
         """
@@ -950,7 +965,7 @@ class Exporter():
                     "input for 'workBook' must be an instance of the 'xlsxwriter.Workbook' module"
                 )
         self._workBook = workBook
-        
+
     def setWorkSheet(self, worksheet):
         """
         setter method for the 'workSheet'-property. this property is going to be
@@ -964,7 +979,7 @@ class Exporter():
         Raises
         ------
         TypeError
-            
+
             - will be raised, if the input for 'worksheet' is not type <xlsxwriter.worksheet.Worksheet>
 
         Returns
@@ -989,10 +1004,10 @@ class Exporter():
         """
 
         return self._workBook
-    
+
     def workSheet(self):
         """
-        getter method for the 'worksheet'-property. the worksheet is related 
+        getter method for the 'worksheet'-property. the worksheet is related
         to the workBook property.
 
         Returns
@@ -1005,7 +1020,7 @@ if __name__ == "__main__":
     file = pathlib.Path(r"C:\Users\Surface\Documents\Trainingspläne\Datenbanken\Training-200829.db")
     print("file: {}".format(file))
     print("Existing: {}".format(file.is_file()))
-    
+
     exporter = Exporter()
     exporter.setDatabase(file)
     exporter.setExportPath("C:/Users/Surface/Documents/Python/Projekte/Aphrodite/Aphrodite/files/test_files")
@@ -1015,7 +1030,7 @@ if __name__ == "__main__":
     print("Export-Path: {}".format(exporter.exportPath()))
     print("Export-Name: {}".format(exporter.databaseName()))
     print("Full Database-Name: {}".format(exporter.database().name))
-    
+
     exporter.export()
     print("Workbook: {}".format(exporter.workBook()))
     print("Worksheet: {}".format(exporter.workSheet()))

@@ -4,12 +4,12 @@ Created on Thu Apr 16 14:37:34 2020
 
 @author: Julian
 """
-
+import re
 import unittest
 import datetime
 import openpyxl
 import xlsxwriter
-import os
+import tempfile
 import pathlib
 import numpy as np
 from PyQt5.QtGui import QStandardItemModel
@@ -69,7 +69,7 @@ class ExporterProperties(unittest.TestCase):
         self.assertEqual(
                 self.exporter.databasePath(), None
             )
-        
+
     def test_layoutProperties_getter(self):
         props = {
                 "headerStartRow": 0,
@@ -78,7 +78,7 @@ class ExporterProperties(unittest.TestCase):
                 "layoutMaxRows": 40,
                 "layoutMaxCols": 10
             }
-        
+
         self.assertEqual(
                 self.exporter.layoutProperties(), props
             )
@@ -117,7 +117,7 @@ class ExporterProperties(unittest.TestCase):
         self.assertEqual(
                 self.exporter.workBook(), None
             )
-        
+
     def test_workSheet_getter(self):
         self.assertEqual(
                 self.exporter.workSheet(), None
@@ -171,7 +171,7 @@ class ExporterProperties(unittest.TestCase):
     def test_exportPath_setter(self):
         self.exporter.setExportPath(self.currentDir)
         self.assertEqual(
-                self.exporter.exportPath(), str(self.currentDir)
+                self.exporter.exportPath(), self.currentDir
             )
         for val in self.raiseTypeErrors:
             with self.subTest(val = val):
@@ -183,7 +183,7 @@ class ExporterProperties(unittest.TestCase):
                 self.assertRaises(
                         ValueError, self.exporter.setExportPath, val
                     )
-                
+
     def test_layoutProperties_setter(self):
         props = {
                 "headerStartRow": 0,
@@ -192,11 +192,11 @@ class ExporterProperties(unittest.TestCase):
                 "layoutMaxRows": 3,
                 "layoutMaxCols": 4
             }
-        
+
         raiseTypeErrors = self.raiseTypeErrors
         del raiseTypeErrors[4]
         raiseTypeErrors.append("")
-        
+
         self.exporter.setLayoutProperties(props)
         self.assertEqual(
                 self.exporter.layoutProperties(), props
@@ -216,9 +216,9 @@ class ExporterProperties(unittest.TestCase):
             )
 
     def test_routineName_setter(self):
-        self.exporter.setRoutineName("Test Name")
+        self.exporter.setRoutineName("Test_Name")
         self.assertEqual(
-                self.exporter.routineName(), "Test Name"
+                self.exporter.routineName(), "Test_Name.xlsx"
             )
         for val in self.raiseTypeErrors:
             with self.subTest(val = val):
@@ -313,22 +313,22 @@ class ExporterProperties(unittest.TestCase):
                 self.assertRaises(
                         TypeError, self.exporter.setWorkBook, val
                     )
-                
+
     def test_workSheet_setter(self):
         wb = xlsxwriter.Workbook()
         ws = wb.add_worksheet()
-        
+
         self.exporter.setWorkSheet(ws)
         self.assertEqual(
                 self.exporter.workSheet(), ws
             )
-        
+
         for val in self.raiseTypeErrors:
             with self.subTest(val = val):
                 self.assertRaises(
                         TypeError, self.exporter.workSheet(), val
                     )
-        
+
     def tearDown(self):
         pass
 
@@ -347,16 +347,14 @@ class TrainingRoutineLayout(unittest.TestCase):
                 ""
             ]
         self.projectRoot = GetProjectRoot()
-        self.file = pathlib.Path("unit_tests/test_files/test_database_2.db")
-        self.database = self.projectRoot / self.file
-        self.currentDir = pathlib.Path().cwd()
-        self.parentDir = pathlib.Path().cwd().parent
+        self.database = self.projectRoot / pathlib.Path("unit_tests/test_files/test_database_2.db")
+        self.exportPath = self.projectRoot / pathlib.Path("unit_tests/test_files")
         self.databaseName = self.database.stem
-        self.routineName = "temp_test_routine.xlsx"
+        self.routineName = "test_database_2.xlsx"
         self.name = "Aphrodite"
         self.trainingMode = "TestMode"
         self.columnCount = 10
-        self.rowCountValues = [6, 10, 20, 40, 60]
+        self.rowCountValues = [40, 60, 80, 100]
 
         self.db = db.database(self.database)
 
@@ -393,12 +391,12 @@ class TrainingRoutineLayout(unittest.TestCase):
         self.exporter.setRoutineName(self.routineName)
         self.exporter.setTrainingMode(self.trainingMode)
         self.exporter.setTrainingPeriode(2020, 11, 11)
-        self.exporter.setExportPath(self.currentDir)
+        self.exporter.setExportPath(self.exportPath)
         self.exporter.export()
 
     def test_workbook_validity(self):
-        wb = self.exporter.routineLayout(self.rowCountValues[1])
-        self.assertIsInstance(wb, openpyxl.Workbook)
+        wb = self.exporter.workBook()
+        self.assertIsInstance(wb, xlsxwriter.Workbook)
 
     def test_dataFromDatabase(self):
         routineData, alternativeData, noteData = self.exporter.dataFromDatabase(self.database)
@@ -451,7 +449,7 @@ class TrainingRoutineLayout(unittest.TestCase):
                 len(alternativeData[0]), 14
             )
 
-        #TODO test note data
+        # test note data
         self.assertEqual(
                 len(np.array(noteData).shape), 2
             )
@@ -460,245 +458,294 @@ class TrainingRoutineLayout(unittest.TestCase):
                 len(noteData[0]), 4
             )
 
-    def test_layout_dimenstions(self):
-        for rowCount in self.rowCountValues:
+    def test_layout_dimensions(self):
+        oldPath = self.exporter.exportPath()
+        oldName = self.exporter.routineName()
+        data = self.db.data("training_routine")
 
-            wb = self.exporter.routineLayout(rowCount)
-            ws = wb.active
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            self.exporter.setRoutineName("test_layout_dimensions")
+            self.exporter.setExportPath(tmpdirname)
+            for row in self.rowCountValues:
+                testProps = {
+                        "headerStartRow": 0,
+                        "routineStartRow": 7,
+                        "alternativeStartRow": 7 + len(data) + 3, # 7: routine Start row, len(data): length of training_routine, 3: space between training_routine and training_alternatives
+                        "layoutMaxRows": row,
+                        "layoutMaxCols": 10
+                    }
+                props = self.exporter.layoutProperties()
+                props["layoutMaxRows"] = row
+                self.exporter.setLayoutProperties(props)
+                self.exporter.export()
 
-            with self.subTest(rowCount = rowCount):
-                for i in range(1, self.columnCount+1):
-                    with self.subTest(i = i):
-                        cell = ws.cell(1, i)
-                        self.assertEqual(cell.border.top.style, "thick")
+                props = self.exporter.layoutProperties()
+                self.assertEqual(
+                        props, testProps
+                    )
 
-                for i in range(1, rowCount+1):
-                    with self.subTest(i = i):
-                        cell = ws.cell(i,10)
-                        self.assertEqual(cell.border.right.style, "thick")
+        self.exporter.setExportPath(oldPath)
+        self.exporter.setRoutineName(oldName)
 
     def test_layout_elements(self):
-        wb = self.exporter.routineLayout(self.rowCountValues[1])
+        wb = openpyxl.load_workbook(
+                filename = self.exporter.exportPath() / self.exporter.routineName()
+            )
         ws = wb.active
 
         cell = ws["A2"]
         self.assertEqual(cell.value, "Name")
-        self.assertEqual(cell.border.bottom.style, "thick")
+        self.assertEqual(cell.border.bottom.style, "medium")
         self.assertTrue(cell.font.b)
 
         cell = ws["D2"]
         self.assertEqual(cell.value, "Trainingszeitraum")
-        self.assertEqual(cell.border.bottom.style, "thick")
+        self.assertEqual(cell.border.bottom.style, "medium")
         self.assertTrue(cell.font.b)
 
         cell = ws["D3"]
         self.assertEqual(cell.value, "Anfang:")
-        self.assertFalse(cell.font.b)
+        self.assertTrue(cell.font.b)
 
         cell = ws["D4"]
         self.assertEqual(cell.value, "Ende:")
-        self.assertFalse(cell.font.b)
+        self.assertTrue(cell.font.b)
 
         cell = ws["I2"]
-        self.assertEqual(cell.border.bottom.style, "thick")
-
-        cell = ws["H2"]
         self.assertEqual(cell.value, "Trainingsmodus")
         self.assertTrue(cell.font.b)
+        self.assertEqual(cell.border.bottom.style, "medium")
 
-        cell = ws["A6"]
+        cell = ws["A7"]
         self.assertEqual(cell.value, "Übung")
         self.assertTrue(cell.font.b)
-        cell = ws["C6"]
+        cell = ws["C7"]
         self.assertEqual(cell.value, "Sätze")
         self.assertTrue(cell.font.b)
-        cell = ws["D6"]
+        cell = ws["D7"]
         self.assertEqual(cell.value, "Whlg.")
         self.assertTrue(cell.font.b)
-        cell = ws["E6"]
+        cell = ws["E7"]
         self.assertEqual(cell.value, "W1")
         self.assertTrue(cell.font.b)
-        cell = ws["F6"]
+        cell = ws["F7"]
         self.assertEqual(cell.value, "W2")
         self.assertTrue(cell.font.b)
-        cell = ws["G6"]
+        cell = ws["G7"]
         self.assertEqual(cell.value, "W3")
         self.assertTrue(cell.font.b)
-        cell = ws["H6"]
+        cell = ws["H7"]
         self.assertEqual(cell.value, "W4")
         self.assertTrue(cell.font.b)
-        cell = ws["I6"]
+        cell = ws["I7"]
         self.assertEqual(cell.value, "W5")
         self.assertTrue(cell.font.b)
-        cell = ws["J6"]
+        cell = ws["J7"]
         self.assertEqual(cell.value, "W6")
         self.assertTrue(cell.font.b)
-        for i in range(1, self.columnCount+1):
+        for i in range(1, self.columnCount + 1):
             with self.subTest(i = i):
-                cell = ws.cell(6, i)
+                cell = ws.cell(7, i)
                 if i == 1:
-                    self.assertEqual(cell.border.left.style, "thick")
-                    self.assertEqual(cell.border.top.style, "thick")
-                    self.assertEqual(cell.border.bottom.style, "thick")
+                    self.assertEqual(cell.border.left.style, "medium")
+                    self.assertEqual(cell.border.top.style, "medium")
+                    self.assertEqual(cell.border.bottom.style, "medium")
+                elif i == 2: # skip the merged part of the cell
+                    continue
                 elif i == self.columnCount:
-                    self.assertEqual(cell.border.right.style, "thick")
-                    self.assertEqual(cell.border.top.style, "thick")
-                    self.assertEqual(cell.border.bottom.style, "thick")
-                self.assertEqual(cell.border.top.style, "thick")
-                self.assertEqual(cell.border.bottom.style, "thick")
-                self.assertEqual(cell.fill.fgColor.rgb, "00808080")
+                    self.assertEqual(cell.border.right.style, "medium")
+                    self.assertEqual(cell.border.top.style, "medium")
+                    self.assertEqual(cell.border.bottom.style, "medium")
+                else:
+                    self.assertEqual(cell.border.top.style, "medium")
+                    self.assertEqual(cell.border.bottom.style, "medium")
+                    self.assertEqual(cell.fill.fgColor.rgb, "FF808080")
 
     def test_table_body(self):
-        grayCols = [1, 2, 3, 4]
+        grayCols = [1, 3, 4]
         witheCols = [5, 6, 7, 8, 9, 10]
+        oldPath = self.exporter.exportPath()
+        oldName = self.exporter.routineName()
 
-        for rowCount in self.rowCountValues:
-            wb = self.exporter.routineLayout(rowCount)
-            ws = wb.active
+        def do_the_magic():
+            for rowCount in self.rowCountValues:
+                props = self.exporter.layoutProperties()
+                props["layoutMaxRows"] = rowCount
+                self.exporter.setLayoutProperties(props)
+                self.exporter.export()
+                wb = openpyxl.load_workbook(
+                        filename = self.exporter.exportPath() / self.exporter.routineName()
+                    )
+                ws = wb.active
 
-            with self.subTest(rowCount = rowCount):
-                for row in range(7, rowCount+1):
-                    with self.subTest(row = row):
-                        for col in grayCols:
-                            with self.subTest(col = col):
-                                cell = ws.cell(row, col)
-                                self.assertEqual(cell.fill.fgColor.rgb, "00808080")
-                        for col in witheCols:
-                            with self.subTest(col = col):
-                                cell = ws.cell(row, col)
-                                self.assertEqual(cell.fill.fgColor.rgb, "00000000")
+                with self.subTest(rowCount = rowCount):
+                    for row in range(8, rowCount + 1):
+                        with self.subTest(row = row):
+                            for col in grayCols:
+                                with self.subTest(col = col):
+                                    cell = ws.cell(row, col)
+                                    self.assertEqual(cell.fill.fgColor.rgb, "FF808080")
+                            for col in witheCols:
+                                with self.subTest(col = col):
+                                    cell = ws.cell(row, col)
+                                    self.assertEqual(cell.fill.fgColor.rgb, "FFFFFFFF") # FFFFFFFF
 
-                for row in range(7, rowCount+1):
-                    with self.subTest(row = row):
-                        for col in range(1, self.columnCount+1):
-                            with self.subTest(col = col):
-                                cell = ws.cell(row, col)
-                                if row != rowCount:
-                                    if col == 1:
-                                        self.assertEqual(cell.border.left.style, "thick")
-                                        self.assertEqual(cell.border.bottom.style, "thin")
-                                        self.assertEqual(cell.border.right.style, "thin")
-                                    elif col == self.columnCount:
-                                        self.assertEqual(cell.border.right.style, "thick")
-                                        self.assertEqual(cell.border.bottom.style, "thin")
+                    for row in range(8, rowCount + 1):
+                        with self.subTest(row = row):
+                            for col in range(1, self.columnCount + 1):
+                                with self.subTest(col = col):
+                                    cell = ws.cell(row, col)
+                                    if row != rowCount:
+                                        if col == 1:
+                                            self.assertEqual(cell.border.left.style, "medium")
+                                            self.assertEqual(cell.border.bottom.style, "thin")
+                                            self.assertEqual(cell.border.right.style, "thin")
+                                        elif col == self.columnCount:
+                                            self.assertEqual(cell.border.right.style, "medium")
+                                            self.assertEqual(cell.border.bottom.style, "thin")
+                                        else:
+                                            self.assertEqual(cell.border.right.style, "thin")
+                                            self.assertEqual(cell.border.bottom.style, "thin")
                                     else:
-                                        self.assertEqual(cell.border.right.style, "thin")
-                                        self.assertEqual(cell.border.bottom.style, "thin")
-                                else:
-                                    if col == 1:
-                                        self.assertEqual(cell.border.left.style, "thick")
-                                        self.assertEqual(cell.border.bottom.style, "thick")
-                                        self.assertEqual(cell.border.right.style, "thin")
-                                    elif col == self.columnCount:
-                                        self.assertEqual(cell.border.right.style, "thick")
-                                        self.assertEqual(cell.border.bottom.style, "thick")
-                                    else:
-                                        self.assertEqual(cell.border.bottom.style, "thick")
-                                        self.assertEqual(cell.border.right.style, "thin")
+                                        if col == 1:
+                                            self.assertEqual(cell.border.left.style, "medium")
+                                            self.assertEqual(cell.border.bottom.style, "medium")
+                                            self.assertEqual(cell.border.right.style, "thin")
+                                        elif col == self.columnCount:
+                                            self.assertEqual(cell.border.right.style, "medium")
+                                            self.assertEqual(cell.border.bottom.style, "medium")
+                                        else:
+                                            self.assertEqual(cell.border.bottom.style, "medium")
+                                            self.assertEqual(cell.border.right.style, "thin")
+
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            self.exporter.setExportPath(tmpdirname)
+            self.exporter.setRoutineName("test_table_body")
+            do_the_magic()
+
+        self.exporter.setExportPath(oldPath)
+        self.exporter.setRoutineName(oldName)
 
     def test_populateRoutine_from_database(self):
-        self.exporter.routineLayout()
-        routineData,_,_ = self.exporter.dataFromDatabase()
-        self.exporter.populateRoutine(routineData, [], [])
-        data = self.db.data("training_routine", self.databaseName)
-        ws = self.exporter.workBook().active
+        oldPath = self.exporter.exportPath()
+        oldName = self.exporter.routineName()
 
-        headerTestCells = ["A3", "F3", "F4", "H3"]
-        headerTestResults = [
-                        self.name,
-                        self.exporter.trainingPeriode()[0],
-                        self.exporter.trainingPeriode()[1],
-                        self.trainingMode
-                     ]
-        for i, val in enumerate(headerTestCells):
-            with self.subTest(val = val):
-                self.assertEqual(
-                        ws[val].value, headerTestResults[i]
-                    )
+        def do_the_magic():
+            routineData,_,_ = self.exporter.dataFromDatabase()
+            data = self.db.data("training_routine", self.databaseName)
+            wb = openpyxl.load_workbook(
+                    filename = self.exporter.exportPath() / self.exporter.routineName()
+                )
+            ws = wb.active
+            headerTestCells = ["A3", "F3", "F4", "H3"]
+            headerTestResults = [
+                            self.name,
+                            self.exporter.trainingPeriode()[0],
+                            self.exporter.trainingPeriode()[1],
+                            self.trainingMode
+                         ]
+            for i, val in enumerate(headerTestCells):
+                with self.subTest(val = val):
+                    self.assertEqual(
+                            ws[val].value, headerTestResults[i]
+                        )
 
-        testValues = [data[i][0] for i in range(len(data))]
-        for i, val in enumerate(testValues):
-            with self.subTest(i = i):
-                cell = ws["A" + str(7 + i)]
-                self.assertEqual(
-                        cell.value, val
-                    )
+            testValues = [data[i][0] for i in range(len(data))]
+            for i, val in enumerate(testValues):
+                with self.subTest(i = i):
+                    cell = ws["A" + str(8 + i)]
+                    value = cell.value[:len(val)]
+                    self.assertEqual(
+                            value, val
+                        )
 
-        testValues = [int(data[i][1]) for i in range(len(data))]
-        for i, val in enumerate(testValues):
-            with self.subTest(i = i):
-                cell = ws["C" + str(7 + i)]
-                self.assertEqual(
-                        cell.value, val
-                    )
+            testValues = [int(data[i][1]) for i in range(len(data))]
+            for i, val in enumerate(testValues):
+                with self.subTest(i = i):
+                    cell = ws["C" + str(8 + i)]
+                    self.assertEqual(
+                            cell.value, val
+                        )
 
-        testValues = [int(data[i][2]) for i in range(len(data))]
-        for i, val in enumerate(testValues):
-            with self.subTest(i = i):
-                cell = ws["D" + str(7 + i)]
-                self.assertEqual(
-                        cell.value, val
-                    )
+            testValues = [int(data[i][2]) for i in range(len(data))]
+            for i, val in enumerate(testValues):
+                with self.subTest(i = i):
+                    cell = ws["D" + str(8 + i)]
+                    self.assertEqual(
+                            cell.value, val
+                        )
+
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            self.exporter.setExportPath(tmpdirname)
+            self.exporter.setRoutineName("test_populateRoutine_from_database.xlsx")
+            self.exporter.export()
+            do_the_magic()
+
+        self.exporter.setExportPath(oldPath)
+        self.exporter.setRoutineName(oldName)
 
     def test_populateRoutine_from_model(self):
-        self.exporter.routineLayout()
-        routineData,_,_ = self.exporter.dataFromModel()
-        self.exporter.populateRoutine(routineData, [], [])
-        data = self.db.data("training_routine", self.databaseName)
-        ws = self.exporter.workBook().active
+        oldPath = self.exporter.exportPath()
+        oldName = self.exporter.routineName()
 
-        headerTestCells = ["A3", "F3", "F4", "H3"]
-        headerTestResults = [
-                        self.name,
-                        self.exporter.trainingPeriode()[0],
-                        self.exporter.trainingPeriode()[1],
-                        self.trainingMode
-                     ]
-        for i, val in enumerate(headerTestCells):
-            with self.subTest(val = val):
-                self.assertEqual(
-                        ws[val].value, headerTestResults[i]
-                    )
+        def do_the_magic():
+            routineData,_,_ = self.exporter.dataFromModel()
+            data = self.db.data("training_routine", self.databaseName)
+            wb = openpyxl.load_workbook(
+                    filename = self.exporter.exportPath() / self.exporter.routineName()
+                )
+            ws = wb.active
 
-        testValues = [data[i][0] for i in range(len(data))]
-        for i, val in enumerate(testValues):
-            with self.subTest(i = i):
-                cell = ws["A" + str(7 + i)]
-                self.assertEqual(
-                        cell.value, val
-                    )
+            headerTestCells = ["A3", "F3", "F4", "H3"]
+            headerTestResults = [
+                            self.name,
+                            self.exporter.trainingPeriode()[0],
+                            self.exporter.trainingPeriode()[1],
+                            self.trainingMode
+                         ]
+            for i, val in enumerate(headerTestCells):
+                with self.subTest(val = val):
+                    self.assertEqual(
+                            ws[val].value, headerTestResults[i]
+                        )
 
-        testValues = [int(data[i][1]) for i in range(len(data))]
-        for i, val in enumerate(testValues):
-            with self.subTest(i = i):
-                cell = ws["C" + str(7 + i)]
-                self.assertEqual(
-                        cell.value, val
-                    )
+            testValues = [data[i][0] for i in range(len(data))]
+            for i, val in enumerate(testValues):
+                with self.subTest(i = i):
+                    cell = ws["A" + str(8 + i)]
+                    value = cell.value[:len(val)]
+                    self.assertEqual(
+                            value, val
+                        )
 
-        testValues = [int(data[i][2]) for i in range(len(data))]
-        for i, val in enumerate(testValues):
-            with self.subTest(i = i):
-                cell = ws["D" + str(7 + i)]
-                self.assertEqual(
-                        cell.value, val
-                    )
+            testValues = [int(data[i][1]) for i in range(len(data))]
+            for i, val in enumerate(testValues):
+                with self.subTest(i = i):
+                    cell = ws["C" + str(8 + i)]
+                    self.assertEqual(
+                            cell.value, val
+                        )
+
+            testValues = [int(data[i][2]) for i in range(len(data))]
+            for i, val in enumerate(testValues):
+                with self.subTest(i = i):
+                    cell = ws["D" + str(8 + i)]
+                    self.assertEqual(
+                            cell.value, val
+                        )
+
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            self.exporter.setExportPath(tmpdirname)
+            self.exporter.setRoutineName("test_populateRoutine_from_database.xlsx")
+            self.exporter.export()
+            do_the_magic()
+
+        self.exporter.setExportPath(oldPath)
+        self.exporter.setRoutineName(oldName)
 
     def tearDown(self):
-        databasePath = self.currentDir / pathlib.Path(self.databaseName + ".db")
-        routinePath = self.currentDir / pathlib.Path(self.routineName)
-        exportFilePath = pathlib.Path(self.exporter.exportPath()) / pathlib.Path(self.exporter.routineName())
+        exportFilePath = self.exportPath / pathlib.Path(self.routineName)
 
-        try:
-            databasePath.unlink()
-        except FileNotFoundError:
-            pass
-
-        try:
-            routinePath.unlink()
-        except FileNotFoundError:
-            pass
-        
         try:
             exportFilePath.unlink()
         except FileNotFoundError:

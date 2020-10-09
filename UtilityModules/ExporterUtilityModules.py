@@ -8,7 +8,7 @@ from Utility_Function_Library.converter import ColorConverter
 from UtilityModules.MiscUtilities import ModelInputValidation
 
 def layoutTemplate(exporter):
-        
+
     """property configuration"""
     wb = exporter.workBook()
     props = exporter.layoutProperties()
@@ -24,7 +24,7 @@ def layoutTemplate(exporter):
     backgroundColor2 = "white"
     borderStyleThinn = 1
     borderStyleThick = 2
-        
+
     """ create a colorconverter"""
     converter = ColorConverter()
     converter.interpretation = "python"
@@ -42,7 +42,7 @@ def layoutTemplate(exporter):
     ws.center_horizontally()
 
     """header"""
-    
+
     # header border line with style 2 (thick)
     start = headerStartRow
     for n in range(start, start + headerRows):
@@ -132,7 +132,7 @@ def layoutTemplate(exporter):
                             }
                         )
                     ws.write(n, m, None, bottom_format)
-    
+
     # header content
     cellRange = "A{}:B{}".format(start + 2, start + 2)
     name_format = wb.add_format(
@@ -147,7 +147,7 @@ def layoutTemplate(exporter):
             }
         )
     ws.merge_range(cellRange, "Name", name_format)
-    
+
     cellRange = "D{}:G{}".format(start + 2, start + 2)
     periode_format = wb.add_format(
             {
@@ -160,7 +160,7 @@ def layoutTemplate(exporter):
             }
         )
     ws.merge_range(cellRange, "Trainingszeitraum", periode_format)
-    
+
     cellRange = "I{}:J{}".format(start + 2, start + 2)
     mode_format = wb.add_format(
             {
@@ -174,7 +174,7 @@ def layoutTemplate(exporter):
             }
         )
     ws.merge_range(cellRange, "Trainingsmodus", mode_format)
-    
+
     time_format = wb.add_format(
             {
                 "align": "left",
@@ -187,10 +187,10 @@ def layoutTemplate(exporter):
     ws.merge_range(cellRange, "Anfang:", time_format)
     cellRange = "D{}:E{}".format(start + 4, start + 4)
     ws.merge_range(cellRange, "Ende:", time_format)
-    
+
     """table header"""
     start = start + headerRows
-    
+
     # table header border line style 2 (thick)
     for m in range(maxCols):
         if m == 0:
@@ -225,7 +225,7 @@ def layoutTemplate(exporter):
                     }
                 )
             ws.write(start, m, None, border_format)
-            
+
     # table header content
     cellRange = "A{}:B{}".format(start + 1, start + 1)
     cell_format = wb.add_format(
@@ -240,7 +240,7 @@ def layoutTemplate(exporter):
             }
         )
     ws.merge_range(cellRange, "Übung", cell_format)
-    
+
     cellRange = "C{}".format(start + 1)
     cell_format = wb.add_format(
             {
@@ -253,7 +253,7 @@ def layoutTemplate(exporter):
             }
         )
     ws.write(cellRange, "Sätze", cell_format)
-    
+
     cellRange = "D{}".format(start + 1)
     cell_format = wb.add_format(
             {
@@ -266,7 +266,7 @@ def layoutTemplate(exporter):
             }
         )
     ws.write(cellRange, "Whlg.", cell_format)
-    
+
     for m in range(4, maxCols):
         week = m - 3
         if m == maxCols - 1:
@@ -282,8 +282,8 @@ def layoutTemplate(exporter):
                     }
                 )
             ws.write(
-                    start, m, 
-                    "W{}".format(week), 
+                    start, m,
+                    "W{}".format(week),
                     cell_format
                 )
         else:
@@ -298,14 +298,14 @@ def layoutTemplate(exporter):
                     }
                 )
             ws.write(
-                    start, m, 
-                    "W{}".format(week), 
+                    start, m,
+                    "W{}".format(week),
                     cell_format
                 )
 
     """table body"""
     start = start + tableHeaderRows
-    
+
     # table body border style 2 (thick)
     for n in range(start, start + tableBodyRows):
         for m in range(maxCols):
@@ -471,24 +471,24 @@ def layoutTemplate(exporter):
                             }
                         )
                     ws.write(n, m, None, bottom_format)
-                    
+
     layoutInformation = {
             "headerStartRow": headerStartRow,
             "routineStartRow": tableBodyStartRow,
             "layoutMaxRows": endRow,
             "layoutMaxCols": maxCols
         }
-    
+
     return ws, layoutInformation
 
 def populateTemplate(exporter):
-    
+
     """property configuration"""
     wb = exporter.workBook()
     ws = exporter.workSheet()
     routineData, alternativeData, noteData = exporter.dataFromDatabase()
     validator = ModelInputValidation()
-    
+
     props = exporter.layoutProperties()
     headerStartRow = props["headerStartRow"]
     routineStartRow = props["routineStartRow"]
@@ -501,7 +501,7 @@ def populateTemplate(exporter):
     borderStyleThinn = 1
     borderStyleThick = 2
 
-    
+
     """set header data"""
     cellRange = "A{}:B{}".format(
             headerStartRow + 3,
@@ -518,7 +518,7 @@ def populateTemplate(exporter):
             }
         )
     ws.merge_range(cellRange, exporter.name(), cellFormat)
-    
+
     cellRange = "F{}:G{}".format(
             headerStartRow + 3,
             headerStartRow + 3
@@ -533,7 +533,7 @@ def populateTemplate(exporter):
             }
         )
     ws.merge_range(cellRange, exporter.trainingPeriode()[0], cellFormat)
-    
+
     cellRange = "F{}:G{}".format(
             headerStartRow + 4,
             headerStartRow + 4
@@ -546,7 +546,7 @@ def populateTemplate(exporter):
             }
         )
     ws.merge_range(cellRange, exporter.trainingPeriode()[1], cellFormat)
-    
+
     cellRange = "H{}:J{}".format(
             headerStartRow + 3,
             headerStartRow + 3
@@ -561,28 +561,28 @@ def populateTemplate(exporter):
             }
         )
     ws.merge_range(cellRange, exporter.trainingMode(), cellFormat)
-    
+
     """set routine data"""
     inputValues = [routineData[i][0] for i in range(len(routineData))]
-    
+
     # exercise names
     for i, val in enumerate(inputValues):
         rowID = i + 1
-        
+
         l = list()
         for alternative in alternativeData:
             if rowID == alternative[0]:
                 l.append(alternative[1])
         alternatives = "%s" * len(l)
         alternatives = alternatives % tuple(l)
-        
+
         l = list()
         for note in noteData:
             if rowID == note[0]:
                 l.append(note[1])
         notes = "%s" * len(l)
         notes = notes % tuple(l)
-        
+
         f = {
                 "align": "left",
                 "valign": "vcenter",
@@ -604,7 +604,7 @@ def populateTemplate(exporter):
             f["left"] = borderStyleThick
             f["bottom"] = borderStyleThinn
             f["right"] = borderStyleThinn
-        
+
         superFormat = wb.add_format({"font_script": 1})
         subFormat = wb.add_format({"font_script": 2})
         cellFormat = wb.add_format(f)
@@ -615,16 +615,16 @@ def populateTemplate(exporter):
         if notes:
             value.append(subFormat)
             value.append(notes)
-        
+
         ws.merge_range(
-                routineStartRow + i, 
-                0, 
-                routineStartRow + i, 
-                1, 
-                None, 
+                routineStartRow + i,
+                0,
+                routineStartRow + i,
+                1,
+                None,
                 cellFormat
             )
-        
+
         if len(value) == 1:
             ws.write(
                     routineStartRow + i,
@@ -634,25 +634,25 @@ def populateTemplate(exporter):
                 )
         else:
             ws.write_rich_string(
-                    routineStartRow + i, 
-                    0, 
+                    routineStartRow + i,
+                    0,
                     *value,
                     cellFormat
                 )
-    
+
     # excercise values
     for n, row in enumerate(routineData):
         row = row[1:-1]
         del row[2]
-        
+
         for m, val in enumerate(row):
             # if values are readalbe as numeric values in  a
             # 'ModelInputValidation' manner, convert them into integer
-            # (prevent excel from throwing a warning for writing numers as 
+            # (prevent excel from throwing a warning for writing numers as
             # string)
             if validator.checkValue(val):
                 val = validator.readValue2(val)[0]
-            
+
             f = {
                     "align": "left",
                     "valign": "vcenter",
@@ -690,10 +690,11 @@ def populateTemplate(exporter):
                     val,
                     cellFormat
                 )
-            
+
     """set alternative data"""
     alternativeStartRow = routineStartRow + len(routineData) + 3
-    
+    outval = alternativeStartRow
+
     cellFormat = wb.add_format(
             {
                 "align": "left",
@@ -713,9 +714,9 @@ def populateTemplate(exporter):
             "Alternativen:",
             cellFormat
         )
-    
+
     alternativeStartRow += 1
-    
+
     # alternative exercise names
     for i, val in enumerate(alternativeData):
         value = val[1] + ") " + val[3]
@@ -735,20 +736,20 @@ def populateTemplate(exporter):
                 value,
                 cellFormat
             )
-    
+
     # alternative exercise values
     for n, row in enumerate(alternativeData):
         row = row[4:-1]
         del row[2]
-        
+
         for m, val in enumerate(row):
-            # if values are readable as numeric values in a 
+            # if values are readable as numeric values in a
             # 'ModelInputValidation' manner, convert them into integer
             # (prevent excel from throwing a warning for writing numbers
             # as string)
             if validator.checkValue(val):
                 val = validator.readValue2(val)[0]
-            
+
             f = {
                     "align": "left",
                     "valign": "vcenter",
@@ -771,7 +772,7 @@ def populateTemplate(exporter):
                     val,
                     cellFormat
                 )
-            
+
     """set note data"""
     cellFormat = wb.add_format(
             {
@@ -798,7 +799,7 @@ def populateTemplate(exporter):
         cellFormat
         )
     layoutMaxRows += 1
-    
+
     # note labels
     inputValues = [noteData[i][1] for i in range(len(noteData))]
     for i, val in enumerate(inputValues):
@@ -814,9 +815,9 @@ def populateTemplate(exporter):
                 layoutMaxRows + i,
                 0,
                 value,
-                cellFormat 
+                cellFormat
             )
-    
+
     # note values
     inputValues = [noteData[i][3] for i in range(len(noteData))]
     for i, val in enumerate(inputValues):
@@ -835,3 +836,8 @@ def populateTemplate(exporter):
                 val,
                 cellFormat
             )
+
+    layoutInformation = {
+            "alternativeStartRow": outval
+        }
+    return layoutInformation
