@@ -673,6 +673,14 @@ class Exporter():
                 )
         for key in props:
             if key in self._layoutProperties:
+                if key == "layoutMaxRows":
+                    if props[key] <= 40:
+                        print("The number of maximum Rows in a Trainingroutine is not allowed to be less then 40.")
+                        props[key] = 40
+                if key == "layoutMaxCols":
+                    if props[key] != 10:
+                        print("The number of maximum columns in a Trainingroutine should stay at 10.")
+                        props[key] = 10
                 self._layoutProperties[key] = props[key]
 
     def setModel(self, model):
